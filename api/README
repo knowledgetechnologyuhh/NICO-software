@@ -1,0 +1,48 @@
+highNICO - High level API to the NICO robot
+
+------------------------------------------------------------------------
+
+Contents:
+
+    1. Python API
+    2. ROS API
+
+------------------------------------------------------------------------
+
+1. Python API
+
+highNICO provides a python API in the form of a python class which can
+be used to communicate with the NICO robot. The API is completely 
+included in the file 'highNICO.py'. To use it in python you can simply
+import it, e.g.:
+
+   from highNICO import HighNico
+
+You can then create an object representing a single robot.
+
+   robot = HighNico(motor_config='NICO.json')
+
+The robot can then be controlled by invoking the different methods, e.g:
+
+   robot.closeHand('RHand')
+
+------------------------------------------------------------------------
+
+1. ROS API
+
+The ROS API is a wrapper which makes most of the highNICO functions 
+available over ROS.
+
+To build the ROS package it should be sufficient if you move the 
+'high_nico' folder into your catkin_workspace 
+($CATKIN_WS/src/high_nico/) and build the packet ('catkin_make').
+
+There are multiple ways to start the wrapper, e.g.:
+
+   rosrun high_nico rosNICO.py
+   roslaunch high_nico high_nico.launch
+
+There are also multiple parameters with which you can influence the
+behaviour of the robot. You can use the following command to see them:
+
+   rosrun high_nico rosNICO.py -h
