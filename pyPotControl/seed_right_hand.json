@@ -1,0 +1,68 @@
+{
+  "controllers": {
+    "all_controller": {
+      "sync_read": false,
+      "attached_motors": [
+        "r_hand"
+        
+      ],
+      "port": "auto"
+    }
+   },
+  "motorgroups": {
+  
+    "r_hand": [
+      
+      "r_wrist_z",
+      "r_wrist_x",
+      "r_indexfingers_x",
+      "r_thumb_x"
+      
+    ]
+  },
+  "motors": {
+
+    "r_wrist_z": {
+      "offset": 0.0,
+      "type": "MX-28",
+      "id": 23,
+      "angle_limit": [
+        -179,
+        179
+      ],
+      "orientation": "indirect"
+    },
+    "r_wrist_x": {
+      "offset": 0.0,
+      "type": "MX-28",
+      "id": 25,
+      "angle_limit": [
+        -50,
+        35
+      ],
+      "orientation": "direct"
+    },
+    "r_indexfingers_x": {
+      "offset": 0.0,
+      "type": "MX-28",
+      "id": 29,
+      "angle_limit": [
+        -160,
+        160
+      ],
+      "orientation": "direct"
+    },
+     "r_thumb_x": {
+      "offset": 0.0,
+      "type": "MX-28",
+      "id": 27,
+      "angle_limit": [
+        -160,
+        160
+      ],
+      "orientation": "direct"
+    }
+     
+   }
+}
+
