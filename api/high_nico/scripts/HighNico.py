@@ -18,11 +18,12 @@
 # along with highNICO. If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-from time import sleep
 import json
 
 import pypot.robot
 import pypot.vrep
+
+import _internal.hand
 
 class HighNico:
     """
@@ -55,74 +56,31 @@ class HighNico:
             logging.info('highNICO: Using robot')
             self._highNicoRobot = pypot.robot.from_config(config)
 
-    def openHand(self, handName):
+    def openHand(self, handName, speed=10, percentage=1.0):
         """
         Opens the specified hand. handName can be 'RHand' or 'LHand'
         :param handName: Name of the hand (RHand, LHand)
+        :type handName: str
+        :param speed: Speed at which hand should open. Default: 10
+        :type speed: int
+        :param percentage: Percentage hand should open. 0.0 < percentage <= 1.0
+        :type percentage: float
         :return: None
         """
-        if self._highNicoRobot is None:
-            logging.critical('NICO not initialised')
-            return
-
-        if handName == 'RHand':
-            self._highNicoRobot.r_indexfingers_x.compliant = False
-            self._highNicoRobot.r_indexfingers_x.goal_speed = 10
-            self._highNicoRobot.r_indexfingers_x.goal_position = -130
-            self._highNicoRobot.r_thumb_x.compliant = False
-            self._highNicoRobot.r_thumb_x.goal_speed = 10
-            self._highNicoRobot.r_thumb_x.goal_position = -130
-            sleep(1)
-            self._highNicoRobot.r_indexfingers_x.compliant = True
-            self._highNicoRobot.r_thumb_x.compliant = True
-        elif handName == 'LHand':
-            self._highNicoRobot.l_indexfingers_x.compliant = False
-            self._highNicoRobot.l_indexfingers_x.goal_speed = 10
-            self._highNicoRobot.l_indexfingers_x.goal_position = -130
-            self._highNicoRobot.l_thumb_x.compliant = False
-            self._highNicoRobot.l_thumb_x.goal_speed = 10
-            self._highNicoRobot.l_thumb_x.goal_position = -130
-            sleep(1)
-            self._highNicoRobot.l_indexfingers_x.compliant = True
-            self._highNicoRobot.l_thumb_x.compliant = True
-        else:
-            logging.warning('Unknown hand handle: %s' % handName)
-            return
+        _internal.hand.closeHand(self._highNicoRobot, handName, speed, percentage)
 
     def closeHand(self, handName):
         """
         Closes the specified hand. handName can be 'RHand' or 'LHand'
         :param handName: Name of the hand (RHand, LHand)
+        :type handName: str
+        :param speed: Speed at which hand should close. Default: 10
+        :type speed: int
+        :param percentage: Percentage hand should open. 0.0 < percentage <= 1.0
+        :type percentage: float
         :return: None
         """
-        if self._highNicoRobot is None:
-            logging.critical('NICO not initialised')
-            return
-
-        if handName == 'RHand':
-            self._highNicoRobot.r_indexfingers_x.compliant = False
-            self._highNicoRobot.r_indexfingers_x.goal_speed = 10
-            self._highNicoRobot.r_indexfingers_x.goal_position = 130
-            self._highNicoRobot.r_thumb_x.compliant = False
-            self._highNicoRobot.r_thumb_x.goal_speed = 10
-            self._highNicoRobot.r_thumb_x.goal_position = 130
-            print(self.label)
-            sleep(1)
-            self._highNicoRobot.r_indexfingers_x.compliant = True
-            self._highNicoRobot.r_thumb_x.compliant = True
-        elif handName == 'LHand':
-            self._highNicoRobot.l_indexfingers_x.compliant = False
-            self._highNicoRobot.l_indexfingers_x.goal_speed = 10
-            self._highNicoRobot.l_indexfingers_x.goal_position = 130
-            self._highNicoRobot.l_thumb_x.compliant = False
-            self._highNicoRobot.l_thumb_x.goal_speed = 10
-            self._highNicoRobot.l_thumb_x.goal_position = 130
-            sleep(1)
-            self._highNicoRobot.l_indexfingers_x.compliant = True
-            self._highNicoRobot.l_thumb_x.compliant = True
-        else:
-            logging.warning('Unknown hand handle: %s' % handName)
-            return
+        _internal.hand.openHand(self._highNicoRobot, handName, speed, percentage)
 
     def cleanup(self):
         """
