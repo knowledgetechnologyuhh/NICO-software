@@ -65,8 +65,8 @@ class RosNico():
 
         # setup subscriber
         logging.debug('Init subscriber')
-        rospy.Subscriber('%s/openHand' % config['rostopic_name'], string, self._ROSPY_openHand)
-        rospy.Subscriber('%s/closeHand' % config['rostopic_name'], string, self._ROSPY_closeHand)
+        rospy.Subscriber('%s/openHand' % config['rostopic_name'], s, self._ROSPY_openHand)
+        rospy.Subscriber('%s/closeHand' % config['rostopic_name'], s, self._ROSPY_closeHand)
 
         # wait for messages
         logging.info('-- All done --')
