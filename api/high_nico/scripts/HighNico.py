@@ -69,7 +69,7 @@ class HighNico:
         """
         _internal.hand.closeHand(self._highNicoRobot, handName, speed, percentage)
 
-    def closeHand(self, handName):
+    def closeHand(self, handName, speed=10, percentage=1.0):
         """
         Closes the specified hand. handName can be 'RHand' or 'LHand'
         :param handName: Name of the hand (RHand, LHand)
@@ -81,6 +81,27 @@ class HighNico:
         :return: None
         """
         _internal.hand.openHand(self._highNicoRobot, handName, speed, percentage)
+
+    def enableForceControl(self, goalForce = 500):
+        """
+        Enables force control for all motors which support this feature
+        :param goalForce: Goal force (0-2000)
+        :type goalForce: int
+        :return: None
+        """
+        for motor in self._highNicoRobot.motors:
+            if hasattr(motor, 'force_control_enable'):
+                motor.force_control_enable = True
+                motor.goal_force = goalForce
+
+    def disableForceControl(self):
+        """
+        Disables force control for all motors which support this feature
+        :return: None
+        """
+        for motor in self._highNicoRobot.motors:
+            if hasattr(motor, 'force_control_enable'):
+                motor.force_control_enable = False
 
     def cleanup(self):
         """

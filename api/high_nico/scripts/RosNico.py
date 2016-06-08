@@ -23,7 +23,7 @@ import argparse
 import sys
 
 import rospy
-from high_nico.msg import s
+from high_nico.msg import s, sif, i, empty
 
 class RosNico():
     """
@@ -65,29 +65,69 @@ class RosNico():
 
         # setup subscriber
         logging.debug('Init subscriber')
-        rospy.Subscriber('%s/openHand' % config['rostopic_name'], s, self._ROSPY_openHand)
-        rospy.Subscriber('%s/closeHand' % config['rostopic_name'], s, self._ROSPY_closeHand)
+        rospy.Subscriber('%s/openHand' % config['rostopicName'], s, self._ROSPY_openHand)
+        rospy.Subscriber('%s/closeHand' % config['rostopicName'], s, self._ROSPY_closeHand)
+        rospy.Subscriber('%s/openHandParam' % config['rostopicName'], sif, self._ROSPY_openHandParam)
+        rospy.Subscriber('%s/closeHandParam' % config['rostopicName'], sif, self._ROSPY_closeHandParam)
+        rospy.Subscriber('%s/enableForceControl' % config['rostopicName'], i, self._ROSPY_enableForceControl)
+        rospy.Subscriber('%s/disableForceControl' % config['rostopicName'], empty, self._ROSPY_disableForceControl)
 
         # wait for messages
         logging.info('-- All done --')
 
-    def _ROSPY_openHand(self, handName):
+    def _ROSPY_openHand(self, message):
         """
         Callback handle for openHand
-        :param handName: ROS message
-        :type handName: high_nico.msg.string
-        :return:
+        :param message: ROS message
+        :type message: high_nico.msg.string
+        :return: None
         """
-        self.robot.openHand(handName.param1)
+        self.robot.openHand(message.param1)
 
-    def _ROSPY_closeHand(self, handName):
+    def _ROSPY_closeHand(self, message):
         """
         Callback handle for closeHand
-        :param handName: ROS message
-        :type handName: high_nico.msg.string
-        :return:
+        :param message: ROS message
+        :type message: high_nico.msg.s
+        :return: None
         """
-        self.robot.closeHand(handName.param1)
+        self.robot.closeHand(message.param1)
+
+    def _ROSPY_openHandParam(self, message):
+        """
+        Callback handle for openHand with additional parameters
+        :param message: ROS message
+        :type message: high_nico.msg.sif
+        :return: None
+        """
+        self.robot.openHand(message.param1, message.param2, message.param3)
+
+    def _ROSPY_closeHandParam(self, message):
+        """
+        Callback handle for closeHand with additional parameters
+        :param message: ROS message
+        :type message: high_nico.msg.sif
+        :return: None
+        """
+        self.robot.closeHand(message.param1, message.param2, message.param3)
+
+    def _ROSPY_enableForceControl(self, message):
+        """
+        Callback handle for enableForceControl
+        :param message: ROS message
+        :type message: high_nico.msg.i
+        :return: None
+        """
+        self.robot.enableForceControl(message.param1)
+
+    def _ROSPY_disableForceControl(self, message):
+        """
+        Callback handle for disableForceControl
+        :param message: ROS message
+        :type message: high_nico.msg.empty
+        :return: None
+        """
+        self.robot.disableForceControl()
 
     def __del__(self):
         self.robot.cleanup()
@@ -112,13 +152,13 @@ if __name__ == '__main__':
     if args.robotMotorFile:
         config['robotMotorFile'] = args.robotMotorFile
     config['vrep'] = args.vrep
-    if args.vrep_host:
+    if args.vrepHost:
         config['vrepHost'] = args.vrepHost
     if args.vrepPort:
         config['vrepPort'] = args.vrepPort
     if args.vrepScene:
         config['vrepScene'] = args.vrepScene
-    if args.rostopic_name:
+    if args.rostopicName:
         config['rostopicName'] = args.rostopicName
 
     # Set logging setting
@@ -135,7 +175,7 @@ if __name__ == '__main__':
             'critical': logging.CRITICAL,
         }[args.logLevel]
     except:
-        sys.stderr.write('LOGGING ERROR: Unknown log level %s\n' % args.log_level)
+        sys.stderr.write('LOGGING ERROR: Unknown log level %s\n' % args.logLevel)
         pass
 
     logging.basicConfig(filename=config['logFile'],
