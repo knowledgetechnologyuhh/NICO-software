@@ -17,13 +17,13 @@
 # You should have received a copy of the GNU General Public License
 # along with highNICO. If not, see <http://www.gnu.org/licenses/>.
 
-from highNICO import HighNico
+from HighNico import HighNico
 import logging
 import argparse
 import sys
 
 import rospy
-from high_nico.msg import string
+from high_nico.msg import s
 
 class RosNico():
     """
@@ -31,18 +31,18 @@ class RosNico():
     """
 
     @staticmethod
-    def get_config():
+    def getConfig():
         """
         Returns a default config dict
         :return: dict
         """
-        return {'log_file': 'NICO.log',
-                'robot_motor_file': 'config.json',
+        return {'logFile': 'NICO.log',
+                'robotMotorFile': 'config.json',
                 'vrep': False,
-                'vrep_host': '127.0.0.1',
-                'vrep_port': 19997,
-                'vrep_scene': None,
-                'rostopic_name': '/nico'
+                'vrepHost': '127.0.0.1',
+                'vrepPort': 19997,
+                'vrepScene': None,
+                'rostopicName': '/nico'
                 }
 
     def __init__(self, config = None):
@@ -53,11 +53,11 @@ class RosNico():
         """
         self.robot = None
         if config is None:
-            config = get_config()
+            config = RosNico.getConfig()
 
         # init highNICO
         logging.info('-- Init rosNICO --')
-        self.robot = HighNico(motor_config=config['robot_motor_file'], vrep=config['vrep'], vrep_host=config['vrep_host'], vrep_port=config['vrep_port'], vrep_scene=config['vrep_scene'])
+        self.robot = HighNico(motorConfig=config['robotMotorFile'], vrep=config['vrep'], vrepHost=config['vrepHost'], vrepPort=config['vrepPort'], vrepScene=config['vrepScene'])
 
         # init ROS
         logging.debug('Init ROS')
@@ -93,38 +93,38 @@ class RosNico():
         self.robot.cleanup()
 
 if __name__ == '__main__':
-    config = RosNico.get_config()
+    config = RosNico.getConfig()
 
     # Parse command line
     parser = argparse.ArgumentParser(description='NICO ROS interface')
-    parser.add_argument('--log-level', dest='log_level', help='Sets log level. Default: INFO', type=str)
-    parser.add_argument('--log-file', dest='log_file', help='Path to log file. Default: %s' % config['log_file'], type=str)
-    parser.add_argument('-m', '--motor-file', dest='robot_motor_file', help='Path to robot motor file. Default: %s' % config['robot_motor_file'], type=str)
+    parser.add_argument('--log-level', dest='logLevel', help='Sets log level. Default: INFO', type=str)
+    parser.add_argument('--log-file', dest='logFile', help='Path to log file. Default: %s' % config['logFile'], type=str)
+    parser.add_argument('-m', '--motor-file', dest='robotMotorFile', help='Path to robot motor file. Default: %s' % config['robotMotorFile'], type=str)
     parser.add_argument('-v', '--vrep', dest='vrep', help='Connect to VREP rather than to a real robot', action='store_true')
-    parser.add_argument('--vrep-host', dest='vrep_host', help='Host of VREP. Default: %s' % config['vrep_host'], type=str)
-    parser.add_argument('--vrep-port', dest='vrep_port', help='Port of VREP. Default: %i' % config['vrep_port'], type=int)
-    parser.add_argument('--vrep-scene', dest='vrep_scene', help='Scene to load in VREP. Default: %s' % config['vrep_scene'], type=str)
-    parser.add_argument('--rostopic-name', dest='rostopic_name', help='Topic name for ROS. Default: %s' % config['rostopic_name'], type=str)
+    parser.add_argument('--vrep-host', dest='vrepHost', help='Host of VREP. Default: %s' % config['vrepHost'], type=str)
+    parser.add_argument('--vrep-port', dest='vrepPort', help='Port of VREP. Default: %i' % config['vrepPort'], type=int)
+    parser.add_argument('--vrep-scene', dest='vrepScene', help='Scene to load in VREP. Default: %s' % config['vrepScene'], type=str)
+    parser.add_argument('--rostopic-name', dest='rostopicName', help='Topic name for ROS. Default: %s' % config['rostopicName'], type=str)
 
     args = parser.parse_known_args()[0]
-    if args.log_file:
-        config['log_file'] = args.log_file
-    if args.robot_motor_file:
-        config['robot_motor_file'] = args.robot_motor_file
+    if args.logFile:
+        config['logFile'] = args.logFile
+    if args.robotMotorFile:
+        config['robotMotorFile'] = args.robotMotorFile
     config['vrep'] = args.vrep
     if args.vrep_host:
-        config['vrep_host'] = args.vrep_host
-    if args.vrep_port:
-        config['vrep_port'] = args.vrep_port
-    if args.vrep_scene:
-        config['vrep_scene'] = args.vrep_scene
+        config['vrepHost'] = args.vrepHost
+    if args.vrepPort:
+        config['vrepPort'] = args.vrepPort
+    if args.vrepScene:
+        config['vrepScene'] = args.vrepScene
     if args.rostopic_name:
-        config['rostopic_name'] = args.rostopic_name
+        config['rostopicName'] = args.rostopicName
 
     # Set logging setting
-    logging_level = logging.INFO
+    loggingLevel = logging.INFO
     try:
-        logging_level = {
+        loggingLevel = {
             'DEBUG': logging.DEBUG,
             'INFO': logging.INFO,
             'WARNING': logging.WARNING,
@@ -133,21 +133,21 @@ if __name__ == '__main__':
             'info': logging.INFO,
             'warning': logging.WARNING,
             'critical': logging.CRITICAL,
-        }[args.log_level]
+        }[args.logLevel]
     except:
         sys.stderr.write('LOGGING ERROR: Unknown log level %s\n' % args.log_level)
         pass
 
-    logging.basicConfig(filename=config['log_file'],
+    logging.basicConfig(filename=config['logFile'],
                         format='%(asctime)s %(levelname)s at %(funcName)s (%(module)s: %(lineno)d): %(message)s',
-                        level=logging_level)
-    stdout_handler = logging.StreamHandler(sys.stdout)
-    stdout_handler.setLevel(logging_level)
+                        level=loggingLevel)
+    stdoutHandler = logging.StreamHandler(sys.stdout)
+    stdoutHandler.setLevel(loggingLevel)
     logging_format = logging.Formatter(
         '%(asctime)s %(levelname)s at %(funcName)s (%(module)s: %(lineno)d): %(message)s')
-    stdout_handler.setFormatter(logging_format)
-    logging.getLogger().addHandler(stdout_handler)
+    stdoutHandler.setFormatter(logging_format)
+    logging.getLogger().addHandler(stdoutHandler)
 
-    ros_connection = RosNico(config)
+    rosConnection = RosNico(config)
 
     rospy.spin()
