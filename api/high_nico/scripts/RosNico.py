@@ -71,6 +71,8 @@ class RosNico():
         rospy.Subscriber('%s/closeHandParam' % config['rostopicName'], high_nico.msg.sif, self._ROSPY_closeHandParam)
         rospy.Subscriber('%s/enableForceControl' % config['rostopicName'], high_nico.msg.i, self._ROSPY_enableForceControl)
         rospy.Subscriber('%s/disableForceControl' % config['rostopicName'], high_nico.msg.empty, self._ROSPY_disableForceControl)
+        rospy.Subscriber('%s/enableForceControlSingleJoint' % config['rostopicName'], high_nico.msg.si, self._ROSPY_enableForceControlSingleJoint)
+        rospy.Subscriber('%s/disableForceControlSingleJoint' % config['rostopicName'], high_nico.msg.s, self._ROSPY_disableForceControlSingleJoint)
         rospy.Subscriber('%s/moveWrist' % config['rostopicName'], high_nico.msg.sff, self._ROSPY_moveWrist)
         rospy.Subscriber('%s/moveWristSpeed' % config['rostopicName'], high_nico.msg.sffi, self._ROSPY_moveWristSpeed)
 
@@ -130,6 +132,24 @@ class RosNico():
         :return: None
         """
         self.robot.disableForceControl()
+
+    def _ROSPY_enableForceControlSingleJoint(self, message):
+        """
+        Callback handle for enableForceControlSingleJoint
+        :param message: ROS message
+        :type message: high_nico.msg.si
+        :return: None
+        """
+        self.robot.enableForceControlSingleJoin(message.param1, message.param2)
+
+    def _ROSPY_disableForceControlSingleJoint(self, message):
+        """
+        Callback handle for disableForceControlSingleJoint
+        :param message: ROS message
+        :type message: high_nico.msg.s
+        :return: None
+        """
+        self.robot.disableForceControlSingleJoin(message.param1)
 
     def _ROSPY_moveWrist(self, message):
         """

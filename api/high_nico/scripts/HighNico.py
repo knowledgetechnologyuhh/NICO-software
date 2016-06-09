@@ -101,7 +101,7 @@ class HighNico:
 
     def enableForceControl(self, goalForce = 500):
         """
-        Enables force control for all motors which support this feature
+        Enables force control for all joints which support this feature
         :param goalForce: Goal force (0-2000)
         :type goalForce: int
         :return: None
@@ -113,12 +113,49 @@ class HighNico:
 
     def disableForceControl(self):
         """
-        Disables force control for all motors which support this feature
+        Disables force control for all joints which support this feature
         :return: None
         """
         for motor in self._highNicoRobot.motors:
             if hasattr(motor, 'force_control_enable'):
                 motor.force_control_enable = False
+
+    def enableForceControlSingleJoin(self, jointName, goalForce):
+        """
+        Enables force control for a single joint
+        :param jointName: Name of the joint
+        :type jointName: str
+        :param goalForce: Goal force (0-2000)
+        :type goalForce: int
+        :return: None
+        """
+        if hasattr(self._highNicoRobot, jointName):
+            motor = getattr(self._highNicoRobot, jointName)
+            if hasattr(motor, 'force_control_enable'):
+                motor.force_control_enable = True
+                motor.goal_force = goalForce
+            else:
+                logging.warning('Joint %s has no force control' % jointName)
+        else:
+            logging.warning('No joint "%s" found' % jointName)
+            return
+
+    def disableForceControlSingleJoin(self, jointName):
+        """
+        Disables force control for a single joint
+        :param jointName: Name of the joint
+        :type jointName: str
+        :return: None
+        """
+        if hasattr(self._highNicoRobot, jointName):
+            motor = getattr(self._highNicoRobot, jointName)
+            if hasattr(motor, 'force_control_enable'):
+                motor.force_control_enable = False
+            else:
+                logging.warning('Joint %s has no force control' % jointName)
+        else:
+            logging.warning('No joint "%s" found' % jointName)
+            return
 
     def cleanup(self):
         """
