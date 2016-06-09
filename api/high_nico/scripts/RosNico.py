@@ -23,7 +23,7 @@ import argparse
 import sys
 
 import rospy
-from high_nico.msg import s, sif, i, empty
+import high_nico.msg
 
 class RosNico():
     """
@@ -65,12 +65,14 @@ class RosNico():
 
         # setup subscriber
         logging.debug('Init subscriber')
-        rospy.Subscriber('%s/openHand' % config['rostopicName'], s, self._ROSPY_openHand)
-        rospy.Subscriber('%s/closeHand' % config['rostopicName'], s, self._ROSPY_closeHand)
-        rospy.Subscriber('%s/openHandParam' % config['rostopicName'], sif, self._ROSPY_openHandParam)
-        rospy.Subscriber('%s/closeHandParam' % config['rostopicName'], sif, self._ROSPY_closeHandParam)
-        rospy.Subscriber('%s/enableForceControl' % config['rostopicName'], i, self._ROSPY_enableForceControl)
-        rospy.Subscriber('%s/disableForceControl' % config['rostopicName'], empty, self._ROSPY_disableForceControl)
+        rospy.Subscriber('%s/openHand' % config['rostopicName'], high_nico.msg.s, self._ROSPY_openHand)
+        rospy.Subscriber('%s/closeHand' % config['rostopicName'], high_nico.msg.s, self._ROSPY_closeHand)
+        rospy.Subscriber('%s/openHandParam' % config['rostopicName'], high_nico.msg.sif, self._ROSPY_openHandParam)
+        rospy.Subscriber('%s/closeHandParam' % config['rostopicName'], high_nico.msg.sif, self._ROSPY_closeHandParam)
+        rospy.Subscriber('%s/enableForceControl' % config['rostopicName'], high_nico.msg.i, self._ROSPY_enableForceControl)
+        rospy.Subscriber('%s/disableForceControl' % config['rostopicName'], high_nico.msg.empty, self._ROSPY_disableForceControl)
+        rospy.Subscriber('%s/moveWrist' % config['rostopicName'], high_nico.msg.sff, self._ROSPY_moveWrist)
+        rospy.Subscriber('%s/moveWristSpeed' % config['rostopicName'], high_nico.msg.sffi, self._ROSPY_moveWristSpeed)
 
         # wait for messages
         logging.info('-- All done --')
@@ -128,6 +130,24 @@ class RosNico():
         :return: None
         """
         self.robot.disableForceControl()
+
+    def _ROSPY_moveWrist(self, message):
+        """
+        Callback handle for moveWrist
+        :param message: ROS message
+        :type message: high_nico.msg.sff
+        :return: None
+        """
+        self.robot.moveWrist(message.param1, message.param2, message.param3)
+
+    def _ROSPY_moveWristSpeed(self, message):
+        """
+        Callback handle for moveWrist
+        :param message: ROS message
+        :type message: high_nico.msg.sffi
+        :return: None
+        """
+        self.robot.moveWrist(message.param1, message.param2, message.param3, message.param4)
 
     def __del__(self):
         self.robot.cleanup()
