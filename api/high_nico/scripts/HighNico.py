@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (C) 2016 Marcus Soll
 #
 # This file is part of highNICO.
