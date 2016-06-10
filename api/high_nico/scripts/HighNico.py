@@ -17,6 +17,7 @@
 
 import logging
 import json
+import time
 
 import pypot.robot
 import pypot.vrep
@@ -55,35 +56,35 @@ class HighNico:
             logging.info('highNICO: Using robot')
             self._highNicoRobot = pypot.robot.from_config(config)
 
-    def openHand(self, handName, speed=10, percentage=1.0):
+    def openHand(self, handName, fractionMaxSpeed=1.0, percentage=1.0):
         """
         Opens the specified hand. handName can be 'RHand' or 'LHand'
 
         :param handName: Name of the hand (RHand, LHand)
         :type handName: str
-        :param speed: Speed at which hand should open. Default: 10
-        :type speed: int
+        :param fractionMaxSpeed: Speed at which hand should open. Default: 1.0
+        :type fractionMaxSpeed: float
         :param percentage: Percentage hand should open. 0.0 < percentage <= 1.0
         :type percentage: float
         :return: None
         """
-        _internal.hand.closeHand(self._highNicoRobot, handName, speed, percentage)
+        _internal.hand.closeHand(self._highNicoRobot, handName, fractionMaxSpeed, percentage)
 
-    def closeHand(self, handName, speed=10, percentage=1.0):
+    def closeHand(self, handName, fractionMaxSpeed=1.0, percentage=1.0):
         """
         Closes the specified hand. handName can be 'RHand' or 'LHand'
 
         :param handName: Name of the hand (RHand, LHand)
         :type handName: str
-        :param speed: Speed at which hand should close. Default: 10
-        :type speed: int
+        :param fractionMaxSpeed: Speed at which hand should close. Default: 1.0
+        :type fractionMaxSpeed: float
         :param percentage: Percentage hand should open. 0.0 < percentage <= 1.0
         :type percentage: float
         :return: None
         """
-        _internal.hand.openHand(self._highNicoRobot, handName, speed, percentage)
+        _internal.hand.openHand(self._highNicoRobot, handName, fractionMaxSpeed, percentage)
 
-    def moveWrist(self, handName, x, z, speed=10):
+    def moveWrist(self, handName, x, z, fractionMaxSpeed=1.0):
         """
         Moves the wrist of one hand to the given position. handName can be 'RHand' or 'LHand'
 
@@ -95,11 +96,11 @@ class HighNico:
         :type x: float
         :param z: Target x position in degree
         :type z: float
-        :param speed: Speed at which hand should close. Default: 10
-        :type speed: int
+        :param fractionMaxSpeed: Speed at which hand should close. Default: 1.0
+        :type fractionMaxSpeed: float
         :return: none
         """
-        _internal.hand.moveWrist(self._highNicoRobot, handName, x, z, speed)
+        _internal.hand.moveWrist(self._highNicoRobot, handName, x, z, fractionMaxSpeed)
 
     def enableForceControl(self, goalForce = 500):
         """
@@ -159,6 +160,52 @@ class HighNico:
                 motor.force_control_enable = False
             else:
                 logging.warning('Joint %s has no force control' % jointName)
+        else:
+            logging.warning('No joint "%s" found' % jointName)
+            return
+
+    def setAngles(self, jointName, angle, fractionMaxSpeed):
+        """
+        Sets the angle of a given joint to an angle (in degree)
+
+        :param jointName: Name of the joint
+        :type jointName: str
+        :param angle: Angle (in degree)
+        :type angle: float
+        :param fractionMaxSpeed: Movement speed of joint
+        :type fractionMaxSpeed: float
+        :return: None
+        """
+        if hasattr(self._highNicoRobot, jointName):
+            motor = getattr(self._highNicoRobot, jointName)
+            motor.compliant = False
+            motor.goal_speed = 10.0 * fractionMaxSpeed
+            motor.goal_position = angle
+            time.sleep(1)
+            motor.compliant = True
+        else:
+            logging.warning('No joint "%s" found' % jointName)
+            return
+
+    def changeAngles(self, name, change, fractionMaxSpeed):
+        """
+        Changes the angle of a given joint by an angle (in degree)
+
+        :param jointName: Name of the joint
+        :type jointName: str
+        :param angle: Angle (in degree)
+        :type angle: float
+        :param fractionMaxSpeed: Movement speed of joint
+        :type fractionMaxSpeed: float
+        :return: None
+        """
+        if hasattr(self._highNicoRobot, jointName):
+            motor = getattr(self._highNicoRobot, jointName)
+            motor.compliant = False
+            motor.goal_speed = 10.0 * fractionMaxSpeed
+            motor.goal_position = change + motor.present_position
+            time.sleep(1)
+            motor.compliant = True
         else:
             logging.warning('No joint "%s" found' % jointName)
             return

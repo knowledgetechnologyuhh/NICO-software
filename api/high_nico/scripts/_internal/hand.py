@@ -18,7 +18,7 @@
 import logging
 import time
 
-def openHand(robot, handName, speed=10, percentage=1.0):
+def openHand(robot, handName, fractionMaxSpeed=1.0, percentage=1.0):
     """
     Opens the specified hand. handName can be 'RHand' or 'LHand'
 
@@ -26,8 +26,8 @@ def openHand(robot, handName, speed=10, percentage=1.0):
     :type robot: pypot.robot
     :param handName: Name of the hand (RHand, LHand)
     :type handName: str
-    :param speed: Speed at which hand should open. Default: 10
-    :type speed: int
+    :param fractionMaxSpeed: Speed at which hand should open. Default: 1.0
+    :type fractionMaxSpeed: float
     :param percentage: Percentage hand should open. 0.0 < percentage <= 1.0
     :type percentage: float
     :return: None
@@ -42,20 +42,20 @@ def openHand(robot, handName, speed=10, percentage=1.0):
 
     if handName == 'RHand':
         robot.r_indexfingers_x.compliant = False
-        robot.r_indexfingers_x.goal_speed = speed
+        robot.r_indexfingers_x.goal_speed = 10.0 * fractionMaxSpeed
         robot.r_indexfingers_x.goal_position = 130.0 * percentage
         robot.r_thumb_x.compliant = False
-        robot.r_thumb_x.goal_speed = speed
+        robot.r_thumb_x.goal_speed = 10.0 * fractionMaxSpeed
         robot.r_thumb_x.goal_position = 130.0 * percentage
         time.sleep(1)
         robot.r_indexfingers_x.compliant = True
         robot.r_thumb_x.compliant = True
     elif handName == 'LHand':
         robot.l_indexfingers_x.compliant = False
-        robot.l_indexfingers_x.goal_speed = speed
+        robot.l_indexfingers_x.goal_speed = 10.0 * fractionMaxSpeed
         robot.l_indexfingers_x.goal_position = 130.0 * percentage
         robot.l_thumb_x.compliant = False
-        robot.l_thumb_x.goal_speed = speed
+        robot.l_thumb_x.goal_speed = 10.0 * fractionMaxSpeed
         robot.l_thumb_x.goal_position = 130.0 * percentage
         time.sleep(1)
         robot.l_indexfingers_x.compliant = True
@@ -65,7 +65,7 @@ def openHand(robot, handName, speed=10, percentage=1.0):
         return
 
 
-def closeHand(robot, handName, speed=10, percentage=1.0):
+def closeHand(robot, handName, fractionMaxSpeed=1.0, percentage=1.0):
     """
     Closes the specified hand. handName can be 'RHand' or 'LHand'
 
@@ -73,8 +73,8 @@ def closeHand(robot, handName, speed=10, percentage=1.0):
     :type robot: pypot.robot
     :param handName: Name of the hand (RHand, LHand)
     :type handName: str
-    :param speed: Speed at which hand should close. Default: 10
-    :type speed: int
+    :param fractionMaxSpeed: Speed at which hand should close. Default: 1.0
+    :type fractionMaxSpeed: float
     :param percentage: Percentage hand should open. 0.0 < percentage <= 1.0
     :type percentage: float
     :return: None
@@ -89,20 +89,20 @@ def closeHand(robot, handName, speed=10, percentage=1.0):
 
     if handName == 'RHand':
         robot.r_indexfingers_x.compliant = False
-        robot.r_indexfingers_x.goal_speed = speed
+        robot.r_indexfingers_x.goal_speed = 10.0 * fractionMaxSpeed
         robot.r_indexfingers_x.goal_position = -130.0 * percentage
         robot.r_thumb_x.compliant = False
-        robot.r_thumb_x.goal_speed = speed
+        robot.r_thumb_x.goal_speed = 10.0 * fractionMaxSpeed
         robot.r_thumb_x.goal_position = -130.0 * percentage
         time.sleep(1)
         robot.r_indexfingers_x.compliant = True
         robot.r_thumb_x.compliant = True
     elif handName == 'LHand':
         robot.l_indexfingers_x.compliant = False
-        robot.l_indexfingers_x.goal_speed = speed
+        robot.l_indexfingers_x.goal_speed = 10.0 * fractionMaxSpeed
         robot.l_indexfingers_x.goal_position = -130.0 * percentage
         robot.l_thumb_x.compliant = False
-        robot.l_thumb_x.goal_speed = speed
+        robot.l_thumb_x.goal_speed = 10.0 * fractionMaxSpeed
         robot.l_thumb_x.goal_position = -130.0 * percentage
         time.sleep(1)
         robot.l_indexfingers_x.compliant = True
@@ -111,7 +111,7 @@ def closeHand(robot, handName, speed=10, percentage=1.0):
         logging.warning('Unknown hand handle: %s' % handName)
         return
 
-def moveWrist(robot, handName, x, z, speed=10):
+def moveWrist(robot, handName, x, z, fractionMaxSpeed=1.0):
     """
     Moves the wrist of one hand to the given position. handName can be 'RHand' or 'LHand'
 
@@ -123,8 +123,8 @@ def moveWrist(robot, handName, x, z, speed=10):
     :type x: float
     :param z: Target x position in degree
     :type z: float
-    :param speed: Speed at which hand should close. Default: 10
-    :type speed: int
+    :param fractionMaxSpeed: Speed at which hand should close. Default: 1.0
+    :type fractionMaxSpeed: float
     :return: none
     """
     if robot is None:
@@ -132,10 +132,10 @@ def moveWrist(robot, handName, x, z, speed=10):
         return
     if handName == 'RHand':
         robot.r_wrist_x.compliant = False
-        robot.r_wrist_x.goal_speed = speed
+        robot.r_wrist_x.goal_speed = 10.0 * fractionMaxSpeed
         robot.r_wrist_x.goal_position = x
         robot.r_wrist_z.compliant = False
-        robot.r_wrist_z.goal_speed = speed
+        robot.r_wrist_z.goal_speed = 10.0 * fractionMaxSpeed
         robot.r_wrist_z.goal_position = z
         time.sleep(1)
         robot.r_wrist_x.compliant = True
@@ -143,10 +143,10 @@ def moveWrist(robot, handName, x, z, speed=10):
         pass
     elif handName == 'LHand':
         robot.l_wrist_x.compliant = False
-        robot.l_wrist_x.goal_speed = speed
+        robot.l_wrist_x.goal_speed = 10.0 * fractionMaxSpeed
         robot.l_wrist_x.goal_position = x
         robot.l_wrist_z.compliant = False
-        robot.l_wrist_z.goal_speed = speed
+        robot.l_wrist_z.goal_speed = 10.0 * fractionMaxSpeed
         robot.l_wrist_z.goal_position = z
         time.sleep(1)
         robot.l_wrist_x.compliant = True

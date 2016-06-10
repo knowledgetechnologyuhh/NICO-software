@@ -69,14 +69,13 @@ class RosNico():
         logging.debug('Init subscriber')
         rospy.Subscriber('%s/openHand' % config['rostopicName'], high_nico.msg.s, self._ROSPY_openHand)
         rospy.Subscriber('%s/closeHand' % config['rostopicName'], high_nico.msg.s, self._ROSPY_closeHand)
-        rospy.Subscriber('%s/openHandParam' % config['rostopicName'], high_nico.msg.sif, self._ROSPY_openHandParam)
-        rospy.Subscriber('%s/closeHandParam' % config['rostopicName'], high_nico.msg.sif, self._ROSPY_closeHandParam)
         rospy.Subscriber('%s/enableForceControl' % config['rostopicName'], high_nico.msg.i, self._ROSPY_enableForceControl)
         rospy.Subscriber('%s/disableForceControl' % config['rostopicName'], high_nico.msg.empty, self._ROSPY_disableForceControl)
         rospy.Subscriber('%s/enableForceControlSingleJoint' % config['rostopicName'], high_nico.msg.si, self._ROSPY_enableForceControlSingleJoint)
         rospy.Subscriber('%s/disableForceControlSingleJoint' % config['rostopicName'], high_nico.msg.s, self._ROSPY_disableForceControlSingleJoint)
-        rospy.Subscriber('%s/moveWrist' % config['rostopicName'], high_nico.msg.sff, self._ROSPY_moveWrist)
-        rospy.Subscriber('%s/moveWristSpeed' % config['rostopicName'], high_nico.msg.sffi, self._ROSPY_moveWristSpeed)
+        rospy.Subscriber('%s/moveWrist' % config['rostopicName'], high_nico.msg.sfff, self._ROSPY_moveWrist)
+        rospy.Subscriber('%s/setAngle' % config['rostopicName'], high_nico.msg.sff, self._ROSPY_setAngles)
+        rospy.Subscriber('%s/changeAngle' % config['rostopicName'], high_nico.msg.sff, self._ROSPY_changeAngles)
 
         # wait for messages
         logging.info('-- All done --')
@@ -86,7 +85,7 @@ class RosNico():
         Callback handle for openHand
 
         :param message: ROS message
-        :type message: high_nico.msg.string
+        :type message: high_nico.msg.s
         :return: None
         """
         self.robot.openHand(message.param1)
@@ -100,26 +99,6 @@ class RosNico():
         :return: None
         """
         self.robot.closeHand(message.param1)
-
-    def _ROSPY_openHandParam(self, message):
-        """
-        Callback handle for openHand with additional parameters
-
-        :param message: ROS message
-        :type message: high_nico.msg.sif
-        :return: None
-        """
-        self.robot.openHand(message.param1, message.param2, message.param3)
-
-    def _ROSPY_closeHandParam(self, message):
-        """
-        Callback handle for closeHand with additional parameters
-
-        :param message: ROS message
-        :type message: high_nico.msg.sif
-        :return: None
-        """
-        self.robot.closeHand(message.param1, message.param2, message.param3)
 
     def _ROSPY_enableForceControl(self, message):
         """
@@ -166,20 +145,30 @@ class RosNico():
         Callback handle for moveWrist
 
         :param message: ROS message
-        :type message: high_nico.msg.sff
-        :return: None
-        """
-        self.robot.moveWrist(message.param1, message.param2, message.param3)
-
-    def _ROSPY_moveWristSpeed(self, message):
-        """
-        Callback handle for moveWrist
-
-        :param message: ROS message
-        :type message: high_nico.msg.sffi
+        :type message: high_nico.msg.sfff
         :return: None
         """
         self.robot.moveWrist(message.param1, message.param2, message.param3, message.param4)
+
+    def _ROSPY_setAngles(self, message):
+        """
+        Callback handle for setAngles
+
+        :param message: ROS message
+        :type message: high_nico.msg.sff
+        :return: None
+        """
+        self.robot.setAngles(message.param1, message.param2, message.param3)
+
+    def _ROSPY_changeAngles(self, message):
+        """
+        Callback handle for changeAngles
+
+        :param message: ROS message
+        :type message: high_nico.msg.sff
+        :return: None
+        """
+        self.robot.changeAngles(message.param1, message.param2, message.param3)
 
     def __del__(self):
         self.robot.cleanup()
