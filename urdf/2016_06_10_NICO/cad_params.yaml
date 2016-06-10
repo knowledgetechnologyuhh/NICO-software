@@ -1,0 +1,5 @@
+scale: "0.001 0.001 0.001"
+forcelowercase: Yes
+
+filenameformat: "package://sandbox//2016_04_13_NICO/%s"
+#filenameformat: "/informatik2/students/home/5wueppen/catkin_ws/src/sandbox/2016_04_13_NICO/%s"
