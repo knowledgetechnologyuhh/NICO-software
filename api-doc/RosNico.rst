@@ -13,3 +13,4 @@ To start the interface run:
     :members:
     :undoc-members:
     :show-inheritance:
+    :private-members:

@@ -7,3 +7,4 @@ The HighNico class allows direct control over the NICO robot.
     :members:
     :undoc-members:
     :show-inheritance:
+    :private-members:

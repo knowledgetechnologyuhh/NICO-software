@@ -66,7 +66,6 @@ class HighNico:
         :type fractionMaxSpeed: float
         :param percentage: Percentage hand should open. 0.0 < percentage <= 1.0
         :type percentage: float
-        :return: None
         """
         _internal.hand.closeHand(self._highNicoRobot, handName, fractionMaxSpeed, percentage)
 
@@ -80,7 +79,6 @@ class HighNico:
         :type fractionMaxSpeed: float
         :param percentage: Percentage hand should open. 0.0 < percentage <= 1.0
         :type percentage: float
-        :return: None
         """
         _internal.hand.openHand(self._highNicoRobot, handName, fractionMaxSpeed, percentage)
 
@@ -98,7 +96,6 @@ class HighNico:
         :type z: float
         :param fractionMaxSpeed: Speed at which hand should close. Default: 1.0
         :type fractionMaxSpeed: float
-        :return: none
         """
         _internal.hand.moveWrist(self._highNicoRobot, handName, x, z, fractionMaxSpeed)
 
@@ -108,7 +105,6 @@ class HighNico:
 
         :param goalForce: Goal force (0-2000)
         :type goalForce: int
-        :return: None
         """
         for motor in self._highNicoRobot.motors:
             if hasattr(motor, 'force_control_enable'):
@@ -118,14 +114,12 @@ class HighNico:
     def disableForceControl(self):
         """
         Disables force control for all joints which support this feature
-
-        :return: None
         """
         for motor in self._highNicoRobot.motors:
             if hasattr(motor, 'force_control_enable'):
                 motor.force_control_enable = False
 
-    def enableForceControlSingleJoin(self, jointName, goalForce):
+    def enableForceControlSingleJoint(self, jointName, goalForce):
         """
         Enables force control for a single joint
 
@@ -133,7 +127,6 @@ class HighNico:
         :type jointName: str
         :param goalForce: Goal force (0-2000)
         :type goalForce: int
-        :return: None
         """
         if hasattr(self._highNicoRobot, jointName):
             motor = getattr(self._highNicoRobot, jointName)
@@ -146,13 +139,12 @@ class HighNico:
             logging.warning('No joint "%s" found' % jointName)
             return
 
-    def disableForceControlSingleJoin(self, jointName):
+    def disableForceControlSingleJoint(self, jointName):
         """
         Disables force control for a single joint
 
         :param jointName: Name of the joint
         :type jointName: str
-        :return: None
         """
         if hasattr(self._highNicoRobot, jointName):
             motor = getattr(self._highNicoRobot, jointName)
@@ -174,7 +166,6 @@ class HighNico:
         :type angle: float
         :param fractionMaxSpeed: Movement speed of joint
         :type fractionMaxSpeed: float
-        :return: None
         """
         if hasattr(self._highNicoRobot, jointName):
             motor = getattr(self._highNicoRobot, jointName)
@@ -197,7 +188,6 @@ class HighNico:
         :type angle: float
         :param fractionMaxSpeed: Movement speed of joint
         :type fractionMaxSpeed: float
-        :return: None
         """
         if hasattr(self._highNicoRobot, jointName):
             motor = getattr(self._highNicoRobot, jointName)
@@ -213,8 +203,6 @@ class HighNico:
     def cleanup(self):
         """
         Cleans up the current connection to the robot. After this you can no longer control the robot
-
-        :return: None
         """
         if self._highNicoRobot is None:
             logging.warning('Cleanup called - but robot is not initialised')
@@ -228,8 +216,6 @@ class HighNico:
     def __del__(self):
         """
         Destructor
-
-        :return: None
         """
         if self._highNicoRobot is  not None:
             self.cleanup()

@@ -82,91 +82,82 @@ class RosNico():
 
     def _ROSPY_openHand(self, message):
         """
-        Callback handle for openHand
+        Callback handle for :meth:`HighNico.HighNico.openHand`
 
         :param message: ROS message
         :type message: high_nico.msg.s
-        :return: None
         """
         self.robot.openHand(message.param1)
 
     def _ROSPY_closeHand(self, message):
         """
-        Callback handle for closeHand
+        Callback handle for :meth:`HighNico.HighNico.closeHand`
 
         :param message: ROS message
         :type message: high_nico.msg.s
-        :return: None
         """
         self.robot.closeHand(message.param1)
 
     def _ROSPY_enableForceControl(self, message):
         """
-        Callback handle for enableForceControl
+        Callback handle for :meth:`HighNico.HighNico.enableForceControl`
 
         :param message: ROS message
         :type message: high_nico.msg.i
-        :return: None
         """
         self.robot.enableForceControl(message.param1)
 
     def _ROSPY_disableForceControl(self, message):
         """
-        Callback handle for disableForceControl
+        Callback handle for :meth:`HighNico.HighNico.disableForceControl`
 
         :param message: ROS message
         :type message: high_nico.msg.empty
-        :return: None
         """
         self.robot.disableForceControl()
 
     def _ROSPY_enableForceControlSingleJoint(self, message):
         """
-        Callback handle for enableForceControlSingleJoint
+        Callback handle for :meth:`HighNico.HighNico.enableForceControlSingleJoint`
 
         :param message: ROS message
         :type message: high_nico.msg.si
-        :return: None
         """
-        self.robot.enableForceControlSingleJoin(message.param1, message.param2)
+        self.robot.enableForceControlSingleJoint(message.param1, message.param2)
 
     def _ROSPY_disableForceControlSingleJoint(self, message):
         """
-        Callback handle for disableForceControlSingleJoint
+        Callback handle for :meth:`HighNico.HighNico.disableForceControlSingleJoint`
 
         :param message: ROS message
         :type message: high_nico.msg.s
-        :return: None
         """
-        self.robot.disableForceControlSingleJoin(message.param1)
+        self.robot.disableForceControlSingleJoint(message.param1)
 
     def _ROSPY_moveWrist(self, message):
         """
-        Callback handle for moveWrist
+        Callback handle for :meth:`HighNico.HighNico.moveWrist`
 
         :param message: ROS message
         :type message: high_nico.msg.sfff
-        :return: None
         """
         self.robot.moveWrist(message.param1, message.param2, message.param3, message.param4)
 
     def _ROSPY_setAngles(self, message):
         """
-        Callback handle for setAngles
+        Callback handle for :meth:`HighNico.HighNico.setAngles`
 
         :param message: ROS message
         :type message: high_nico.msg.sff
-        :return: None
         """
         self.robot.setAngles(message.param1, message.param2, message.param3)
 
     def _ROSPY_changeAngles(self, message):
         """
-        Callback handle for changeAngles
+        Callback handle for :meth:`HighNico.HighNico.changeAngles`
 
         :param message: ROS message
         :type message: high_nico.msg.sff
-        :return: None
         """
         self.robot.changeAngles(message.param1, message.param2, message.param3)
 
