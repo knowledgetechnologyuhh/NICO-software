@@ -7,3 +7,6 @@ __pycache__
 
 #temporary files
 *~
+
+#api doc
+api-doc/_build
