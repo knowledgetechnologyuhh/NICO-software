@@ -21,6 +21,7 @@ import time
 def openHand(robot, handName, speed=10, percentage=1.0):
     """
     Opens the specified hand. handName can be 'RHand' or 'LHand'
+
     :param robot: Robot object
     :type robot: pypot.robot
     :param handName: Name of the hand (RHand, LHand)
@@ -67,6 +68,7 @@ def openHand(robot, handName, speed=10, percentage=1.0):
 def closeHand(robot, handName, speed=10, percentage=1.0):
     """
     Closes the specified hand. handName can be 'RHand' or 'LHand'
+
     :param robot: Robot object
     :type robot: pypot.robot
     :param handName: Name of the hand (RHand, LHand)
@@ -112,6 +114,7 @@ def closeHand(robot, handName, speed=10, percentage=1.0):
 def moveWrist(robot, handName, x, z, speed=10):
     """
     Moves the wrist of one hand to the given position. handName can be 'RHand' or 'LHand'
+
     :param robot: Robot object
     :type robot: pypot.robot
     :param handName: Name of the hand (RHand, LHand)

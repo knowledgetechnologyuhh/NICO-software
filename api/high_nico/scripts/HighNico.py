@@ -31,6 +31,7 @@ class HighNico:
     def __init__(self, motorConfig='config.json', vrep=False, vrepHost='127.0.0.1', vrepPort=19997, vrepScene=None):
         """
         HighNico is a high level interface to the NICO robot,
+
         :param motorConfig: motor config file (JSON format)
         :type motorConfig: str
         :param vrep: If set to true VREP will be used instead of real robot
@@ -57,6 +58,7 @@ class HighNico:
     def openHand(self, handName, speed=10, percentage=1.0):
         """
         Opens the specified hand. handName can be 'RHand' or 'LHand'
+
         :param handName: Name of the hand (RHand, LHand)
         :type handName: str
         :param speed: Speed at which hand should open. Default: 10
@@ -70,6 +72,7 @@ class HighNico:
     def closeHand(self, handName, speed=10, percentage=1.0):
         """
         Closes the specified hand. handName can be 'RHand' or 'LHand'
+
         :param handName: Name of the hand (RHand, LHand)
         :type handName: str
         :param speed: Speed at which hand should close. Default: 10
@@ -83,6 +86,7 @@ class HighNico:
     def moveWrist(self, handName, x, z, speed=10):
         """
         Moves the wrist of one hand to the given position. handName can be 'RHand' or 'LHand'
+
         :param robot: Robot object
         :type robot: pypot.robot
         :param handName: Name of the hand (RHand, LHand)
@@ -100,6 +104,7 @@ class HighNico:
     def enableForceControl(self, goalForce = 500):
         """
         Enables force control for all joints which support this feature
+
         :param goalForce: Goal force (0-2000)
         :type goalForce: int
         :return: None
@@ -112,6 +117,7 @@ class HighNico:
     def disableForceControl(self):
         """
         Disables force control for all joints which support this feature
+
         :return: None
         """
         for motor in self._highNicoRobot.motors:
@@ -121,6 +127,7 @@ class HighNico:
     def enableForceControlSingleJoin(self, jointName, goalForce):
         """
         Enables force control for a single joint
+
         :param jointName: Name of the joint
         :type jointName: str
         :param goalForce: Goal force (0-2000)
@@ -141,6 +148,7 @@ class HighNico:
     def disableForceControlSingleJoin(self, jointName):
         """
         Disables force control for a single joint
+
         :param jointName: Name of the joint
         :type jointName: str
         :return: None
@@ -158,6 +166,7 @@ class HighNico:
     def cleanup(self):
         """
         Cleans up the current connection to the robot. After this you can no longer control the robot
+
         :return: None
         """
         if self._highNicoRobot is None:
@@ -172,6 +181,7 @@ class HighNico:
     def __del__(self):
         """
         Destructor
+
         :return: None
         """
         if self._highNicoRobot is  not None:

@@ -34,6 +34,7 @@ class RosNico():
     def getConfig():
         """
         Returns a default config dict
+
         :return: dict
         """
         return {'logFile': 'NICO.log',
@@ -48,6 +49,7 @@ class RosNico():
     def __init__(self, config = None):
         """
         RosNico provides HighNico functions over ROS
+
         :param config: Configuration of the HighNico and RosNico interface
         :type config: dict
         """
@@ -82,6 +84,7 @@ class RosNico():
     def _ROSPY_openHand(self, message):
         """
         Callback handle for openHand
+
         :param message: ROS message
         :type message: high_nico.msg.string
         :return: None
@@ -91,6 +94,7 @@ class RosNico():
     def _ROSPY_closeHand(self, message):
         """
         Callback handle for closeHand
+
         :param message: ROS message
         :type message: high_nico.msg.s
         :return: None
@@ -100,6 +104,7 @@ class RosNico():
     def _ROSPY_openHandParam(self, message):
         """
         Callback handle for openHand with additional parameters
+
         :param message: ROS message
         :type message: high_nico.msg.sif
         :return: None
@@ -109,6 +114,7 @@ class RosNico():
     def _ROSPY_closeHandParam(self, message):
         """
         Callback handle for closeHand with additional parameters
+
         :param message: ROS message
         :type message: high_nico.msg.sif
         :return: None
@@ -118,6 +124,7 @@ class RosNico():
     def _ROSPY_enableForceControl(self, message):
         """
         Callback handle for enableForceControl
+
         :param message: ROS message
         :type message: high_nico.msg.i
         :return: None
@@ -127,6 +134,7 @@ class RosNico():
     def _ROSPY_disableForceControl(self, message):
         """
         Callback handle for disableForceControl
+
         :param message: ROS message
         :type message: high_nico.msg.empty
         :return: None
@@ -136,6 +144,7 @@ class RosNico():
     def _ROSPY_enableForceControlSingleJoint(self, message):
         """
         Callback handle for enableForceControlSingleJoint
+
         :param message: ROS message
         :type message: high_nico.msg.si
         :return: None
@@ -145,6 +154,7 @@ class RosNico():
     def _ROSPY_disableForceControlSingleJoint(self, message):
         """
         Callback handle for disableForceControlSingleJoint
+
         :param message: ROS message
         :type message: high_nico.msg.s
         :return: None
@@ -154,6 +164,7 @@ class RosNico():
     def _ROSPY_moveWrist(self, message):
         """
         Callback handle for moveWrist
+
         :param message: ROS message
         :type message: high_nico.msg.sff
         :return: None
@@ -163,6 +174,7 @@ class RosNico():
     def _ROSPY_moveWristSpeed(self, message):
         """
         Callback handle for moveWrist
+
         :param message: ROS message
         :type message: high_nico.msg.sffi
         :return: None
