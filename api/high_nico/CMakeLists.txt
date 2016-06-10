@@ -47,10 +47,12 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
 add_message_files(
    FILES
-   s.msg
-   i.msg
-   sif.msg
    empty.msg
+   i.msg
+   s.msg
+   sff.msg
+   sfff.msg
+   si.msg
  )
 
 ## Generate services in the 'srv' folder

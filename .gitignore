@@ -4,3 +4,9 @@ __pycache__
 
 #IDE
 .idea
+
+#temporary files
+*~
+
+#api doc
+api-doc/_build

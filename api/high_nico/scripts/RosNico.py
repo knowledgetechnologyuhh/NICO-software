@@ -23,7 +23,7 @@ import argparse
 import sys
 
 import rospy
-from high_nico.msg import s, sif, i, empty
+import high_nico.msg
 
 class RosNico():
     """
@@ -34,6 +34,7 @@ class RosNico():
     def getConfig():
         """
         Returns a default config dict
+
         :return: dict
         """
         return {'logFile': 'NICO.log',
@@ -48,6 +49,7 @@ class RosNico():
     def __init__(self, config = None):
         """
         RosNico provides HighNico functions over ROS
+
         :param config: Configuration of the HighNico and RosNico interface
         :type config: dict
         """
@@ -65,69 +67,99 @@ class RosNico():
 
         # setup subscriber
         logging.debug('Init subscriber')
-        rospy.Subscriber('%s/openHand' % config['rostopicName'], s, self._ROSPY_openHand)
-        rospy.Subscriber('%s/closeHand' % config['rostopicName'], s, self._ROSPY_closeHand)
-        rospy.Subscriber('%s/openHandParam' % config['rostopicName'], sif, self._ROSPY_openHandParam)
-        rospy.Subscriber('%s/closeHandParam' % config['rostopicName'], sif, self._ROSPY_closeHandParam)
-        rospy.Subscriber('%s/enableForceControl' % config['rostopicName'], i, self._ROSPY_enableForceControl)
-        rospy.Subscriber('%s/disableForceControl' % config['rostopicName'], empty, self._ROSPY_disableForceControl)
+        rospy.Subscriber('%s/openHand' % config['rostopicName'], high_nico.msg.s, self._ROSPY_openHand)
+        rospy.Subscriber('%s/closeHand' % config['rostopicName'], high_nico.msg.s, self._ROSPY_closeHand)
+        rospy.Subscriber('%s/enableForceControl' % config['rostopicName'], high_nico.msg.i, self._ROSPY_enableForceControl)
+        rospy.Subscriber('%s/disableForceControl' % config['rostopicName'], high_nico.msg.empty, self._ROSPY_disableForceControl)
+        rospy.Subscriber('%s/enableForceControlSingleJoint' % config['rostopicName'], high_nico.msg.si, self._ROSPY_enableForceControlSingleJoint)
+        rospy.Subscriber('%s/disableForceControlSingleJoint' % config['rostopicName'], high_nico.msg.s, self._ROSPY_disableForceControlSingleJoint)
+        rospy.Subscriber('%s/moveWrist' % config['rostopicName'], high_nico.msg.sfff, self._ROSPY_moveWrist)
+        rospy.Subscriber('%s/setAngle' % config['rostopicName'], high_nico.msg.sff, self._ROSPY_setAngles)
+        rospy.Subscriber('%s/changeAngle' % config['rostopicName'], high_nico.msg.sff, self._ROSPY_changeAngles)
 
         # wait for messages
         logging.info('-- All done --')
 
     def _ROSPY_openHand(self, message):
         """
-        Callback handle for openHand
+        Callback handle for :meth:`HighNico.HighNico.openHand`
+
         :param message: ROS message
-        :type message: high_nico.msg.string
-        :return: None
+        :type message: high_nico.msg.s
         """
         self.robot.openHand(message.param1)
 
     def _ROSPY_closeHand(self, message):
         """
-        Callback handle for closeHand
+        Callback handle for :meth:`HighNico.HighNico.closeHand`
+
         :param message: ROS message
         :type message: high_nico.msg.s
-        :return: None
         """
         self.robot.closeHand(message.param1)
 
-    def _ROSPY_openHandParam(self, message):
-        """
-        Callback handle for openHand with additional parameters
-        :param message: ROS message
-        :type message: high_nico.msg.sif
-        :return: None
-        """
-        self.robot.openHand(message.param1, message.param2, message.param3)
-
-    def _ROSPY_closeHandParam(self, message):
-        """
-        Callback handle for closeHand with additional parameters
-        :param message: ROS message
-        :type message: high_nico.msg.sif
-        :return: None
-        """
-        self.robot.closeHand(message.param1, message.param2, message.param3)
-
     def _ROSPY_enableForceControl(self, message):
         """
-        Callback handle for enableForceControl
+        Callback handle for :meth:`HighNico.HighNico.enableForceControl`
+
         :param message: ROS message
         :type message: high_nico.msg.i
-        :return: None
         """
         self.robot.enableForceControl(message.param1)
 
     def _ROSPY_disableForceControl(self, message):
         """
-        Callback handle for disableForceControl
+        Callback handle for :meth:`HighNico.HighNico.disableForceControl`
+
         :param message: ROS message
         :type message: high_nico.msg.empty
-        :return: None
         """
         self.robot.disableForceControl()
+
+    def _ROSPY_enableForceControlSingleJoint(self, message):
+        """
+        Callback handle for :meth:`HighNico.HighNico.enableForceControlSingleJoint`
+
+        :param message: ROS message
+        :type message: high_nico.msg.si
+        """
+        self.robot.enableForceControlSingleJoint(message.param1, message.param2)
+
+    def _ROSPY_disableForceControlSingleJoint(self, message):
+        """
+        Callback handle for :meth:`HighNico.HighNico.disableForceControlSingleJoint`
+
+        :param message: ROS message
+        :type message: high_nico.msg.s
+        """
+        self.robot.disableForceControlSingleJoint(message.param1)
+
+    def _ROSPY_moveWrist(self, message):
+        """
+        Callback handle for :meth:`HighNico.HighNico.moveWrist`
+
+        :param message: ROS message
+        :type message: high_nico.msg.sfff
+        """
+        self.robot.moveWrist(message.param1, message.param2, message.param3, message.param4)
+
+    def _ROSPY_setAngles(self, message):
+        """
+        Callback handle for :meth:`HighNico.HighNico.setAngles`
+
+        :param message: ROS message
+        :type message: high_nico.msg.sff
+        """
+        self.robot.setAngles(message.param1, message.param2, message.param3)
+
+    def _ROSPY_changeAngles(self, message):
+        """
+        Callback handle for :meth:`HighNico.HighNico.changeAngles`
+
+        :param message: ROS message
+        :type message: high_nico.msg.sff
+        """
+        self.robot.changeAngles(message.param1, message.param2, message.param3)
 
     def __del__(self):
         self.robot.cleanup()
