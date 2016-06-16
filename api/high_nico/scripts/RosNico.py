@@ -24,6 +24,7 @@ import sys
 
 import rospy
 import high_nico.msg
+import high_nico.srv
 
 class RosNico():
     """
@@ -76,6 +77,10 @@ class RosNico():
         rospy.Subscriber('%s/moveWrist' % config['rostopicName'], high_nico.msg.sfff, self._ROSPY_moveWrist)
         rospy.Subscriber('%s/setAngle' % config['rostopicName'], high_nico.msg.sff, self._ROSPY_setAngles)
         rospy.Subscriber('%s/changeAngle' % config['rostopicName'], high_nico.msg.sff, self._ROSPY_changeAngles)
+
+        # setup services
+        logging.debug('Init services')
+        rospy.Service('%s/getAngle' % config['rostopicName'], high_nico.srv.get_angle, self._ROSPY_getAngle)
 
         # wait for messages
         logging.info('-- All done --')
@@ -160,6 +165,17 @@ class RosNico():
         :type message: high_nico.msg.sff
         """
         self.robot.changeAngles(message.param1, message.param2, message.param3)
+
+    def _ROSPY_getAngle(self, message):
+        """
+        Callback handle for :meth:`HighNico.HighNico.getAngle`
+
+        :param message: ROS message
+        :type message: high_nico.srv.get_angle
+        :return: Angle of requested joint
+        :rtype: float
+        """
+        return self.robot.getAngles(message.param1)
 
     def __del__(self):
         self.robot.cleanup()

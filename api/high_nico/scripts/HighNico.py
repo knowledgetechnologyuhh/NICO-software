@@ -200,6 +200,22 @@ class HighNico:
             logging.warning('No joint "%s" found' % jointName)
             return
 
+    def getAngles(self, jointName):
+        """
+        Returns the current angle of a given joint (in degree)
+
+        :param jointName: Name of the joint
+        :type jointName: str
+        :return: Angle of the joint (degree)
+        :rtype: double
+        """
+        if hasattr(self._highNicoRobot, jointName):
+            motor = getattr(self._highNicoRobot, jointName)
+            return motor.present_position
+        else:
+            logging.warning('No joint "%s" found' % jointName)
+            return 0.0
+
     def cleanup(self):
         """
         Cleans up the current connection to the robot. After this you can no longer control the robot
