@@ -156,7 +156,7 @@ class HighNico:
             logging.warning('No joint "%s" found' % jointName)
             return
 
-    def setAngles(self, jointName, angle, fractionMaxSpeed):
+    def setAngle(self, jointName, angle, fractionMaxSpeed):
         """
         Sets the angle of a given joint to an angle (in degree)
 
@@ -178,7 +178,7 @@ class HighNico:
             logging.warning('No joint "%s" found' % jointName)
             return
 
-    def changeAngles(self, jointName, change, fractionMaxSpeed):
+    def changeAngle(self, jointName, change, fractionMaxSpeed):
         """
         Changes the angle of a given joint by an angle (in degree)
 
@@ -200,7 +200,7 @@ class HighNico:
             logging.warning('No joint "%s" found' % jointName)
             return
 
-    def getAngles(self, jointName):
+    def getAngle(self, jointName):
         """
         Returns the current angle of a given joint (in degree)
 

@@ -75,8 +75,8 @@ class RosNico():
         rospy.Subscriber('%s/enableForceControlSingleJoint' % config['rostopicName'], high_nico.msg.si, self._ROSPY_enableForceControlSingleJoint)
         rospy.Subscriber('%s/disableForceControlSingleJoint' % config['rostopicName'], high_nico.msg.s, self._ROSPY_disableForceControlSingleJoint)
         rospy.Subscriber('%s/moveWrist' % config['rostopicName'], high_nico.msg.sfff, self._ROSPY_moveWrist)
-        rospy.Subscriber('%s/setAngle' % config['rostopicName'], high_nico.msg.sff, self._ROSPY_setAngles)
-        rospy.Subscriber('%s/changeAngle' % config['rostopicName'], high_nico.msg.sff, self._ROSPY_changeAngles)
+        rospy.Subscriber('%s/setAngle' % config['rostopicName'], high_nico.msg.sff, self._ROSPY_setAngle)
+        rospy.Subscriber('%s/changeAngle' % config['rostopicName'], high_nico.msg.sff, self._ROSPY_changeAngle)
 
         # setup services
         logging.debug('Init services')
@@ -148,23 +148,23 @@ class RosNico():
         """
         self.robot.moveWrist(message.param1, message.param2, message.param3, message.param4)
 
-    def _ROSPY_setAngles(self, message):
+    def _ROSPY_setAngle(self, message):
         """
         Callback handle for :meth:`HighNico.HighNico.setAngles`
 
         :param message: ROS message
         :type message: high_nico.msg.sff
         """
-        self.robot.setAngles(message.param1, message.param2, message.param3)
+        self.robot.setAngle(message.param1, message.param2, message.param3)
 
-    def _ROSPY_changeAngles(self, message):
+    def _ROSPY_changeAngle(self, message):
         """
         Callback handle for :meth:`HighNico.HighNico.changeAngles`
 
         :param message: ROS message
         :type message: high_nico.msg.sff
         """
-        self.robot.changeAngles(message.param1, message.param2, message.param3)
+        self.robot.changeAngle(message.param1, message.param2, message.param3)
 
     def _ROSPY_getAngle(self, message):
         """
@@ -175,7 +175,7 @@ class RosNico():
         :return: Angle of requested joint
         :rtype: float
         """
-        return self.robot.getAngles(message.param1)
+        return self.robot.getAngle(message.param1)
 
     def __del__(self):
         self.robot.cleanup()
