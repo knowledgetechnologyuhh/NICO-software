@@ -81,7 +81,8 @@ class RosNico():
         # setup services
         logging.debug('Init services')
         rospy.Service('%s/getAngle' % config['rostopicName'], high_nico.srv.get_angle, self._ROSPY_getAngle)
-        rospy.Service('%s/getJointNames' % config['rostopicName'], high_nico.srv.get_joint_names, self._ROSPY_getJointNames)
+        rospy.Service('%s/getJointNames' % config['rostopicName'], high_nico.srv.get_names, self._ROSPY_getJointNames)
+        rospy.Service('%s/getSensorNames' % config['rostopicName'], high_nico.srv.get_names, self._ROSPY_getSensorNames)
 
         # wait for messages
         logging.info('-- All done --')
@@ -183,11 +184,22 @@ class RosNico():
         Callback handle for :meth:`HighNico.HighNico.getJointNames`
 
         :param message: ROS message
-        :type message: high_nico.srv.get_joint_names
+        :type message: high_nico.srv.get_names
         :return: List of joint names
         :rtype: list
         """
         return [self.robot.getJointNames()]
+
+    def _ROSPY_getSensorNames(self, message):
+        """
+        Callback handle for :meth:`HighNico.HighNico.getSensorNames`
+
+        :param message: ROS message
+        :type message: high_nico.srv.get_names
+        :return: List of sensor names
+        :rtype: list
+        """
+        return [self.robot.getSensorNames()]
 
     def __del__(self):
         self.robot.cleanup()

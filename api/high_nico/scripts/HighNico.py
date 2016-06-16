@@ -228,6 +228,19 @@ class HighNico:
             jointNames += [motor.name]
         return jointNames
 
+    def getSensorNames(self):
+        """
+        Returns all sensor names
+
+        :return: List with sensor names
+        :rtype: list
+        """
+        sensorNames = []
+        for sensor in self._highNicoRobot.sensors:
+            sensorNames += [sensor.name]
+        return sensorNames
+
+
 
     def cleanup(self):
         """

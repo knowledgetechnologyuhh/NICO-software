@@ -59,7 +59,7 @@ add_message_files(
 add_service_files(
    FILES
    get_angle.srv
-   get_joint_names.srv
+   get_names.srv
 )
 
 ## Generate actions in the 'action' folder
