@@ -80,9 +80,12 @@ class RosNico():
 
         # setup services
         logging.debug('Init services')
-        rospy.Service('%s/getAngle' % config['rostopicName'], high_nico.srv.get_angle, self._ROSPY_getAngle)
+        rospy.Service('%s/getAngle' % config['rostopicName'], high_nico.srv.get_value, self._ROSPY_getAngle)
         rospy.Service('%s/getJointNames' % config['rostopicName'], high_nico.srv.get_names, self._ROSPY_getJointNames)
         rospy.Service('%s/getSensorNames' % config['rostopicName'], high_nico.srv.get_names, self._ROSPY_getSensorNames)
+        rospy.Service('%s/getAngleUpperLimit' % config['rostopicName'], high_nico.srv.get_value, self._ROSPY_getAngleUpperLimit)
+        rospy.Service('%s/getAngleLowerLimit' % config['rostopicName'], high_nico.srv.get_value, self._ROSPY_getAngleLowerLimit)
+        rospy.Service('%s/getTorqueLimit' % config['rostopicName'], high_nico.srv.get_value, self._ROSPY_getTorqueLimit)
 
         # wait for messages
         logging.info('-- All done --')
@@ -173,7 +176,7 @@ class RosNico():
         Callback handle for :meth:`HighNico.HighNico.getAngle`
 
         :param message: ROS message
-        :type message: high_nico.srv.get_angle
+        :type message: high_nico.srv.get_value
         :return: Angle of requested joint
         :rtype: float
         """
@@ -200,6 +203,39 @@ class RosNico():
         :rtype: list
         """
         return [self.robot.getSensorNames()]
+
+    def _ROSPY_getAngleUpperLimit(self, message):
+        """
+        Callback handle for :meth:`HighNico.HighNico.getAngleUpperLimit`
+
+        :param message: ROS message
+        :type message: high_nico.srv.get_value
+        :return: Angle upper limit of requested joint
+        :rtype: float
+        """
+        return self.robot.getAngleUpperLimit(message.param1)
+
+    def _ROSPY_getAngleLowerLimit(self, message):
+        """
+        Callback handle for :meth:`HighNico.HighNico.getAngleLowerLimit`
+
+        :param message: ROS message
+        :type message: high_nico.srv.get_value
+        :return: Angle lower limit of requested joint
+        :rtype: float
+        """
+        return self.robot.getAngle(message.param1)
+
+    def _ROSPY_getTorqueLimit(self, message):
+        """
+        Callback handle for :meth:`HighNico.HighNico.getTorqueLimit`
+
+        :param message: ROS message
+        :type message: high_nico.srv.get_value
+        :return: Torque limit of requested joint
+        :rtype: float
+        """
+        return self.robot.getTorqueLimit(message.param1)
 
     def __del__(self):
         self.robot.cleanup()

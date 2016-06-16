@@ -207,7 +207,7 @@ class HighNico:
         :param jointName: Name of the joint
         :type jointName: str
         :return: Angle of the joint (degree)
-        :rtype: double
+        :rtype: float
         """
         if hasattr(self._highNicoRobot, jointName):
             motor = getattr(self._highNicoRobot, jointName)
@@ -240,7 +240,53 @@ class HighNico:
             sensorNames += [sensor.name]
         return sensorNames
 
+    def getAngleUpperLimit(self, jointName):
+        """
+        Returns the upper angle limit of a joint (in degree)
 
+        :param jointName: Name of the joint
+        :type jointName: str
+        :return: Upper angle limit of the joint (degree)
+        :rtype: float
+        """
+        if hasattr(self._highNicoRobot, jointName):
+            motor = getattr(self._highNicoRobot, jointName)
+            return motor.upper_limit
+        else:
+            logging.warning('No joint "%s" found' % jointName)
+            return 0.0
+
+    def getAngleLowerLimit(self, jointName):
+        """
+        Returns the lower angle limit of a joint (in degree)
+
+        :param jointName: Name of the joint
+        :type jointName: str
+        :return: Lower angle limit of the joint (degree)
+        :rtype: float
+        """
+        if hasattr(self._highNicoRobot, jointName):
+            motor = getattr(self._highNicoRobot, jointName)
+            return motor.lower_limit
+        else:
+            logging.warning('No joint "%s" found' % jointName)
+            return 0.0
+
+    def getTorqueLimit(self, jointName):
+        """
+        Returns the torque limit of a joint
+
+        :param jointName: Name of the joint
+        :type jointName: str
+        :return: Torque limit of the joint
+        :rtype: float
+        """
+        if hasattr(self._highNicoRobot, jointName):
+            motor = getattr(self._highNicoRobot, jointName)
+            return motor.torque_limit
+        else:
+            logging.warning('No joint "%s" found' % jointName)
+            return 0.0
 
     def cleanup(self):
         """
