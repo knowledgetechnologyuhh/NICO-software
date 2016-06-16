@@ -216,6 +216,19 @@ class HighNico:
             logging.warning('No joint "%s" found' % jointName)
             return 0.0
 
+    def getJointNames(self):
+        """
+        Returns all joint names
+
+        :return: List with joint names
+        :rtype: list
+        """
+        jointNames = []
+        for motor in self._highNicoRobot.motors:
+            jointNames += [motor.name]
+        return jointNames
+
+
     def cleanup(self):
         """
         Cleans up the current connection to the robot. After this you can no longer control the robot
