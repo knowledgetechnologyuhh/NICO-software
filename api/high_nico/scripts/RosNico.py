@@ -86,6 +86,8 @@ class RosNico():
         rospy.Service('%s/getAngleUpperLimit' % config['rostopicName'], high_nico.srv.get_value, self._ROSPY_getAngleUpperLimit)
         rospy.Service('%s/getAngleLowerLimit' % config['rostopicName'], high_nico.srv.get_value, self._ROSPY_getAngleLowerLimit)
         rospy.Service('%s/getTorqueLimit' % config['rostopicName'], high_nico.srv.get_value, self._ROSPY_getTorqueLimit)
+        rospy.Service('%s/getTemperature' % config['rostopicName'], high_nico.srv.get_value, self._ROSPY_getTemperature)
+        rospy.Service('%s/getCurrent' % config['rostopicName'], high_nico.srv.get_value, self._ROSPY_getCurrent)
 
         # wait for messages
         logging.info('-- All done --')
@@ -236,6 +238,28 @@ class RosNico():
         :rtype: float
         """
         return self.robot.getTorqueLimit(message.param1)
+
+    def _ROSPY_getTemperature(self, message):
+        """
+        Callback handle for :meth:`HighNico.HighNico.getTemperature`
+
+        :param message: ROS message
+        :type message: high_nico.srv.get_value
+        :return: Temperature of requested joint
+        :rtype: float
+        """
+        return self.robot.getTemperature(message.param1)
+
+    def _ROSPY_getCurrent(self, message):
+        """
+        Callback handle for :meth:`HighNico.HighNico.getCurrent`
+
+        :param message: ROS message
+        :type message: high_nico.srv.get_value
+        :return: Current of requested joint
+        :rtype: float
+        """
+        return self.robot.getCurrent(message.param1)
 
     def __del__(self):
         self.robot.cleanup()

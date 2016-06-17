@@ -288,6 +288,46 @@ class HighNico:
             logging.warning('No joint "%s" found' % jointName)
             return 0.0
 
+    def getTemperature(self, jointName):
+        """
+        Returns the current temperature of a motor
+
+        :param jointName: Name of the joint
+        :type jointName: str
+        :return: Temperature of the joint
+        :rtype: float
+        """
+        if hasattr(self._highNicoRobot, jointName):
+            motor = getattr(self._highNicoRobot, jointName)
+            if hasattr(motor, 'present_temperature'):
+                return motor.present_temperature
+            else:
+                logging.warning('Joint %s has no present temperature' % jointName)
+                return 0.0
+        else:
+            logging.warning('No joint "%s" found' % jointName)
+            return 0.0
+
+    def getCurrent(self, jointName):
+        """
+        Returns the current current of a motor
+
+        :param jointName: Name of the joint
+        :type jointName: str
+        :return: Current of the joint
+        :rtype: float
+        """
+        if hasattr(self._highNicoRobot, jointName):
+            motor = getattr(self._highNicoRobot, jointName)
+            if hasattr(motor, 'present_voltage'):
+                return motor.present_voltage
+            else:
+                logging.warning('Joint %s has no present voltage' % jointName)
+                return 0.0
+        else:
+            logging.warning('No joint "%s" found' % jointName)
+            return 0.0
+
     def cleanup(self):
         """
         Cleans up the current connection to the robot. After this you can no longer control the robot
