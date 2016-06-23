@@ -66,21 +66,21 @@ The following ROS services are exposed by RosNico - where $PREFIX stands for the
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
 | ROS service name                               | Service type                                   | Short description                                                          |
 +================================================+================================================+============================================================================+
-| /nico/getAngle                                 | high_nico/get_value                            | Returns the angle of a single joint                                        | 
+| $PREFIX/getAngle                               | high_nico/get_value                            | Returns the angle of a single joint                                        | 
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
-| /nico/getAngleLowerLimit                       | high_nico/get_value                            | Returns the lower limit of the angle for a single joint                    |
+| $PREFIX/getAngleLowerLimit                     | high_nico/get_value                            | Returns the lower limit of the angle for a single joint                    |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
-| /nico/getAngleUpperLimit                       | high_nico/get_value                            | Returns the upper limit of the angle for a single joint                    |
+| $PREFIX/getAngleUpperLimit                     | high_nico/get_value                            | Returns the upper limit of the angle for a single joint                    |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
-| /nico/getCurrent                               | high_nico/get_value                            | Returns the present currency of a single joint                             |
+| $PREFIX/getCurrent                             | high_nico/get_value                            | Returns the present currency of a single joint                             |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
-| /nico/getJointNames                            | high_nico/get_names                            | Returns a list with the names of all joints                                |
+| $PREFIX/getJointNames                          | high_nico/get_names                            | Returns a list with the names of all joints                                |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
-| /nico/getSensorNames                           | high_nico/get_names                            | Returns a list with the names of all sensors                               |
+| $PREFIX/getSensorNames                         | high_nico/get_names                            | Returns a list with the names of all sensors                               |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
-|/nico/getTemperature                            | high_nico/get_value                            | Returns the present temperature of a single joint                          |
+| $PREFIX/getTemperature                         | high_nico/get_value                            | Returns the present temperature of a single joint                          |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
-| /nico/getTorqueLimit                           | high_nico/get_value                            | Returns the torque limit of a single joint                                 |
+| $PREFIX/getTorqueLimit                         | high_nico/get_value                            | Returns the torque limit of a single joint                                 |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
 
 Class documentation
