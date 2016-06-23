@@ -82,23 +82,6 @@ class HighNico:
         """
         _internal.hand.openHand(self._highNicoRobot, handName, fractionMaxSpeed, percentage)
 
-    def moveWrist(self, handName, x, z, fractionMaxSpeed=1.0):
-        """
-        Moves the wrist of one hand to the given position. handName can be 'RHand' or 'LHand'
-
-        :param robot: Robot object
-        :type robot: pypot.robot
-        :param handName: Name of the hand (RHand, LHand)
-        :type handName: str
-        :param x: Target x position in degree
-        :type x: float
-        :param z: Target x position in degree
-        :type z: float
-        :param fractionMaxSpeed: Speed at which hand should close. Default: 1.0
-        :type fractionMaxSpeed: float
-        """
-        _internal.hand.moveWrist(self._highNicoRobot, handName, x, z, fractionMaxSpeed)
-
     def enableForceControl(self, goalForce = 500):
         """
         Enables force control for all joints which support this feature

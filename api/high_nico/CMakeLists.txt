@@ -51,7 +51,6 @@ add_message_files(
    i.msg
    s.msg
    sff.msg
-   sfff.msg
    si.msg
  )
 

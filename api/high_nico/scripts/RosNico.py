@@ -74,7 +74,6 @@ class RosNico():
         rospy.Subscriber('%s/disableForceControl' % config['rostopicName'], high_nico.msg.empty, self._ROSPY_disableForceControl)
         rospy.Subscriber('%s/enableForceControlSingleJoint' % config['rostopicName'], high_nico.msg.si, self._ROSPY_enableForceControlSingleJoint)
         rospy.Subscriber('%s/disableForceControlSingleJoint' % config['rostopicName'], high_nico.msg.s, self._ROSPY_disableForceControlSingleJoint)
-        rospy.Subscriber('%s/moveWrist' % config['rostopicName'], high_nico.msg.sfff, self._ROSPY_moveWrist)
         rospy.Subscriber('%s/setAngle' % config['rostopicName'], high_nico.msg.sff, self._ROSPY_setAngle)
         rospy.Subscriber('%s/changeAngle' % config['rostopicName'], high_nico.msg.sff, self._ROSPY_changeAngle)
 
@@ -145,15 +144,6 @@ class RosNico():
         :type message: high_nico.msg.s
         """
         self.robot.disableForceControlSingleJoint(message.param1)
-
-    def _ROSPY_moveWrist(self, message):
-        """
-        Callback handle for :meth:`HighNico.HighNico.moveWrist`
-
-        :param message: ROS message
-        :type message: high_nico.msg.sfff
-        """
-        self.robot.moveWrist(message.param1, message.param2, message.param3, message.param4)
 
     def _ROSPY_setAngle(self, message):
         """
