@@ -303,10 +303,10 @@ class HighNico:
         """
         if hasattr(self._highNicoRobot, jointName):
             motor = getattr(self._highNicoRobot, jointName)
-            if hasattr(motor, 'present_voltage'):
-                return motor.present_voltage
+            if hasattr(motor, 'present_current'):
+                return motor.present_current
             else:
-                logging.warning('Joint %s has no present voltage' % jointName)
+                logging.warning('Joint %s has no present current' % jointName)
                 return 0.0
         else:
             logging.warning('No joint "%s" found' % jointName)
