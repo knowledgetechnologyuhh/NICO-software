@@ -77,6 +77,7 @@ class RosNico():
         rospy.Subscriber('%s/setAngle' % config['rostopicName'], high_nico.msg.sff, self._ROSPY_setAngle)
         rospy.Subscriber('%s/changeAngle' % config['rostopicName'], high_nico.msg.sff, self._ROSPY_changeAngle)
         rospy.Subscriber('%s/setMaximumSpeed' % config['rostopicName'], high_nico.msg.f, self._ROSPY_setMaximumSpeed)
+        rospy.Subscriber('%s/setStifftness' % config['rostopicName'], high_nico.msg.sf, self._ROSPY_setStifftness)
 
         # setup services
         logging.debug('Init services')
@@ -88,6 +89,7 @@ class RosNico():
         rospy.Service('%s/getTorqueLimit' % config['rostopicName'], high_nico.srv.get_value, self._ROSPY_getTorqueLimit)
         rospy.Service('%s/getTemperature' % config['rostopicName'], high_nico.srv.get_value, self._ROSPY_getTemperature)
         rospy.Service('%s/getCurrent' % config['rostopicName'], high_nico.srv.get_value, self._ROSPY_getCurrent)
+        rospy.Service('%s/getStifftness' % config['rostopicName'], high_nico.srv.get_value, self._ROSPY_getStifftness)
 
         # wait for messages
         logging.info('-- All done --')
@@ -260,6 +262,26 @@ class RosNico():
         :type message: high_nico.msg.f
         """
         self.robot.setMaximumSpeed(message.param1)
+
+    def _ROSPY_setStifftness(self, message):
+        """
+        Callback handle for :meth:`HighNico.HighNico.setStifftness`
+
+        :param message: ROS message
+        :type message: high_nico.msg.sf
+        """
+        self.robot.setStifftness(message.param1, message.param2)
+
+    def _ROSPY_getStifftness(self, message):
+        """
+        Callback handle for :meth:`HighNico.HighNico.getStifftness`
+
+        :param message: ROS message
+        :type message: high_nico.srv.get_value
+        :return: Stifftness of requested joint
+        :rtype: float
+        """
+        return self.robot.getStifftness(message.param1)
 
     def __del__(self):
         self.robot.cleanup()

@@ -320,9 +320,52 @@ class HighNico:
         :param maximumSpeed: Maximum allowed speed (0 <= maximumSpeed <= 1.0)
         """
         if not 0.0 <= maximumSpeed <= 1.0:
-            logging.warning('New maximum speed out of bounds (d)' % maximumSpeed)
+            logging.warning('New maximum speed out of bounds (%d)' % maximumSpeed)
             return
         self._maximumSpeed = maximumSpeed
+
+    def setStifftness(self, jointName, stifftness):
+        """
+        Sets the stifftness (0 <= stifftness <= 1) for a single motor
+
+        :param jointName: Name of the joint
+        :type jointName: str
+        :param stifftness: Target stifftness
+        :type stifftness: float
+        """
+        if not 0.0 <= stifftness <= 1.0:
+            logging.warning('New stifftness out of bounds (%d)' % maximumSpeed)
+            return
+
+        if hasattr(self._highNicoRobot, jointName):
+            motor = getattr(self._highNicoRobot, jointName)
+            if hasattr(motor, 'torque_limit'):
+                motor.torque_limit = 100.0 * stifftness
+            else:
+                logging.warning('Joint %s has no torque limit' % jointName)
+        else:
+            logging.warning('No joint "%s" found' % jointName)
+            return
+
+    def getStifftness(self, jointName):
+        """
+        Returns the current stifftness of a motor
+
+        :param jointName: Name of the joint
+        :type jointName: str
+        :return: Stifftness of the joint
+        :rtype: float
+        """
+        if hasattr(self._highNicoRobot, jointName):
+            motor = getattr(self._highNicoRobot, jointName)
+            if hasattr(motor, 'torque_limit'):
+                return motor.torque_limit / 100.0
+            else:
+                logging.warning('Joint %s has no torque limit' % jointName)
+                return 0.0
+        else:
+            logging.warning('No joint "%s" found' % jointName)
+            return 0.0
 
     def cleanup(self):
         """

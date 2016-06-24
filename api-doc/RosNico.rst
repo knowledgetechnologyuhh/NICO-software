@@ -50,8 +50,12 @@ The following ROS topics are exposed by RosNico - where $PREFIX stands for the p
 |                                                |                                                |  2. angle                                                                             |
 |                                                |                                                |  3. Fraction of max speed                                                             |
 +------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
-| $PREFIX/setMaximumSpeed                        | high_nico/sff                                  | Sets the maximum allowed speed (in fraction of maximum possible speed Parameters:     |
+| $PREFIX/setMaximumSpeed                        | high_nico/f                                    | Sets the maximum allowed speed (in fraction of maximum possible speed). Parameters:   |
 |                                                |                                                |  1. Maximum speed                                                                     |
++------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
+| $PREFIX/setStifftness                          | high_nico/sf                                   | Sets the stifftness of a single joint. Parameters:                                    |
+|                                                |                                                |  1. Name of joint                                                                     |
+|                                                |                                                |  2. stifftness                                                                        |
 +------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
 
 Exposed services
@@ -73,6 +77,8 @@ The following ROS services are exposed by RosNico - where $PREFIX stands for the
 | $PREFIX/getJointNames                          | high_nico/get_names                            | Returns a list with the names of all joints                                |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
 | $PREFIX/getSensorNames                         | high_nico/get_names                            | Returns a list with the names of all sensors                               |
++------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
+| $PREFIX/getStifftness                          | high_nico/get_value                            | Returns the stifftness of a single joint                                   |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
 | $PREFIX/getTemperature                         | high_nico/get_value                            | Returns the present temperature of a single joint                          |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+

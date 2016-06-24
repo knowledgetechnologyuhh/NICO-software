@@ -51,6 +51,7 @@ add_message_files(
    f.msg
    i.msg
    s.msg
+   sf.msg
    sff.msg
    si.msg
  )
