@@ -76,6 +76,7 @@ class RosNico():
         rospy.Subscriber('%s/disableForceControlSingleJoint' % config['rostopicName'], high_nico.msg.s, self._ROSPY_disableForceControlSingleJoint)
         rospy.Subscriber('%s/setAngle' % config['rostopicName'], high_nico.msg.sff, self._ROSPY_setAngle)
         rospy.Subscriber('%s/changeAngle' % config['rostopicName'], high_nico.msg.sff, self._ROSPY_changeAngle)
+        rospy.Subscriber('%s/setMaximumSpeed' % config['rostopicName'], high_nico.msg.f, self._ROSPY_setMaximumSpeed)
 
         # setup services
         logging.debug('Init services')
@@ -250,6 +251,15 @@ class RosNico():
         :rtype: float
         """
         return self.robot.getCurrent(message.param1)
+
+    def _ROSPY_setMaximumSpeed(self, message):
+        """
+        Callback handle for :meth:`HighNico.HighNico.setMaximumSpeed`
+
+        :param message: ROS message
+        :type message: high_nico.msg.f
+        """
+        self.robot.setMaximumSpeed(message.param1)
 
     def __del__(self):
         self.robot.cleanup()

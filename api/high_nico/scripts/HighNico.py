@@ -45,6 +45,7 @@ class HighNico:
         :type vrepScene: str
         """
         self._highNicoRobot = None
+        self._maximumSpeed = 1.0
 
         with open(motorConfig, 'r') as config_file:
             config = json.load(config_file)
@@ -67,7 +68,7 @@ class HighNico:
         :param percentage: Percentage hand should open. 0.0 < percentage <= 1.0
         :type percentage: float
         """
-        _internal.hand.closeHand(self._highNicoRobot, handName, fractionMaxSpeed, percentage)
+        _internal.hand.closeHand(self._highNicoRobot, handName, min(fractionMaxSpeed, self._maximumSpeed), percentage)
 
     def closeHand(self, handName, fractionMaxSpeed=1.0, percentage=1.0):
         """
@@ -80,7 +81,7 @@ class HighNico:
         :param percentage: Percentage hand should open. 0.0 < percentage <= 1.0
         :type percentage: float
         """
-        _internal.hand.openHand(self._highNicoRobot, handName, fractionMaxSpeed, percentage)
+        _internal.hand.openHand(self._highNicoRobot, handName, min(fractionMaxSpeed, self._maximumSpeed), percentage)
 
     def enableForceControl(self, goalForce = 500):
         """
@@ -153,7 +154,7 @@ class HighNico:
         if hasattr(self._highNicoRobot, jointName):
             motor = getattr(self._highNicoRobot, jointName)
             motor.compliant = False
-            motor.goal_speed = 10.0 * fractionMaxSpeed
+            motor.goal_speed = 1000.0 * min(fractionMaxSpeed, self._maximumSpeed)
             motor.goal_position = angle
             time.sleep(1)
             motor.compliant = True
@@ -175,7 +176,7 @@ class HighNico:
         if hasattr(self._highNicoRobot, jointName):
             motor = getattr(self._highNicoRobot, jointName)
             motor.compliant = False
-            motor.goal_speed = 10.0 * fractionMaxSpeed
+            motor.goal_speed = 1000.0 * min(fractionMaxSpeed, self._maximumSpeed)
             motor.goal_position = change + motor.present_position
             time.sleep(1)
             motor.compliant = True
@@ -310,6 +311,18 @@ class HighNico:
         else:
             logging.warning('No joint "%s" found' % jointName)
             return 0.0
+
+    def setMaximumSpeed(self, maximumSpeed):
+        """
+        Sets the maximum allowed speed (in fraction of maximum possible speed). When giving a higher speed to any other
+        functions the movement won't go over the value set here
+
+        :param maximumSpeed: Maximum allowed speed (0 <= maximumSpeed <= 1.0)
+        """
+        if not 0.0 <= maximumSpeed <= 1.0:
+            logging.warning('New maximum speed out of bounds (d)' % maximumSpeed)
+            return
+        self._maximumSpeed = maximumSpeed
 
     def cleanup(self):
         """
