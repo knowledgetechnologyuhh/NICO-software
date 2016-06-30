@@ -74,15 +74,24 @@ class RosNico():
         rospy.Subscriber('%s/disableForceControl' % config['rostopicName'], high_nico.msg.empty, self._ROSPY_disableForceControl)
         rospy.Subscriber('%s/enableForceControlSingleJoint' % config['rostopicName'], high_nico.msg.si, self._ROSPY_enableForceControlSingleJoint)
         rospy.Subscriber('%s/disableForceControlSingleJoint' % config['rostopicName'], high_nico.msg.s, self._ROSPY_disableForceControlSingleJoint)
-        rospy.Subscriber('%s/moveWrist' % config['rostopicName'], high_nico.msg.sfff, self._ROSPY_moveWrist)
         rospy.Subscriber('%s/setAngle' % config['rostopicName'], high_nico.msg.sff, self._ROSPY_setAngle)
         rospy.Subscriber('%s/changeAngle' % config['rostopicName'], high_nico.msg.sff, self._ROSPY_changeAngle)
+        rospy.Subscriber('%s/setMaximumSpeed' % config['rostopicName'], high_nico.msg.f, self._ROSPY_setMaximumSpeed)
+        rospy.Subscriber('%s/setStifftness' % config['rostopicName'], high_nico.msg.sf, self._ROSPY_setStifftness)
+        rospy.Subscriber('%s/setPID' % config['rostopicName'], high_nico.msg.sfff, self._ROSPY_setPID)
 
         # setup services
         logging.debug('Init services')
-        rospy.Service('%s/getAngle' % config['rostopicName'], high_nico.srv.get_angle, self._ROSPY_getAngle)
+        rospy.Service('%s/getAngle' % config['rostopicName'], high_nico.srv.get_value, self._ROSPY_getAngle)
         rospy.Service('%s/getJointNames' % config['rostopicName'], high_nico.srv.get_names, self._ROSPY_getJointNames)
         rospy.Service('%s/getSensorNames' % config['rostopicName'], high_nico.srv.get_names, self._ROSPY_getSensorNames)
+        rospy.Service('%s/getAngleUpperLimit' % config['rostopicName'], high_nico.srv.get_value, self._ROSPY_getAngleUpperLimit)
+        rospy.Service('%s/getAngleLowerLimit' % config['rostopicName'], high_nico.srv.get_value, self._ROSPY_getAngleLowerLimit)
+        rospy.Service('%s/getTorqueLimit' % config['rostopicName'], high_nico.srv.get_value, self._ROSPY_getTorqueLimit)
+        rospy.Service('%s/getTemperature' % config['rostopicName'], high_nico.srv.get_value, self._ROSPY_getTemperature)
+        rospy.Service('%s/getCurrent' % config['rostopicName'], high_nico.srv.get_value, self._ROSPY_getCurrent)
+        rospy.Service('%s/getStifftness' % config['rostopicName'], high_nico.srv.get_value, self._ROSPY_getStifftness)
+        rospy.Service('%s/getPID' % config['rostopicName'], high_nico.srv.get_pid, self._ROSPY_getPID)
 
         # wait for messages
         logging.info('-- All done --')
@@ -141,15 +150,6 @@ class RosNico():
         """
         self.robot.disableForceControlSingleJoint(message.param1)
 
-    def _ROSPY_moveWrist(self, message):
-        """
-        Callback handle for :meth:`HighNico.HighNico.moveWrist`
-
-        :param message: ROS message
-        :type message: high_nico.msg.sfff
-        """
-        self.robot.moveWrist(message.param1, message.param2, message.param3, message.param4)
-
     def _ROSPY_setAngle(self, message):
         """
         Callback handle for :meth:`HighNico.HighNico.setAngles`
@@ -173,7 +173,7 @@ class RosNico():
         Callback handle for :meth:`HighNico.HighNico.getAngle`
 
         :param message: ROS message
-        :type message: high_nico.srv.get_angle
+        :type message: high_nico.srv.get_value
         :return: Angle of requested joint
         :rtype: float
         """
@@ -200,6 +200,110 @@ class RosNico():
         :rtype: list
         """
         return [self.robot.getSensorNames()]
+
+    def _ROSPY_getAngleUpperLimit(self, message):
+        """
+        Callback handle for :meth:`HighNico.HighNico.getAngleUpperLimit`
+
+        :param message: ROS message
+        :type message: high_nico.srv.get_value
+        :return: Angle upper limit of requested joint
+        :rtype: float
+        """
+        return self.robot.getAngleUpperLimit(message.param1)
+
+    def _ROSPY_getAngleLowerLimit(self, message):
+        """
+        Callback handle for :meth:`HighNico.HighNico.getAngleLowerLimit`
+
+        :param message: ROS message
+        :type message: high_nico.srv.get_value
+        :return: Angle lower limit of requested joint
+        :rtype: float
+        """
+        return self.robot.getAngle(message.param1)
+
+    def _ROSPY_getTorqueLimit(self, message):
+        """
+        Callback handle for :meth:`HighNico.HighNico.getTorqueLimit`
+
+        :param message: ROS message
+        :type message: high_nico.srv.get_value
+        :return: Torque limit of requested joint
+        :rtype: float
+        """
+        return self.robot.getTorqueLimit(message.param1)
+
+    def _ROSPY_getTemperature(self, message):
+        """
+        Callback handle for :meth:`HighNico.HighNico.getTemperature`
+
+        :param message: ROS message
+        :type message: high_nico.srv.get_value
+        :return: Temperature of requested joint
+        :rtype: float
+        """
+        return self.robot.getTemperature(message.param1)
+
+    def _ROSPY_getCurrent(self, message):
+        """
+        Callback handle for :meth:`HighNico.HighNico.getCurrent`
+
+        :param message: ROS message
+        :type message: high_nico.srv.get_value
+        :return: Current of requested joint
+        :rtype: float
+        """
+        return self.robot.getCurrent(message.param1)
+
+    def _ROSPY_setMaximumSpeed(self, message):
+        """
+        Callback handle for :meth:`HighNico.HighNico.setMaximumSpeed`
+
+        :param message: ROS message
+        :type message: high_nico.msg.f
+        """
+        self.robot.setMaximumSpeed(message.param1)
+
+    def _ROSPY_setStifftness(self, message):
+        """
+        Callback handle for :meth:`HighNico.HighNico.setStifftness`
+
+        :param message: ROS message
+        :type message: high_nico.msg.sf
+        """
+        self.robot.setStifftness(message.param1, message.param2)
+
+    def _ROSPY_getStifftness(self, message):
+        """
+        Callback handle for :meth:`HighNico.HighNico.getStifftness`
+
+        :param message: ROS message
+        :type message: high_nico.srv.get_value
+        :return: Stifftness of requested joint
+        :rtype: float
+        """
+        return self.robot.getStifftness(message.param1)
+
+    def _ROSPY_setPID(self, message):
+        """
+        Callback handle for :meth:`HighNico.HighNico.setPID`
+
+        :param message: ROS message
+        :type message: high_nico.msg.sfff
+        """
+        self.robot.setPID(message.param1, message.param2, message.param3, message.param4)
+
+    def _ROSPY_getPID(self, message):
+        """
+        Callback handle for :meth:`HighNico.HighNico.getPID`
+
+        :param message: ROS message
+        :type message: high_nico.srv.get_pid
+        :return: Tuple: (p, i, d)
+        :rtype: tuple
+        """
+        return self.robot.getPID(message.param1)
 
     def __del__(self):
         self.robot.cleanup()

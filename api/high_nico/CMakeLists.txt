@@ -48,8 +48,10 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
    FILES
    empty.msg
+   f.msg
    i.msg
    s.msg
+   sf.msg
    sff.msg
    sfff.msg
    si.msg
@@ -58,8 +60,9 @@ add_message_files(
 ## Generate services in the 'srv' folder
 add_service_files(
    FILES
-   get_angle.srv
    get_names.srv
+   get_pid.srv
+   get_value.srv
 )
 
 ## Generate actions in the 'action' folder

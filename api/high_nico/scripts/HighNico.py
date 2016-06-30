@@ -45,6 +45,7 @@ class HighNico:
         :type vrepScene: str
         """
         self._highNicoRobot = None
+        self._maximumSpeed = 1.0
 
         with open(motorConfig, 'r') as config_file:
             config = json.load(config_file)
@@ -67,7 +68,7 @@ class HighNico:
         :param percentage: Percentage hand should open. 0.0 < percentage <= 1.0
         :type percentage: float
         """
-        _internal.hand.closeHand(self._highNicoRobot, handName, fractionMaxSpeed, percentage)
+        _internal.hand.closeHand(self._highNicoRobot, handName, min(fractionMaxSpeed, self._maximumSpeed), percentage)
 
     def closeHand(self, handName, fractionMaxSpeed=1.0, percentage=1.0):
         """
@@ -80,24 +81,7 @@ class HighNico:
         :param percentage: Percentage hand should open. 0.0 < percentage <= 1.0
         :type percentage: float
         """
-        _internal.hand.openHand(self._highNicoRobot, handName, fractionMaxSpeed, percentage)
-
-    def moveWrist(self, handName, x, z, fractionMaxSpeed=1.0):
-        """
-        Moves the wrist of one hand to the given position. handName can be 'RHand' or 'LHand'
-
-        :param robot: Robot object
-        :type robot: pypot.robot
-        :param handName: Name of the hand (RHand, LHand)
-        :type handName: str
-        :param x: Target x position in degree
-        :type x: float
-        :param z: Target x position in degree
-        :type z: float
-        :param fractionMaxSpeed: Speed at which hand should close. Default: 1.0
-        :type fractionMaxSpeed: float
-        """
-        _internal.hand.moveWrist(self._highNicoRobot, handName, x, z, fractionMaxSpeed)
+        _internal.hand.openHand(self._highNicoRobot, handName, min(fractionMaxSpeed, self._maximumSpeed), percentage)
 
     def enableForceControl(self, goalForce = 500):
         """
@@ -170,7 +154,7 @@ class HighNico:
         if hasattr(self._highNicoRobot, jointName):
             motor = getattr(self._highNicoRobot, jointName)
             motor.compliant = False
-            motor.goal_speed = 10.0 * fractionMaxSpeed
+            motor.goal_speed = 1000.0 * min(fractionMaxSpeed, self._maximumSpeed)
             motor.goal_position = angle
             time.sleep(1)
             motor.compliant = True
@@ -192,7 +176,7 @@ class HighNico:
         if hasattr(self._highNicoRobot, jointName):
             motor = getattr(self._highNicoRobot, jointName)
             motor.compliant = False
-            motor.goal_speed = 10.0 * fractionMaxSpeed
+            motor.goal_speed = 1000.0 * min(fractionMaxSpeed, self._maximumSpeed)
             motor.goal_position = change + motor.present_position
             time.sleep(1)
             motor.compliant = True
@@ -207,7 +191,7 @@ class HighNico:
         :param jointName: Name of the joint
         :type jointName: str
         :return: Angle of the joint (degree)
-        :rtype: double
+        :rtype: float
         """
         if hasattr(self._highNicoRobot, jointName):
             motor = getattr(self._highNicoRobot, jointName)
@@ -240,7 +224,193 @@ class HighNico:
             sensorNames += [sensor.name]
         return sensorNames
 
+    def getAngleUpperLimit(self, jointName):
+        """
+        Returns the upper angle limit of a joint (in degree)
 
+        :param jointName: Name of the joint
+        :type jointName: str
+        :return: Upper angle limit of the joint (degree)
+        :rtype: float
+        """
+        if hasattr(self._highNicoRobot, jointName):
+            motor = getattr(self._highNicoRobot, jointName)
+            return motor.upper_limit
+        else:
+            logging.warning('No joint "%s" found' % jointName)
+            return 0.0
+
+    def getAngleLowerLimit(self, jointName):
+        """
+        Returns the lower angle limit of a joint (in degree)
+
+        :param jointName: Name of the joint
+        :type jointName: str
+        :return: Lower angle limit of the joint (degree)
+        :rtype: float
+        """
+        if hasattr(self._highNicoRobot, jointName):
+            motor = getattr(self._highNicoRobot, jointName)
+            return motor.lower_limit
+        else:
+            logging.warning('No joint "%s" found' % jointName)
+            return 0.0
+
+    def getTorqueLimit(self, jointName):
+        """
+        Returns the torque limit of a joint
+
+        :param jointName: Name of the joint
+        :type jointName: str
+        :return: Torque limit of the joint
+        :rtype: float
+        """
+        if hasattr(self._highNicoRobot, jointName):
+            motor = getattr(self._highNicoRobot, jointName)
+            return motor.torque_limit
+        else:
+            logging.warning('No joint "%s" found' % jointName)
+            return 0.0
+
+    def getTemperature(self, jointName):
+        """
+        Returns the current temperature of a motor
+
+        :param jointName: Name of the joint
+        :type jointName: str
+        :return: Temperature of the joint
+        :rtype: float
+        """
+        if hasattr(self._highNicoRobot, jointName):
+            motor = getattr(self._highNicoRobot, jointName)
+            if hasattr(motor, 'present_temperature'):
+                return motor.present_temperature
+            else:
+                logging.warning('Joint %s has no present temperature' % jointName)
+                return 0.0
+        else:
+            logging.warning('No joint "%s" found' % jointName)
+            return 0.0
+
+    def getCurrent(self, jointName):
+        """
+        Returns the current current of a motor
+
+        :param jointName: Name of the joint
+        :type jointName: str
+        :return: Current of the joint
+        :rtype: float
+        """
+        if hasattr(self._highNicoRobot, jointName):
+            motor = getattr(self._highNicoRobot, jointName)
+            if hasattr(motor, 'present_current'):
+                return motor.present_current
+            else:
+                logging.warning('Joint %s has no present current' % jointName)
+                return 0.0
+        else:
+            logging.warning('No joint "%s" found' % jointName)
+            return 0.0
+
+    def setMaximumSpeed(self, maximumSpeed):
+        """
+        Sets the maximum allowed speed (in fraction of maximum possible speed). When giving a higher speed to any other
+        functions the movement won't go over the value set here
+
+        :param maximumSpeed: Maximum allowed speed (0 <= maximumSpeed <= 1.0)
+        """
+        if not 0.0 <= maximumSpeed <= 1.0:
+            logging.warning('New maximum speed out of bounds (%d)' % maximumSpeed)
+            return
+        self._maximumSpeed = maximumSpeed
+
+    def setStifftness(self, jointName, stifftness):
+        """
+        Sets the stifftness (0 <= stifftness <= 1) for a single motor
+
+        :param jointName: Name of the joint
+        :type jointName: str
+        :param stifftness: Target stifftness
+        :type stifftness: float
+        """
+        if not 0.0 <= stifftness <= 1.0:
+            logging.warning('New stifftness out of bounds (%d)' % maximumSpeed)
+            return
+
+        if hasattr(self._highNicoRobot, jointName):
+            motor = getattr(self._highNicoRobot, jointName)
+            if hasattr(motor, 'torque_limit'):
+                motor.torque_limit = 100.0 * stifftness
+            else:
+                logging.warning('Joint %s has no torque limit' % jointName)
+        else:
+            logging.warning('No joint "%s" found' % jointName)
+            return
+
+    def getStifftness(self, jointName):
+        """
+        Returns the current stifftness of a motor
+
+        :param jointName: Name of the joint
+        :type jointName: str
+        :return: Stifftness of the joint
+        :rtype: float
+        """
+        if hasattr(self._highNicoRobot, jointName):
+            motor = getattr(self._highNicoRobot, jointName)
+            if hasattr(motor, 'torque_limit'):
+                return motor.torque_limit / 100.0
+            else:
+                logging.warning('Joint %s has no torque limit' % jointName)
+                return 0.0
+        else:
+            logging.warning('No joint "%s" found' % jointName)
+            return 0.0
+
+    def setPID(self, jointName, p, i, d):
+        """
+        Sets the PID controller for a single motor. For more information see
+        http://support.robotis.com/en/product/dynamixel/mx_series/mx-64.htm#Actuator_Address_1A
+
+        :param jointName: Name of the joint
+        :type jointName: str
+        :param p: Proportional band
+        :type p: float
+        :param i: Integral action
+        :type i: float
+        :param d: Derivative action
+        :type d: float
+        """
+        if hasattr(self._highNicoRobot, jointName):
+            motor = getattr(self._highNicoRobot, jointName)
+            if hasattr(motor, 'pid'):
+                motor.pid = (p, i, d)
+            else:
+                logging.warning('Joint %s has no pid' % jointName)
+        else:
+            logging.warning('No joint "%s" found' % jointName)
+            return
+
+    def getPID(self, jointName):
+        """
+        Returns the current stifftness of a motor. For more information see
+        http://support.robotis.com/en/product/dynamixel/mx_series/mx-64.htm#Actuator_Address_1A
+
+        :param jointName: Name of the joint
+        :type jointName: str
+        :return: Tupel: p,i,d
+        :rtype: tuple
+        """
+        if hasattr(self._highNicoRobot, jointName):
+            motor = getattr(self._highNicoRobot, jointName)
+            if hasattr(motor, 'pid'):
+                return motor.pid
+            else:
+                logging.warning('Joint %s has no pid' % jointName)
+                return (0.0, 0.0, 0.0)
+        else:
+            logging.warning('No joint "%s" found' % jointName)
+            return (0.0, 0.0, 0.0)
 
     def cleanup(self):
         """
