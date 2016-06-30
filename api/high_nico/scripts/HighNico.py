@@ -367,6 +367,51 @@ class HighNico:
             logging.warning('No joint "%s" found' % jointName)
             return 0.0
 
+    def setPID(self, jointName, p, i, d):
+        """
+        Sets the PID controller for a single motor. For more information see
+        http://support.robotis.com/en/product/dynamixel/mx_series/mx-64.htm#Actuator_Address_1A
+
+        :param jointName: Name of the joint
+        :type jointName: str
+        :param p: Proportional band
+        :type p: float
+        :param i: Integral action
+        :type i: float
+        :param d: Derivative action
+        :type d: float
+        """
+        if hasattr(self._highNicoRobot, jointName):
+            motor = getattr(self._highNicoRobot, jointName)
+            if hasattr(motor, 'pid'):
+                motor.pid = (p, i, d)
+            else:
+                logging.warning('Joint %s has no pid' % jointName)
+        else:
+            logging.warning('No joint "%s" found' % jointName)
+            return
+
+    def getPID(self, jointName):
+        """
+        Returns the current stifftness of a motor. For more information see
+        http://support.robotis.com/en/product/dynamixel/mx_series/mx-64.htm#Actuator_Address_1A
+
+        :param jointName: Name of the joint
+        :type jointName: str
+        :return: Tupel: p,i,d
+        :rtype: tuple
+        """
+        if hasattr(self._highNicoRobot, jointName):
+            motor = getattr(self._highNicoRobot, jointName)
+            if hasattr(motor, 'pid'):
+                return motor.pid
+            else:
+                logging.warning('Joint %s has no pid' % jointName)
+                return (0.0, 0.0, 0.0)
+        else:
+            logging.warning('No joint "%s" found' % jointName)
+            return (0.0, 0.0, 0.0)
+
     def cleanup(self):
         """
         Cleans up the current connection to the robot. After this you can no longer control the robot

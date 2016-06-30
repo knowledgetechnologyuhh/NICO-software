@@ -53,6 +53,7 @@ add_message_files(
    s.msg
    sf.msg
    sff.msg
+   sfff.msg
    si.msg
  )
 
@@ -60,6 +61,7 @@ add_message_files(
 add_service_files(
    FILES
    get_names.srv
+   get_pid.srv
    get_value.srv
 )
 

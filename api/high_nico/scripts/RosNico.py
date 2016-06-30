@@ -78,6 +78,7 @@ class RosNico():
         rospy.Subscriber('%s/changeAngle' % config['rostopicName'], high_nico.msg.sff, self._ROSPY_changeAngle)
         rospy.Subscriber('%s/setMaximumSpeed' % config['rostopicName'], high_nico.msg.f, self._ROSPY_setMaximumSpeed)
         rospy.Subscriber('%s/setStifftness' % config['rostopicName'], high_nico.msg.sf, self._ROSPY_setStifftness)
+        rospy.Subscriber('%s/setPID' % config['rostopicName'], high_nico.msg.sfff, self._ROSPY_setPID)
 
         # setup services
         logging.debug('Init services')
@@ -90,6 +91,7 @@ class RosNico():
         rospy.Service('%s/getTemperature' % config['rostopicName'], high_nico.srv.get_value, self._ROSPY_getTemperature)
         rospy.Service('%s/getCurrent' % config['rostopicName'], high_nico.srv.get_value, self._ROSPY_getCurrent)
         rospy.Service('%s/getStifftness' % config['rostopicName'], high_nico.srv.get_value, self._ROSPY_getStifftness)
+        rospy.Service('%s/getPID' % config['rostopicName'], high_nico.srv.get_pid, self._ROSPY_getPID)
 
         # wait for messages
         logging.info('-- All done --')
@@ -282,6 +284,26 @@ class RosNico():
         :rtype: float
         """
         return self.robot.getStifftness(message.param1)
+
+    def _ROSPY_setPID(self, message):
+        """
+        Callback handle for :meth:`HighNico.HighNico.setPID`
+
+        :param message: ROS message
+        :type message: high_nico.msg.sfff
+        """
+        self.robot.setPID(message.param1, message.param2, message.param3, message.param4)
+
+    def _ROSPY_getPID(self, message):
+        """
+        Callback handle for :meth:`HighNico.HighNico.getPID`
+
+        :param message: ROS message
+        :type message: high_nico.srv.get_pid
+        :return: Tuple: (p, i, d)
+        :rtype: tuple
+        """
+        return self.robot.getPID(message.param1)
 
     def __del__(self):
         self.robot.cleanup()

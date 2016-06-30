@@ -53,6 +53,12 @@ The following ROS topics are exposed by RosNico - where $PREFIX stands for the p
 | $PREFIX/setMaximumSpeed                        | high_nico/f                                    | Sets the maximum allowed speed (in fraction of maximum possible speed). Parameters:   |
 |                                                |                                                |  1. Maximum speed                                                                     |
 +------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
+| $PREFIX/setPID                                 | high_nico/sfff                                 | Sets the PID control of a single joint. Parameters:                                   |
+|                                                |                                                |  1. Name of joint                                                                     |
+|                                                |                                                |  2. *p* (proportional band)                                                           |
+|                                                |                                                |  3. *i* (integral action)                                                             |
+|                                                |                                                |  4. *d* (derivative action)                                                           |
++------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
 | $PREFIX/setStifftness                          | high_nico/sf                                   | Sets the stifftness of a single joint. Parameters:                                    |
 |                                                |                                                |  1. Name of joint                                                                     |
 |                                                |                                                |  2. stifftness                                                                        |
@@ -75,6 +81,8 @@ The following ROS services are exposed by RosNico - where $PREFIX stands for the
 | $PREFIX/getCurrent                             | high_nico/get_value                            | Returns the present currency of a single joint                             |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
 | $PREFIX/getJointNames                          | high_nico/get_names                            | Returns a list with the names of all joints                                |
++------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
+| $PREFIX/getPID                                 | high_nico/get_pid                              | Returns the PID control of a single joint                                  |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
 | $PREFIX/getSensorNames                         | high_nico/get_names                            | Returns a list with the names of all sensors                               |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
