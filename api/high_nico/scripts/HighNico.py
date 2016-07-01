@@ -29,6 +29,7 @@ class HighNico:
         """
         self._highNicoRobot = None
         self._maximumSpeed = 1.0
+        self._vrep = vrep
 
         with open(motorConfig, 'r') as config_file:
             config = json.load(config_file)
@@ -51,7 +52,10 @@ class HighNico:
         :param percentage: Percentage hand should open. 0.0 < percentage <= 1.0
         :type percentage: float
         """
-        _internal.hand.closeHand(self._highNicoRobot, handName, min(fractionMaxSpeed, self._maximumSpeed), percentage)
+        if self._vrep:
+            _internal.hand.openHandVREP(self._highNicoRobot, handName, min(fractionMaxSpeed, self._maximumSpeed), percentage)
+        else:
+            _internal.hand.openHand(self._highNicoRobot, handName, min(fractionMaxSpeed, self._maximumSpeed), percentage)
 
     def closeHand(self, handName, fractionMaxSpeed=1.0, percentage=1.0):
         """
@@ -64,7 +68,10 @@ class HighNico:
         :param percentage: Percentage hand should open. 0.0 < percentage <= 1.0
         :type percentage: float
         """
-        _internal.hand.openHand(self._highNicoRobot, handName, min(fractionMaxSpeed, self._maximumSpeed), percentage)
+        if self._vrep:
+            _internal.hand.closeHandVREP(self._highNicoRobot, handName, min(fractionMaxSpeed, self._maximumSpeed), percentage)
+        else:
+            _internal.hand.closeHand(self._highNicoRobot, handName, min(fractionMaxSpeed, self._maximumSpeed), percentage)
 
     def enableForceControl(self, goalForce = 500):
         """
