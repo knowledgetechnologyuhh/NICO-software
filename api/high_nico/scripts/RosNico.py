@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from HighNico import HighNico
+from Motion import Motion
 import logging
 import argparse
 import sys
@@ -41,9 +41,9 @@ class RosNico():
         if config is None:
             config = RosNico.getConfig()
 
-        # init highNICO
+        # init Motion
         logging.info('-- Init rosNICO --')
-        self.robot = HighNico(motorConfig=config['robotMotorFile'], vrep=config['vrep'], vrepHost=config['vrepHost'], vrepPort=config['vrepPort'], vrepScene=config['vrepScene'])
+        self.robot = Motion(motorConfig=config['robotMotorFile'], vrep=config['vrep'], vrepHost=config['vrepHost'], vrepPort=config['vrepPort'], vrepScene=config['vrepScene'])
 
         # init ROS
         logging.debug('Init ROS')
@@ -67,7 +67,6 @@ class RosNico():
         logging.debug('Init services')
         rospy.Service('%s/getAngle' % config['rostopicName'], high_nico.srv.get_value, self._ROSPY_getAngle)
         rospy.Service('%s/getJointNames' % config['rostopicName'], high_nico.srv.get_names, self._ROSPY_getJointNames)
-        rospy.Service('%s/getSensorNames' % config['rostopicName'], high_nico.srv.get_names, self._ROSPY_getSensorNames)
         rospy.Service('%s/getAngleUpperLimit' % config['rostopicName'], high_nico.srv.get_value, self._ROSPY_getAngleUpperLimit)
         rospy.Service('%s/getAngleLowerLimit' % config['rostopicName'], high_nico.srv.get_value, self._ROSPY_getAngleLowerLimit)
         rospy.Service('%s/getTorqueLimit' % config['rostopicName'], high_nico.srv.get_value, self._ROSPY_getTorqueLimit)
@@ -81,7 +80,7 @@ class RosNico():
 
     def _ROSPY_openHand(self, message):
         """
-        Callback handle for :meth:`HighNico.HighNico.openHand`
+        Callback handle for :meth:`HighNico.Motion.openHand`
 
         :param message: ROS message
         :type message: high_nico.msg.s
@@ -90,7 +89,7 @@ class RosNico():
 
     def _ROSPY_closeHand(self, message):
         """
-        Callback handle for :meth:`HighNico.HighNico.closeHand`
+        Callback handle for :meth:`HighNico.Motion.closeHand`
 
         :param message: ROS message
         :type message: high_nico.msg.s
@@ -99,7 +98,7 @@ class RosNico():
 
     def _ROSPY_enableForceControl(self, message):
         """
-        Callback handle for :meth:`HighNico.HighNico.enableForceControl`
+        Callback handle for :meth:`HighNico.Motion.enableForceControl`
 
         :param message: ROS message
         :type message: high_nico.msg.i
@@ -108,7 +107,7 @@ class RosNico():
 
     def _ROSPY_disableForceControl(self, message):
         """
-        Callback handle for :meth:`HighNico.HighNico.disableForceControl`
+        Callback handle for :meth:`HighNico.Motion.disableForceControl`
 
         :param message: ROS message
         :type message: high_nico.msg.empty
@@ -117,7 +116,7 @@ class RosNico():
 
     def _ROSPY_enableForceControlSingleJoint(self, message):
         """
-        Callback handle for :meth:`HighNico.HighNico.enableForceControlSingleJoint`
+        Callback handle for :meth:`HighNico.Motion.enableForceControlSingleJoint`
 
         :param message: ROS message
         :type message: high_nico.msg.si
@@ -126,7 +125,7 @@ class RosNico():
 
     def _ROSPY_disableForceControlSingleJoint(self, message):
         """
-        Callback handle for :meth:`HighNico.HighNico.disableForceControlSingleJoint`
+        Callback handle for :meth:`HighNico.Motion.disableForceControlSingleJoint`
 
         :param message: ROS message
         :type message: high_nico.msg.s
@@ -135,7 +134,7 @@ class RosNico():
 
     def _ROSPY_setAngle(self, message):
         """
-        Callback handle for :meth:`HighNico.HighNico.setAngles`
+        Callback handle for :meth:`HighNico.Motion.setAngles`
 
         :param message: ROS message
         :type message: high_nico.msg.sff
@@ -144,7 +143,7 @@ class RosNico():
 
     def _ROSPY_changeAngle(self, message):
         """
-        Callback handle for :meth:`HighNico.HighNico.changeAngles`
+        Callback handle for :meth:`HighNico.Motion.changeAngles`
 
         :param message: ROS message
         :type message: high_nico.msg.sff
@@ -153,7 +152,7 @@ class RosNico():
 
     def _ROSPY_getAngle(self, message):
         """
-        Callback handle for :meth:`HighNico.HighNico.getAngle`
+        Callback handle for :meth:`HighNico.Motion.getAngle`
 
         :param message: ROS message
         :type message: high_nico.srv.get_value
@@ -164,7 +163,7 @@ class RosNico():
 
     def _ROSPY_getJointNames(self, message):
         """
-        Callback handle for :meth:`HighNico.HighNico.getJointNames`
+        Callback handle for :meth:`HighNico.Motion.getJointNames`
 
         :param message: ROS message
         :type message: high_nico.srv.get_names
@@ -173,20 +172,9 @@ class RosNico():
         """
         return [self.robot.getJointNames()]
 
-    def _ROSPY_getSensorNames(self, message):
-        """
-        Callback handle for :meth:`HighNico.HighNico.getSensorNames`
-
-        :param message: ROS message
-        :type message: high_nico.srv.get_names
-        :return: List of sensor names
-        :rtype: list
-        """
-        return [self.robot.getSensorNames()]
-
     def _ROSPY_getAngleUpperLimit(self, message):
         """
-        Callback handle for :meth:`HighNico.HighNico.getAngleUpperLimit`
+        Callback handle for :meth:`HighNico.Motion.getAngleUpperLimit`
 
         :param message: ROS message
         :type message: high_nico.srv.get_value
@@ -197,7 +185,7 @@ class RosNico():
 
     def _ROSPY_getAngleLowerLimit(self, message):
         """
-        Callback handle for :meth:`HighNico.HighNico.getAngleLowerLimit`
+        Callback handle for :meth:`HighNico.Motion.getAngleLowerLimit`
 
         :param message: ROS message
         :type message: high_nico.srv.get_value
@@ -208,7 +196,7 @@ class RosNico():
 
     def _ROSPY_getTorqueLimit(self, message):
         """
-        Callback handle for :meth:`HighNico.HighNico.getTorqueLimit`
+        Callback handle for :meth:`HighNico.Motion.getTorqueLimit`
 
         :param message: ROS message
         :type message: high_nico.srv.get_value
@@ -219,7 +207,7 @@ class RosNico():
 
     def _ROSPY_getTemperature(self, message):
         """
-        Callback handle for :meth:`HighNico.HighNico.getTemperature`
+        Callback handle for :meth:`HighNico.Motion.getTemperature`
 
         :param message: ROS message
         :type message: high_nico.srv.get_value
@@ -230,7 +218,7 @@ class RosNico():
 
     def _ROSPY_getCurrent(self, message):
         """
-        Callback handle for :meth:`HighNico.HighNico.getCurrent`
+        Callback handle for :meth:`HighNico.Motion.getCurrent`
 
         :param message: ROS message
         :type message: high_nico.srv.get_value
@@ -241,7 +229,7 @@ class RosNico():
 
     def _ROSPY_setMaximumSpeed(self, message):
         """
-        Callback handle for :meth:`HighNico.HighNico.setMaximumSpeed`
+        Callback handle for :meth:`HighNico.Motion.setMaximumSpeed`
 
         :param message: ROS message
         :type message: high_nico.msg.f
@@ -250,7 +238,7 @@ class RosNico():
 
     def _ROSPY_setStifftness(self, message):
         """
-        Callback handle for :meth:`HighNico.HighNico.setStifftness`
+        Callback handle for :meth:`HighNico.Motion.setStifftness`
 
         :param message: ROS message
         :type message: high_nico.msg.sf
@@ -259,7 +247,7 @@ class RosNico():
 
     def _ROSPY_getStifftness(self, message):
         """
-        Callback handle for :meth:`HighNico.HighNico.getStifftness`
+        Callback handle for :meth:`HighNico.Motion.getStifftness`
 
         :param message: ROS message
         :type message: high_nico.srv.get_value
@@ -270,7 +258,7 @@ class RosNico():
 
     def _ROSPY_setPID(self, message):
         """
-        Callback handle for :meth:`HighNico.HighNico.setPID`
+        Callback handle for :meth:`HighNico.Motion.setPID`
 
         :param message: ROS message
         :type message: high_nico.msg.sfff
@@ -279,7 +267,7 @@ class RosNico():
 
     def _ROSPY_getPID(self, message):
         """
-        Callback handle for :meth:`HighNico.HighNico.getPID`
+        Callback handle for :meth:`HighNico.Motion.getPID`
 
         :param message: ROS message
         :type message: high_nico.srv.get_pid

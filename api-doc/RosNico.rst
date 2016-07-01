@@ -1,7 +1,7 @@
 RosNico
 *******
 
-The RosNico class allows control over the NICO robot by communicating through ros.
+The RosNico class allows control over the NICO robot by communicating through ROS.
 
 To start the interface run:
 
