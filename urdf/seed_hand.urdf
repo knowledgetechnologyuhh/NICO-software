@@ -3,7 +3,7 @@
 	<link name="right_wrist:11">
 		<visual>
 			<geometry>
-				<mesh filename="package://sandbox//urdf/hand_test/right_wrist_iam_81504746.STL" scale="0.001 0.001 0.001"/>
+				<mesh filename="package://NICO-models/right_wrist_iam_81504746.STL" scale="0.001 0.001 0.001"/>
 			</geometry>
 			<origin rpy="0 0 0" xyz="-0.010971 -0.017043 0.01141"/>
 			<material name="right_wrist:11_color">
@@ -12,7 +12,7 @@
 		</visual>
 		<collision>
 			<geometry>
-				<mesh filename="package://sandbox//urdf/hand_test/right_wrist_iam_81504746.STL" scale="0.001 0.001 0.001"/>
+				<mesh filename="package://NICO-models/right_wrist_iam_81504746.STL" scale="0.001 0.001 0.001"/>
 			</geometry>
 			<origin rpy="0 0 0" xyz="-0.010971 -0.017043 0.01141"/>
 		</collision>
@@ -25,7 +25,7 @@
 	<link name="right_palm:11">
 		<visual>
 			<geometry>
-				<mesh filename="package://sandbox//urdf/hand_test/right_palm_iam_583b22df.STL" scale="0.001 0.001 0.001"/>
+				<mesh filename="package://NICO-models/right_palm_iam_583b22df.STL" scale="0.001 0.001 0.001"/>
 			</geometry>
 			<origin rpy="0 0 0" xyz="-0.022933 0.001905 -0.017234"/>
 			<material name="right_palm:11_color">
@@ -34,7 +34,7 @@
 		</visual>
 		<collision>
 			<geometry>
-				<mesh filename="package://sandbox//urdf/hand_test/right_palm_iam_583b22df.STL" scale="0.001 0.001 0.001"/>
+				<mesh filename="package://NICO-models/right_palm_iam_583b22df.STL" scale="0.001 0.001 0.001"/>
 			</geometry>
 			<origin rpy="0 0 0" xyz="-0.022933 0.001905 -0.017234"/>
 		</collision>
@@ -54,7 +54,7 @@
 	<link name="finger_segment:22">
 		<visual>
 			<geometry>
-				<mesh filename="package://sandbox//urdf/hand_test/finger_segment_ipt_50d2a7f4.STL" scale="0.001 0.001 0.001"/>
+				<mesh filename="package://NICO-models/finger_segment_ipt_50d2a7f4.STL" scale="0.001 0.001 0.001"/>
 			</geometry>
 			<origin rpy="0 0 0" xyz="-0.006681 -0.015507 -0.007416"/>
 			<material name="finger_segment:22_color">
@@ -63,7 +63,7 @@
 		</visual>
 		<collision>
 			<geometry>
-				<mesh filename="package://sandbox//urdf/hand_test/finger_segment_ipt_50d2a7f4.STL" scale="0.001 0.001 0.001"/>
+				<mesh filename="package://NICO-models/finger_segment_ipt_50d2a7f4.STL" scale="0.001 0.001 0.001"/>
 			</geometry>
 			<origin rpy="0 0 0" xyz="-0.006681 -0.015507 -0.007416"/>
 		</collision>
@@ -77,13 +77,13 @@
 		<parent link="right_palm:11"/>
 		<child link="finger_segment:22"/>
 		<origin rpy="-0.569851 -0.062904 -3.141593" xyz="-0.035879 0.006226 -0.040569"/>
-		<axis xyz="-0.998022 0.00962907 0.0621208"/>
-		<limit effort="30" lower="0" upper="1.309" velocity="1"/>
+		<axis xyz="0.998022 -0.00962907 -0.0621208"/>
+		<limit effort="30" lower="-1.309" upper="0" velocity="1"/>
 	</joint>
 	<link name="finger_segment:12">
 		<visual>
 			<geometry>
-				<mesh filename="package://sandbox//urdf/hand_test/finger_segment_ipt_50d2a7f4.STL" scale="0.001 0.001 0.001"/>
+				<mesh filename="package://NICO-models/finger_segment_ipt_50d2a7f4.STL" scale="0.001 0.001 0.001"/>
 			</geometry>
 			<origin rpy="0 0 0" xyz="-0.006181 -0.015507 -0.007416"/>
 			<material name="finger_segment:12_color">
@@ -92,7 +92,7 @@
 		</visual>
 		<collision>
 			<geometry>
-				<mesh filename="package://sandbox//urdf/hand_test/finger_segment_ipt_50d2a7f4.STL" scale="0.001 0.001 0.001"/>
+				<mesh filename="package://NICO-models/finger_segment_ipt_50d2a7f4.STL" scale="0.001 0.001 0.001"/>
 			</geometry>
 			<origin rpy="0 0 0" xyz="-0.006181 -0.015507 -0.007416"/>
 		</collision>
@@ -106,13 +106,13 @@
 		<parent link="finger_segment:22"/>
 		<child link="finger_segment:12"/>
 		<origin rpy="-0.095245 0 0" xyz="-0.0005 0 -0.016"/>
-		<axis xyz="-0.998022 0.00962907 0.0621208"/>
-		<limit effort="30" lower="0" upper="1.309" velocity="1"/>
+		<axis xyz="0.998022 -0.00962907 -0.0621208"/>
+		<limit effort="30" lower="-1.309" upper="0" velocity="1"/>
 	</joint>
 	<link name="fingertip:12">
 		<visual>
 			<geometry>
-				<mesh filename="package://sandbox//urdf/hand_test/fingertip_ipt_8417b8a9.STL" scale="0.001 0.001 0.001"/>
+				<mesh filename="package://NICO-models/fingertip_ipt_8417b8a9.STL" scale="0.001 0.001 0.001"/>
 			</geometry>
 			<origin rpy="0 0 0" xyz="0.005514 0.000374 -0.010171"/>
 			<material name="fingertip:12_color">
@@ -121,7 +121,7 @@
 		</visual>
 		<collision>
 			<geometry>
-				<mesh filename="package://sandbox//urdf/hand_test/fingertip_ipt_8417b8a9.STL" scale="0.001 0.001 0.001"/>
+				<mesh filename="package://NICO-models/fingertip_ipt_8417b8a9.STL" scale="0.001 0.001 0.001"/>
 			</geometry>
 			<origin rpy="0 0 0" xyz="0.005514 0.000374 -0.010171"/>
 		</collision>
@@ -135,13 +135,13 @@
 		<parent link="finger_segment:12"/>
 		<child link="fingertip:12"/>
 		<origin rpy="-0.109614 0 0" xyz="0 0 -0.016"/>
-		<axis xyz="-0.998022 0.00962907 0.0621208"/>
-		<limit effort="30" lower="0" upper="1.309" velocity="1"/>
+		<axis xyz="0.998022 -0.00962907 -0.0621208"/>
+		<limit effort="30" lower="-1.309" upper="0" velocity="1"/>
 	</joint>
 	<link name="finger_segment:21">
 		<visual>
 			<geometry>
-				<mesh filename="package://sandbox//urdf/hand_test/finger_segment_ipt_50d2a7f4.STL" scale="0.001 0.001 0.001"/>
+				<mesh filename="package://NICO-models/finger_segment_ipt_50d2a7f4.STL" scale="0.001 0.001 0.001"/>
 			</geometry>
 			<origin rpy="0 0 0" xyz="-0.006681 -0.015507 -0.007416"/>
 			<material name="finger_segment:21_color">
@@ -150,7 +150,7 @@
 		</visual>
 		<collision>
 			<geometry>
-				<mesh filename="package://sandbox//urdf/hand_test/finger_segment_ipt_50d2a7f4.STL" scale="0.001 0.001 0.001"/>
+				<mesh filename="package://NICO-models/finger_segment_ipt_50d2a7f4.STL" scale="0.001 0.001 0.001"/>
 			</geometry>
 			<origin rpy="0 0 0" xyz="-0.006681 -0.015507 -0.007416"/>
 		</collision>
@@ -164,13 +164,13 @@
 		<parent link="right_palm:11"/>
 		<child link="finger_segment:21"/>
 		<origin rpy="1.915504 0 0" xyz="-0.0275 0.0199 -0.00842"/>
-		<axis xyz="-1 0 0"/>
-		<limit effort="30" lower="0" upper="1.309" velocity="1"/>
+		<axis xyz="1 0 0"/>
+		<limit effort="30" lower="-1.309" upper="0" velocity="1"/>
 	</joint>
 	<link name="finger_segment:11">
 		<visual>
 			<geometry>
-				<mesh filename="package://sandbox//urdf/hand_test/finger_segment_ipt_50d2a7f4.STL" scale="0.001 0.001 0.001"/>
+				<mesh filename="package://NICO-models/finger_segment_ipt_50d2a7f4.STL" scale="0.001 0.001 0.001"/>
 			</geometry>
 			<origin rpy="0 0 0" xyz="-0.006181 -0.015507 -0.007416"/>
 			<material name="finger_segment:11_color">
@@ -179,7 +179,7 @@
 		</visual>
 		<collision>
 			<geometry>
-				<mesh filename="package://sandbox//urdf/hand_test/finger_segment_ipt_50d2a7f4.STL" scale="0.001 0.001 0.001"/>
+				<mesh filename="package://NICO-models/finger_segment_ipt_50d2a7f4.STL" scale="0.001 0.001 0.001"/>
 			</geometry>
 			<origin rpy="0 0 0" xyz="-0.006181 -0.015507 -0.007416"/>
 		</collision>
@@ -193,13 +193,13 @@
 		<parent link="finger_segment:21"/>
 		<child link="finger_segment:11"/>
 		<origin rpy="-0.095246 0 0" xyz="-0.0005 0 -0.016"/>
-		<axis xyz="-1 0 0"/>
-		<limit effort="30" lower="0" upper="1.309" velocity="1"/>
+		<axis xyz="1 0 0"/>
+		<limit effort="30" lower="-1.309" upper="0" velocity="1"/>
 	</joint>
 	<link name="fingertip:11">
 		<visual>
 			<geometry>
-				<mesh filename="package://sandbox//urdf/hand_test/fingertip_ipt_8417b8a9.STL" scale="0.001 0.001 0.001"/>
+				<mesh filename="package://NICO-models/fingertip_ipt_8417b8a9.STL" scale="0.001 0.001 0.001"/>
 			</geometry>
 			<origin rpy="0 0 0" xyz="0.005514 0.000374 -0.010171"/>
 			<material name="fingertip:11_color">
@@ -208,7 +208,7 @@
 		</visual>
 		<collision>
 			<geometry>
-				<mesh filename="package://sandbox//urdf/hand_test/fingertip_ipt_8417b8a9.STL" scale="0.001 0.001 0.001"/>
+				<mesh filename="package://NICO-models/fingertip_ipt_8417b8a9.STL" scale="0.001 0.001 0.001"/>
 			</geometry>
 			<origin rpy="0 0 0" xyz="0.005514 0.000374 -0.010171"/>
 		</collision>
@@ -222,13 +222,13 @@
 		<parent link="finger_segment:11"/>
 		<child link="fingertip:11"/>
 		<origin rpy="-0.109614 0 0" xyz="0 0 -0.016"/>
-		<axis xyz="-1 0 0"/>
-		<limit effort="30" lower="0" upper="1.309" velocity="1"/>
+		<axis xyz="1 0 0"/>
+		<limit effort="30" lower="-1.309" upper="0" velocity="1"/>
 	</joint>
 	<link name="finger_segment:23">
 		<visual>
 			<geometry>
-				<mesh filename="package://sandbox//urdf/hand_test/finger_segment_ipt_50d2a7f4.STL" scale="0.001 0.001 0.001"/>
+				<mesh filename="package://NICO-models/finger_segment_ipt_50d2a7f4.STL" scale="0.001 0.001 0.001"/>
 			</geometry>
 			<origin rpy="0 0 0" xyz="-0.006681 -0.015507 -0.007416"/>
 			<material name="finger_segment:23_color">
@@ -237,7 +237,7 @@
 		</visual>
 		<collision>
 			<geometry>
-				<mesh filename="package://sandbox//urdf/hand_test/finger_segment_ipt_50d2a7f4.STL" scale="0.001 0.001 0.001"/>
+				<mesh filename="package://NICO-models/finger_segment_ipt_50d2a7f4.STL" scale="0.001 0.001 0.001"/>
 			</geometry>
 			<origin rpy="0 0 0" xyz="-0.006681 -0.015507 -0.007416"/>
 		</collision>
@@ -251,13 +251,13 @@
 		<parent link="right_palm:11"/>
 		<child link="finger_segment:23"/>
 		<origin rpy="-0.578103 0.062904 -3.141593" xyz="-0.001139 0.006226 -0.040003"/>
-		<axis xyz="-0.998022 -0.00962907 -0.0621208"/>
-		<limit effort="30" lower="0" upper="1.309" velocity="1"/>
+		<axis xyz="0.998022 0.00962907 0.0621208"/>
+		<limit effort="30" lower="-1.309" upper="0" velocity="1"/>
 	</joint>
 	<link name="finger_segment:13">
 		<visual>
 			<geometry>
-				<mesh filename="package://sandbox//urdf/hand_test/finger_segment_ipt_50d2a7f4.STL" scale="0.001 0.001 0.001"/>
+				<mesh filename="package://NICO-models/finger_segment_ipt_50d2a7f4.STL" scale="0.001 0.001 0.001"/>
 			</geometry>
 			<origin rpy="0 0 0" xyz="-0.006181 -0.015507 -0.007416"/>
 			<material name="finger_segment:13_color">
@@ -266,7 +266,7 @@
 		</visual>
 		<collision>
 			<geometry>
-				<mesh filename="package://sandbox//urdf/hand_test/finger_segment_ipt_50d2a7f4.STL" scale="0.001 0.001 0.001"/>
+				<mesh filename="package://NICO-models/finger_segment_ipt_50d2a7f4.STL" scale="0.001 0.001 0.001"/>
 			</geometry>
 			<origin rpy="0 0 0" xyz="-0.006181 -0.015507 -0.007416"/>
 		</collision>
@@ -280,13 +280,13 @@
 		<parent link="finger_segment:23"/>
 		<child link="finger_segment:13"/>
 		<origin rpy="-0.095246 0 0" xyz="-0.0005 0 -0.016"/>
-		<axis xyz="-0.998022 -0.00962907 -0.0621208"/>
-		<limit effort="30" lower="0" upper="1.309" velocity="1"/>
+		<axis xyz="0.998022 0.00962907 0.0621208"/>
+		<limit effort="30" lower="-1.309" upper="0" velocity="1"/>
 	</joint>
 	<link name="fingertip:13">
 		<visual>
 			<geometry>
-				<mesh filename="package://sandbox//urdf/hand_test/fingertip_ipt_8417b8a9.STL" scale="0.001 0.001 0.001"/>
+				<mesh filename="package://NICO-models/fingertip_ipt_8417b8a9.STL" scale="0.001 0.001 0.001"/>
 			</geometry>
 			<origin rpy="0 0 0" xyz="0.005514 0.000374 -0.010171"/>
 			<material name="fingertip:13_color">
@@ -295,7 +295,7 @@
 		</visual>
 		<collision>
 			<geometry>
-				<mesh filename="package://sandbox//urdf/hand_test/fingertip_ipt_8417b8a9.STL" scale="0.001 0.001 0.001"/>
+				<mesh filename="package://NICO-models/fingertip_ipt_8417b8a9.STL" scale="0.001 0.001 0.001"/>
 			</geometry>
 			<origin rpy="0 0 0" xyz="0.005514 0.000374 -0.010171"/>
 		</collision>
@@ -309,8 +309,8 @@
 		<parent link="finger_segment:13"/>
 		<child link="fingertip:13"/>
 		<origin rpy="-0.109614 0 0" xyz="0 0 -0.016"/>
-		<axis xyz="-0.998022 -0.00962907 -0.0621208"/>
-		<limit effort="30" lower="0" upper="1.309" velocity="1"/>
+		<axis xyz="0.998022 0.00962907 0.0621208"/>
+		<limit effort="30" lower="-1.309" upper="0" velocity="1"/>
 	</joint>
 </robot>
 
