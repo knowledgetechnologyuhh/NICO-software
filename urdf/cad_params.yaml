@@ -15,13 +15,13 @@ redefinedjoints:
    69: {name: l_wrist_z, axis: "0 0 1", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.5708, upper: 1.5708}}
    67: {name: l_palm_x, axis: "1 0 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -0.872665, upper: 0}}
 
-   29: {name: l_indexfinger_base_x, axis: "0.99794 -0.0170003 0.0618655", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
-   25: {name: l_indexfinger_1st_x, axis: "0.99794 -0.0170003 0.0618655", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
-   27: {name: l_indexfinger_2nd_x, axis: "0.99794 -0.0170003 0.0618655", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
+   29: {name: l_indexfinger_base_x, axis: "0.99794 -0.0170003 -0.0618655", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
+   25: {name: l_indexfinger_1st_x, axis: "0.99794 -0.0170003 -0.0618655", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
+   27: {name: l_indexfinger_2nd_x, axis: "0.99794 -0.0170003 -0.0618655", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
 
-   35: {name: l_ringfinger_base_x, axis: "0.998051 0.00234199 -0.0623629", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
-   31: {name: l_ringfinger_1st_x, axis: "0.998051 0.00234199 -0.0623629", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
-   33: {name: l_ringfinger_2nd_x, axis: "0.998051 0.00234199 -0.0623629", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
+   35: {name: l_ringfinger_base_x, axis: "0.998051 0.00234199 0.0623629", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
+   31: {name: l_ringfinger_1st_x, axis: "0.998051 0.00234199 0.0623629", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
+   33: {name: l_ringfinger_2nd_x, axis: "0.998051 0.00234199 0.0623629", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
 
    19: {name: l_thumb_base_x, axis: "1 0 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
    21: {name: l_thumb_1st_x, axis: "1 0 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}

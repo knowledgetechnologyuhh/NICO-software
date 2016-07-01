@@ -1063,7 +1063,7 @@
 		<parent link="left_palm:11"/>
 		<child link="finger_segment:26"/>
 		<origin rpy="2.499505 -0.062904 0" xyz="-0.036179 0.006226 0.04057"/>
-		<axis xyz="0.998051 0.00234199 -0.0623629"/>
+		<axis xyz="0.998051 0.00234199 0.0623629"/>
 		<limit effort="30" lower="-1.309" upper="0" velocity="1"/>
 	</joint>
 	<link name="finger_segment:16">
@@ -1092,7 +1092,7 @@
 		<parent link="finger_segment:26"/>
 		<child link="finger_segment:16"/>
 		<origin rpy="-0.095246 0 0" xyz="-0.00951 0 -0.016"/>
-		<axis xyz="0.998051 0.00234199 -0.0623629"/>
+		<axis xyz="0.998051 0.00234199 0.0623629"/>
 		<limit effort="30" lower="-1.309" upper="0" velocity="1"/>
 	</joint>
 	<link name="fingertip:16">
@@ -1121,7 +1121,7 @@
 		<parent link="finger_segment:16"/>
 		<child link="fingertip:16"/>
 		<origin rpy="-0.109613 0 0" xyz="-0 -0 -0.015999"/>
-		<axis xyz="0.998051 0.00234199 -0.0623629"/>
+		<axis xyz="0.998051 0.00234199 0.0623629"/>
 		<limit effort="30" lower="-1.309" upper="0" velocity="1"/>
 	</joint>
 	<link name="finger_segment:25">
@@ -1150,7 +1150,7 @@
 		<parent link="left_palm:11"/>
 		<child link="finger_segment:25"/>
 		<origin rpy="2.492946 0.062904 0" xyz="-0.001439 0.006226 0.040004"/>
-		<axis xyz="0.99794 -0.0170003 0.0618655"/>
+		<axis xyz="0.99794 -0.0170003 -0.0618655"/>
 		<limit effort="30" lower="-1.309" upper="0" velocity="1"/>
 	</joint>
 	<link name="finger_segment:15">
@@ -1179,7 +1179,7 @@
 		<parent link="finger_segment:25"/>
 		<child link="finger_segment:15"/>
 		<origin rpy="-0.095245 0 0" xyz="-0.00951 0 -0.016"/>
-		<axis xyz="0.99794 -0.0170003 0.0618655"/>
+		<axis xyz="0.99794 -0.0170003 -0.0618655"/>
 		<limit effort="30" lower="-1.309" upper="0" velocity="1"/>
 	</joint>
 	<link name="fingertip:15">
@@ -1208,7 +1208,7 @@
 		<parent link="finger_segment:15"/>
 		<child link="fingertip:15"/>
 		<origin rpy="-0.109614 0 0" xyz="0 -0 -0.016"/>
-		<axis xyz="0.99794 -0.0170003 0.0618655"/>
+		<axis xyz="0.99794 -0.0170003 -0.0618655"/>
 		<limit effort="30" lower="-1.309" upper="0" velocity="1"/>
 	</joint>
 	<link name="finger_segment:24">
