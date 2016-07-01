@@ -62,11 +62,9 @@
       "r_arm"
     ],
     "r_hand": [
-      "r_gripper_x",
       "r_wrist_z"
     ],
     "l_hand": [
-      "l_gripper_x",
       "l_wrist_z"
     ],
     "hands": [
@@ -297,16 +295,6 @@
       ],
       "orientation": "direct"
     },
-    "r_gripper_x": {
-      "offset": 0.0,
-      "type": "MX-28",
-      "id": 25,
-      "angle_limit": [
-        -35,
-        50
-      ],
-      "orientation": "indirect"
-    },
     "r_wrist_z": {
       "offset": 0.0,
       "type": "MX-28",
@@ -316,16 +304,6 @@
         179
       ],
       "orientation": "indirect"
-    },
-    "l_gripper_x": {
-      "offset": 0.0,
-      "type": "MX-28",
-      "id": 26,
-      "angle_limit": [
-        -50,
-        35
-      ],
-      "orientation": "direct"
     },
      "l_wrist_z": {
       "offset": 0.0,
