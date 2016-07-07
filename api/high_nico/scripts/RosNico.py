@@ -60,7 +60,7 @@ class RosNico():
         rospy.Subscriber('%s/setAngle' % config['rostopicName'], high_nico.msg.sff, self._ROSPY_setAngle)
         rospy.Subscriber('%s/changeAngle' % config['rostopicName'], high_nico.msg.sff, self._ROSPY_changeAngle)
         rospy.Subscriber('%s/setMaximumSpeed' % config['rostopicName'], high_nico.msg.f, self._ROSPY_setMaximumSpeed)
-        rospy.Subscriber('%s/setStifftness' % config['rostopicName'], high_nico.msg.sf, self._ROSPY_setStifftness)
+        rospy.Subscriber('%s/setStiffness' % config['rostopicName'], high_nico.msg.sf, self._ROSPY_setStiffness)
         rospy.Subscriber('%s/setPID' % config['rostopicName'], high_nico.msg.sfff, self._ROSPY_setPID)
 
         # setup services
@@ -72,7 +72,7 @@ class RosNico():
         rospy.Service('%s/getTorqueLimit' % config['rostopicName'], high_nico.srv.get_value, self._ROSPY_getTorqueLimit)
         rospy.Service('%s/getTemperature' % config['rostopicName'], high_nico.srv.get_value, self._ROSPY_getTemperature)
         rospy.Service('%s/getCurrent' % config['rostopicName'], high_nico.srv.get_value, self._ROSPY_getCurrent)
-        rospy.Service('%s/getStifftness' % config['rostopicName'], high_nico.srv.get_value, self._ROSPY_getStifftness)
+        rospy.Service('%s/getStiffness' % config['rostopicName'], high_nico.srv.get_value, self._ROSPY_getStiffness)
         rospy.Service('%s/getPID' % config['rostopicName'], high_nico.srv.get_pid, self._ROSPY_getPID)
 
         # wait for messages
@@ -236,25 +236,25 @@ class RosNico():
         """
         self.robot.setMaximumSpeed(message.param1)
 
-    def _ROSPY_setStifftness(self, message):
+    def _ROSPY_setStiffness(self, message):
         """
-        Callback handle for :meth:`HighNico.Motion.setStifftness`
+        Callback handle for :meth:`HighNico.Motion.setStiffness`
 
         :param message: ROS message
         :type message: high_nico.msg.sf
         """
-        self.robot.setStifftness(message.param1, message.param2)
+        self.robot.setStiffness(message.param1, message.param2)
 
-    def _ROSPY_getStifftness(self, message):
+    def _ROSPY_getStiffness(self, message):
         """
-        Callback handle for :meth:`HighNico.Motion.getStifftness`
+        Callback handle for :meth:`HighNico.Motion.getStiffness`
 
         :param message: ROS message
         :type message: high_nico.srv.get_value
-        :return: Stifftness of requested joint
+        :return: Stiffness of requested joint
         :rtype: float
         """
-        return self.robot.getStifftness(message.param1)
+        return self.robot.getStiffness(message.param1)
 
     def _ROSPY_setPID(self, message):
         """

@@ -314,36 +314,36 @@ class Motion:
             return
         self._maximumSpeed = maximumSpeed
 
-    def setStifftness(self, jointName, stifftness):
+    def setStiffness(self, jointName, stiffness):
         """
-        Sets the stifftness (0 <= stifftness <= 1) for a single motor
+        Sets the stiffness (0 <= stiffness <= 1) for a single motor
 
         :param jointName: Name of the joint
         :type jointName: str
-        :param stifftness: Target stifftness
-        :type stifftness: float
+        :param stiffness: Target stiffness
+        :type stiffness: float
         """
-        if not 0.0 <= stifftness <= 1.0:
-            logging.warning('New stifftness out of bounds (%d)' % maximumSpeed)
+        if not 0.0 <= stiffness <= 1.0:
+            logging.warning('New stiffness out of bounds (%d)' % maximumSpeed)
             return
 
         if hasattr(self._robot, jointName):
             motor = getattr(self._robot, jointName)
             if hasattr(motor, 'torque_limit'):
-                motor.torque_limit = 100.0 * stifftness
+                motor.torque_limit = 100.0 * stiffness
             else:
                 logging.warning('Joint %s has no torque limit' % jointName)
         else:
             logging.warning('No joint "%s" found' % jointName)
             return
 
-    def getStifftness(self, jointName):
+    def getStiffness(self, jointName):
         """
-        Returns the current stifftness of a motor
+        Returns the current stiffness of a motor
 
         :param jointName: Name of the joint
         :type jointName: str
-        :return: Stifftness of the joint
+        :return: Stiffness of the joint
         :rtype: float
         """
         if hasattr(self._robot, jointName):
