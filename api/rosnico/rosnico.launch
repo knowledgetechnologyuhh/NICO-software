@@ -1,0 +1,3 @@
+<launch>
+  <node name="motion" pkg="rosnico" type="Motion.py" />
+</launch>

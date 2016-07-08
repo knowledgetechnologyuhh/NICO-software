@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(high_nico)
+project(rosnico)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -8,6 +8,8 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  nico_msg
+  motion
   message_generation
 )
 
@@ -45,25 +47,14 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-add_message_files(
-   FILES
-   empty.msg
-   f.msg
-   i.msg
-   s.msg
-   sf.msg
-   sff.msg
-   sfff.msg
-   si.msg
- )
+#add_message_files(
+#   FILES
+# )
 
 ## Generate services in the 'srv' folder
-add_service_files(
-   FILES
-   get_names.srv
-   get_pid.srv
-   get_value.srv
-)
+#add_service_files(
+#   FILES
+#)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -73,10 +64,11 @@ add_service_files(
 # )
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages(
-   DEPENDENCIES
-   std_msgs
- )
+#generate_messages(
+#   DEPENDENCIES
+#   std_msgs
+#   nico_msg
+# )
 
 ###################################
 ## catkin specific configuration ##

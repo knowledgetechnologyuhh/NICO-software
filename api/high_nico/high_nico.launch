@@ -1,3 +1,0 @@
-<launch>
-  <node name="NICO" pkg="high_nico" type="RosNico.py" />
-</launch>
