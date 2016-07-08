@@ -33,29 +33,29 @@ end
 if (sim_call_type==sim_childscriptcall_actuation) then
     -- Right finger
     local r_finger_pos = simGetJointTargetPosition(r_indexfingers_handle)
-    simSetJointTargetPosition(r_finger1_handle_1)
-    simSetJointTargetPosition(r_finger1_handle_2)
-    simSetJointTargetPosition(r_finger2_handle_0)
-    simSetJointTargetPosition(r_finger2_handle_1)
-    simSetJointTargetPosition(r_finger2_handle_2)
+    simSetJointTargetPosition(r_finger1_handle_1, r_finger_pos)
+    simSetJointTargetPosition(r_finger1_handle_2, r_finger_pos)
+    simSetJointTargetPosition(r_finger2_handle_0, r_finger_pos)
+    simSetJointTargetPosition(r_finger2_handle_1, r_finger_pos)
+    simSetJointTargetPosition(r_finger2_handle_2, r_finger_pos)
 
     -- Right thumb
     local r_thumb_pos = simGetJointTargetPosition(r_thumb_handle)
-    simSetJointTargetPosition(r_thumb1_handle)
-    simSetJointTargetPosition(r_thumb2_handle)
+    simSetJointTargetPosition(r_thumb1_handle, r_thumb_pos)
+    simSetJointTargetPosition(r_thumb2_handle, r_thumb_pos)
 
     -- Left finger
     local l_finger_pos = simGetJointTargetPosition(l_indexfingers_handle)
-    simSetJointTargetPosition(l_finger1_handle_1)
-    simSetJointTargetPosition(l_finger1_handle_2)
-    simSetJointTargetPosition(l_finger2_handle_0)
-    simSetJointTargetPosition(l_finger2_handle_1)
-    simSetJointTargetPosition(l_finger2_handle_2)
+    simSetJointTargetPosition(l_finger1_handle_1, l_finger_pos)
+    simSetJointTargetPosition(l_finger1_handle_2, l_finger_pos)
+    simSetJointTargetPosition(l_finger2_handle_0, l_finger_pos)
+    simSetJointTargetPosition(l_finger2_handle_1, l_finger_pos)
+    simSetJointTargetPosition(l_finger2_handle_2, l_finger_pos)
 
     -- left thumb
     local r_thumb_pos = simGetJointTargetPosition(l_thumb_handle)
-    simSetJointTargetPosition(l_thumb1_handle)
-    simSetJointTargetPosition(l_thumb2_handle)
+    simSetJointTargetPosition(l_thumb1_handle, r_thumb_pos)
+    simSetJointTargetPosition(l_thumb2_handle, r_thumb_pos)
 
 end
 
