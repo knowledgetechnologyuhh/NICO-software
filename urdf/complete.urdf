@@ -49,7 +49,7 @@
 		<child link="right_shoulder:11"/>
 		<origin rpy="0 0 -0.20444" xyz="0.026783 -0.049912 0.748809"/>
 		<axis xyz="0 0 1"/>
-		<limit effort="30" lower="-1.22173" upper="0.872665" velocity="1"/>
+		<limit effort="30" lower="-1.745" upper="2.182" velocity="1"/>
 	</joint>
 	<link name="right_collarbone:11">
 		<visual>
@@ -77,8 +77,8 @@
 		<parent link="right_shoulder:11"/>
 		<child link="right_collarbone:11"/>
 		<origin rpy="0 0 0.20444" xyz="0.026211 -0.018056 0.037"/>
-		<axis xyz="0 1 0"/>
-		<limit effort="30" lower="-2.79253" upper="0.523599" velocity="1"/>
+		<axis xyz="0 -1 0"/>
+		<limit effort="30" lower="-3.142" upper="3.124" velocity="1"/>
 	</joint>
 	<link name="right_upper_arm:11">
 		<visual>
@@ -107,7 +107,7 @@
 		<child link="right_upper_arm:11"/>
 		<origin rpy="0 0 0" xyz="0.0245 -0.073664 -0.022853"/>
 		<axis xyz="1 0 0"/>
-		<limit effort="30" lower="-2.05949" upper="1.51844" velocity="1"/>
+		<limit effort="30" lower="-1.885" upper="0.751" velocity="1"/>
 	</joint>
 	<link name="right_lower_arm:11">
 		<visual>
@@ -135,8 +135,8 @@
 		<parent link="right_upper_arm:11"/>
 		<child link="right_lower_arm:11"/>
 		<origin rpy="0 0 0" xyz="-0.023001 -0.024001 -0.1732"/>
-		<axis xyz="0 -1 0"/>
-		<limit effort="30" lower="-1.5708" upper="1.5708" velocity="1"/>
+		<axis xyz="0 1 0"/>
+		<limit effort="30" lower="-1.745" upper="1.745" velocity="1"/>
 	</joint>
 	<link name="right_wrist:11">
 		<visual>
@@ -164,8 +164,8 @@
 		<parent link="right_lower_arm:11"/>
 		<child link="right_wrist:11"/>
 		<origin rpy="0 0 0.028946" xyz="0 0.0102 -0.12605"/>
-		<axis xyz="0 0 -1"/>
-		<limit effort="30" lower="-1.5708" upper="1.5708" velocity="1"/>
+		<axis xyz="0 0 1"/>
+		<limit effort="30" lower="-1.571" upper="1.571" velocity="1"/>
 	</joint>
 	<link name="right_palm:11">
 		<visual>
@@ -657,7 +657,7 @@
 		<parent link="torso:11"/>
 		<child link="left_hip_up:11"/>
 		<origin rpy="0 0 0" xyz="0.010783 0.054788 0.519208"/>
-		<axis xyz="0 0 -1"/>
+		<axis xyz="0 0 1"/>
 		<limit effort="30" lower="-0.698132" upper="0.698132" velocity="1"/>
 	</joint>
 	<link name="left_hip_low:11">
@@ -832,7 +832,7 @@
 		<child link="neck:11"/>
 		<origin rpy="0 0 0" xyz="0.001283 -0.000212 0.756309"/>
 		<axis xyz="0 0 1"/>
-		<limit effort="30" lower="-2.18166" upper="2.18166" velocity="1"/>
+		<limit effort="30" lower="-3.124" upper="3.142" velocity="1"/>
 	</joint>
 	<link name="head:21">
 		<visual>
@@ -861,7 +861,7 @@
 		<child link="head:21"/>
 		<origin rpy="0 0 0" xyz="0 0.023001 0.0745"/>
 		<axis xyz="0 1 0"/>
-		<limit effort="30" lower="-0.785398" upper="0.314159" velocity="1"/>
+		<limit effort="30" lower="-1.553" upper="1.379" velocity="1"/>
 	</joint>
 	<link name="left_shoulder:11">
 		<visual>
@@ -890,7 +890,7 @@
 		<child link="left_shoulder:11"/>
 		<origin rpy="0 0 0.019617" xyz="0.026783 0.049488 0.748809"/>
 		<axis xyz="0 0 1"/>
-		<limit effort="30" lower="-0.872665" upper="1.22173" velocity="1"/>
+		<limit effort="30" lower="-2.182" upper="1.745" velocity="1"/>
 	</joint>
 	<link name="left_collarbone:11">
 		<visual>
@@ -919,7 +919,7 @@
 		<child link="left_collarbone:11"/>
 		<origin rpy="0 -0.00445 -0.019538" xyz="0.022445 0.022567 0.037"/>
 		<axis xyz="0 1 0"/>
-		<limit effort="30" lower="-2.79253" upper="0.523599" velocity="1"/>
+		<limit effort="30" lower="-3.124" upper="3.142" velocity="1"/>
 	</joint>
 	<link name="left_upper_arm:11">
 		<visual>
@@ -948,7 +948,7 @@
 		<child link="left_upper_arm:11"/>
 		<origin rpy="0.000683 -0.051282 -0.000035" xyz="0.0245 0.073663 -0.022853"/>
 		<axis xyz="1 0 0"/>
-		<limit effort="30" lower="-1.51844" upper="2.05949" velocity="1"/>
+		<limit effort="30" lower="-1.8675" upper="3.002" velocity="1"/>
 	</joint>
 	<link name="left_lower_arm:11">
 		<visual>
@@ -976,8 +976,8 @@
 		<parent link="left_upper_arm:11"/>
 		<child link="left_lower_arm:11"/>
 		<origin rpy="0 0.055976 0" xyz="-0.034583 0.023066 -0.169859"/>
-		<axis xyz="0 1 0"/>
-		<limit effort="30" lower="-1.5708" upper="1.5708" velocity="1"/>
+		<axis xyz="0 -1 0"/>
+		<limit effort="30" lower="-1.745" upper="1.745" velocity="1"/>
 	</joint>
 	<link name="left_wrist:11">
 		<visual>
@@ -1005,8 +1005,8 @@
 		<parent link="left_lower_arm:11"/>
 		<child link="left_wrist:11"/>
 		<origin rpy="3.141593 0 0.028703" xyz="0 -0.010201 -0.12555"/>
-		<axis xyz="0 0 1"/>
-		<limit effort="30" lower="-1.5708" upper="1.5708" velocity="1"/>
+		<axis xyz="0 0 -1"/>
+		<limit effort="30" lower="-1.571" upper="1.571" velocity="1"/>
 	</joint>
 	<link name="left_palm:11">
 		<visual>

@@ -5,14 +5,14 @@ filenameformat: "package://NICO-models/%s"
 #filenameformat: "/informatik2/students/home/5wueppen/catkin_ws/src/sandbox/urdf/%s"
 
 redefinedjoints:
-   83: {name: head_z, axis: "0 0 1", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -2.18166, upper: 2.18166}}
-   85: {name: head_y, axis: "0 1 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -0.785398, upper: 0.314159}}
+   83: {name: head_z, axis: "0 0 1", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -3.124, upper: 3.142}}
+   85: {name: head_y, axis: "0 1 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.553, upper: 1.379}}
 
-   73: {name: l_shoulder_z, axis: "0 0 1", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -0.872665, upper: 1.22173}}
-   71: {name: l_shoulder_y, axis: "0 1 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -2.79253, upper: 0.523599}}
-   15: {name: l_arm_x, axis: "1 0 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.51844, upper: 2.05949}}
-   17: {name: l_elbow_y, axis: "0 1 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.570800000709, upper: 1.5708}}
-   69: {name: l_wrist_z, axis: "0 0 1", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.5708, upper: 1.5708}}
+   73: {name: l_shoulder_z, axis: "0 0 1", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -2.182, upper: 1.745}}
+   71: {name: l_shoulder_y, axis: "0 1 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -3.124, upper: 3.142}}
+   15: {name: l_arm_x, axis: "1 0 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.8675, upper: 3.002}}
+   17: {name: l_elbow_y, axis: "0 -1 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.745, upper: 1.745}}
+   69: {name: l_wrist_z, axis: "0 0 -1", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.571, upper: 1.571}}
    67: {name: l_palm_x, axis: "1 0 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -0.872665, upper: 0}}
 
    29: {name: l_indexfinger_base_x, axis: "0.99794 -0.0170003 -0.0618655", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
@@ -35,11 +35,11 @@ redefinedjoints:
    93: {name: l_ankle_y, axis: "0 1 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -0.78539816, upper: 0.78539816}}
    49: {name: l_ankle_x, axis: "1 0 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -0.78539816, upper: 0.78539816}}
 
-   87: {name: r_shoulder_z, axis: "0 0 1", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.22173, upper: 0.872665}}
-   91: {name: r_shoulder_y, axis: "0 1 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -2.79253, upper: 0.523599}}
-   41: {name: r_arm_x, axis: "1 0 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -2.05949, upper: 1.51844}}
-   37: {name: r_elbow_y, axis: "0 1 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.5708, upper: 1.570800000709}}
-   39: {name: r_wrist_z, axis: "0 0 1", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.5708, upper: 1.5708}}
+   87: {name: r_shoulder_z, axis: "0 0 1", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.745, upper: 2.182}}
+   91: {name: r_shoulder_y, axis: "0 -1 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -3.142, upper: 3.124}}
+   41: {name: r_arm_x, axis: "1 0 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.885, upper: 0.751}}
+   37: {name: r_elbow_y, axis: "0 1 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.745, upper: 1.745}}
+   39: {name: r_wrist_z, axis: "0 0 1", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.571, upper: 1.571}}
    75: {name: r_palm_x, axis: "1 0 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: 0, upper: 0.872665}}
 
    65: {name: r_indexfinger_base_x, axis: "0.998022 0.00962907 0.0621208", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
