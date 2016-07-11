@@ -107,7 +107,7 @@
 		<child link="right_upper_arm:11"/>
 		<origin rpy="0 0 0" xyz="0.0245 -0.073664 -0.022853"/>
 		<axis xyz="1 0 0"/>
-		<limit effort="30" lower="-1.885" upper="0.751" velocity="1"/>
+		<limit effort="30" lower="-3.002" upper="1.8675" velocity="1"/>
 	</joint>
 	<link name="right_lower_arm:11">
 		<visual>

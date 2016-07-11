@@ -37,7 +37,7 @@ redefinedjoints:
 
    87: {name: r_shoulder_z, axis: "0 0 1", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.745, upper: 2.182}}
    91: {name: r_shoulder_y, axis: "0 -1 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -3.142, upper: 3.124}}
-   41: {name: r_arm_x, axis: "1 0 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.885, upper: 0.751}}
+   41: {name: r_arm_x, axis: "1 0 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -3.002, upper: 1.8675}}
    37: {name: r_elbow_y, axis: "0 1 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.745, upper: 1.745}}
    39: {name: r_wrist_z, axis: "0 0 1", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.571, upper: 1.571}}
    75: {name: r_palm_x, axis: "1 0 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: 0, upper: 0.872665}}
