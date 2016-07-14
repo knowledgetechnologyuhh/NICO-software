@@ -1,7 +1,7 @@
 rosnico - Motion
 ****************
 
-The Motion class allows control over the NICO robot by communicating through ROS.
+The Motion class allows control over the NICO motors through ROS.
 
 To start the interface run:
 
