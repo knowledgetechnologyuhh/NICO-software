@@ -65,15 +65,15 @@ class RosNicoMotion():
 
         # setup services
         logging.debug('Init services')
-        rospy.Service('%s/getAngle' % config['rostopicName'], nico_msg.srv.get_value, self._ROSPY_getAngle)
-        rospy.Service('%s/getJointNames' % config['rostopicName'], nico_msg.srv.get_names, self._ROSPY_getJointNames)
-        rospy.Service('%s/getAngleUpperLimit' % config['rostopicName'], nico_msg.srv.get_value, self._ROSPY_getAngleUpperLimit)
-        rospy.Service('%s/getAngleLowerLimit' % config['rostopicName'], nico_msg.srv.get_value, self._ROSPY_getAngleLowerLimit)
-        rospy.Service('%s/getTorqueLimit' % config['rostopicName'], nico_msg.srv.get_value, self._ROSPY_getTorqueLimit)
-        rospy.Service('%s/getTemperature' % config['rostopicName'], nico_msg.srv.get_value, self._ROSPY_getTemperature)
-        rospy.Service('%s/getCurrent' % config['rostopicName'], nico_msg.srv.get_value, self._ROSPY_getCurrent)
-        rospy.Service('%s/getStiffness' % config['rostopicName'], nico_msg.srv.get_value, self._ROSPY_getStiffness)
-        rospy.Service('%s/getPID' % config['rostopicName'], nico_msg.srv.get_pid, self._ROSPY_getPID)
+        rospy.Service('%s/getAngle' % config['rostopicName'], nico_msg.srv.GetValue, self._ROSPY_getAngle)
+        rospy.Service('%s/getJointNames' % config['rostopicName'], nico_msg.srv.GetNames, self._ROSPY_getJointNames)
+        rospy.Service('%s/getAngleUpperLimit' % config['rostopicName'], nico_msg.srv.GetValue, self._ROSPY_getAngleUpperLimit)
+        rospy.Service('%s/getAngleLowerLimit' % config['rostopicName'], nico_msg.srv.GetValue, self._ROSPY_getAngleLowerLimit)
+        rospy.Service('%s/getTorqueLimit' % config['rostopicName'], nico_msg.srv.GetValue, self._ROSPY_getTorqueLimit)
+        rospy.Service('%s/getTemperature' % config['rostopicName'], nico_msg.srv.GetValue, self._ROSPY_getTemperature)
+        rospy.Service('%s/getCurrent' % config['rostopicName'], nico_msg.srv.GetValue, self._ROSPY_getCurrent)
+        rospy.Service('%s/getStiffness' % config['rostopicName'], nico_msg.srv.GetValue, self._ROSPY_getStiffness)
+        rospy.Service('%s/getPID' % config['rostopicName'], nico_msg.srv.GetPID, self._ROSPY_getPID)
 
         # wait for messages
         logging.info('-- All done --')
@@ -155,7 +155,7 @@ class RosNicoMotion():
         Callback handle for :meth:`motion.Motion.getAngle`
 
         :param message: ROS message
-        :type message: nico_msg.srv.get_value
+        :type message: nico_msg.srv.GetValue
         :return: Angle of requested joint
         :rtype: float
         """
@@ -166,7 +166,7 @@ class RosNicoMotion():
         Callback handle for :meth:`motion.Motion.getJointNames`
 
         :param message: ROS message
-        :type message: nico_msg.srv.get_names
+        :type message: nico_msg.srv.GetNames
         :return: List of joint names
         :rtype: list
         """
@@ -177,7 +177,7 @@ class RosNicoMotion():
         Callback handle for :meth:`motion.Motion.getAngleUpperLimit`
 
         :param message: ROS message
-        :type message: nico_msg.srv.get_value
+        :type message: nico_msg.srv.GetValue
         :return: Angle upper limit of requested joint
         :rtype: float
         """
@@ -188,7 +188,7 @@ class RosNicoMotion():
         Callback handle for :meth:`motion.Motion.getAngleLowerLimit`
 
         :param message: ROS message
-        :type message: nico_msg.srv.get_value
+        :type message: nico_msg.srv.GetValue
         :return: Angle lower limit of requested joint
         :rtype: float
         """
@@ -199,7 +199,7 @@ class RosNicoMotion():
         Callback handle for :meth:`motion.Motion.getTorqueLimit`
 
         :param message: ROS message
-        :type message: nico_msg.srv.get_value
+        :type message: nico_msg.srv.GetValue
         :return: Torque limit of requested joint
         :rtype: float
         """
@@ -210,7 +210,7 @@ class RosNicoMotion():
         Callback handle for :meth:`motion.Motion.getTemperature`
 
         :param message: ROS message
-        :type message: nico_msg.srv.get_value
+        :type message: nico_msg.srv.GetValue
         :return: Temperature of requested joint
         :rtype: float
         """
@@ -221,7 +221,7 @@ class RosNicoMotion():
         Callback handle for :meth:`motion.Motion.getCurrent`
 
         :param message: ROS message
-        :type message: nico_msg.srv.get_value
+        :type message: nico_msg.srv.GetValue
         :return: Current of requested joint
         :rtype: float
         """
@@ -250,7 +250,7 @@ class RosNicoMotion():
         Callback handle for :meth:`motion.Motion.getStiffness`
 
         :param message: ROS message
-        :type message: nico_msg.srv.get_value
+        :type message: nico_msg.srv.GetValue
         :return: Stiffness of requested joint
         :rtype: float
         """
@@ -270,7 +270,7 @@ class RosNicoMotion():
         Callback handle for :meth:`motion.Motion.getPID`
 
         :param message: ROS message
-        :type message: nico_msg.srv.get_pid
+        :type message: nico_msg.srv.GetPID
         :return: Tuple: (p, i, d)
         :rtype: tuple
         """

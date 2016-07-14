@@ -60,9 +60,9 @@ add_message_files(
 ## Generate services in the 'srv' folder
 add_service_files(
    FILES
-   get_names.srv
-   get_pid.srv
-   get_value.srv
+   GetNames.srv
+   GetPID.srv
+   GetValue.srv
 )
 
 ## Generate actions in the 'action' folder

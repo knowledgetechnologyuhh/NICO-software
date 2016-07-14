@@ -72,25 +72,25 @@ The following ROS services are exposed by the class - where $PREFIX stands for t
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
 | ROS service name                               | Service type                                   | Short description                                                          |
 +================================================+================================================+============================================================================+
-| $PREFIX/getAngle                               | nico_msg/get_value                             | Returns the angle of a single joint                                        | 
+| $PREFIX/getAngle                               | nico_msg/GetValue                              | Returns the angle of a single joint                                        | 
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
-| $PREFIX/getAngleLowerLimit                     | nico_msg/get_value                             | Returns the lower limit of the angle for a single joint                    |
+| $PREFIX/getAngleLowerLimit                     | nico_msg/GetValue                              | Returns the lower limit of the angle for a single joint                    |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
-| $PREFIX/getAngleUpperLimit                     | nico_msg/get_value                             | Returns the upper limit of the angle for a single joint                    |
+| $PREFIX/getAngleUpperLimit                     | nico_msg/GetValue                              | Returns the upper limit of the angle for a single joint                    |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
-| $PREFIX/getCurrent                             | nico_msg/get_value                             | Returns the present currency of a single joint                             |
+| $PREFIX/getCurrent                             | nico_msg/GetValue                              | Returns the present currency of a single joint                             |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
-| $PREFIX/getJointNames                          | nico_msg/get_names                             | Returns a list with the names of all joints                                |
+| $PREFIX/getJointNames                          | nico_msg/GetNames                              | Returns a list with the names of all joints                                |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
-| $PREFIX/getPID                                 | nico_msg/get_pid                               | Returns the PID control of a single joint                                  |
+| $PREFIX/getPID                                 | nico_msg/GetPID                                | Returns the PID control of a single joint                                  |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
-| $PREFIX/getSensorNames                         | nico_msg/get_names                             | Returns a list with the names of all sensors                               |
+| $PREFIX/getSensorNames                         | nico_msg/GetNames                              | Returns a list with the names of all sensors                               |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
-| $PREFIX/getStifftness                          | nico_msg/get_value                             | Returns the stifftness of a single joint                                   |
+| $PREFIX/getStifftness                          | nico_msg/GetValue                              | Returns the stifftness of a single joint                                   |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
-| $PREFIX/getTemperature                         | nico_msg/get_value                             | Returns the present temperature of a single joint                          |
+| $PREFIX/getTemperature                         | nico_msg/GetValue                              | Returns the present temperature of a single joint                          |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
-| $PREFIX/getTorqueLimit                         | nico_msg/get_value                             | Returns the torque limit of a single joint                                 |
+| $PREFIX/getTorqueLimit                         | nico_msg/GetValue                              | Returns the torque limit of a single joint                                 |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
 
 Class documentation
