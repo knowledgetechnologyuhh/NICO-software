@@ -10,3 +10,7 @@ __pycache__
 
 #api doc
 api-doc/_build
+
+# catkin generated files
+api/build
+api/devel
