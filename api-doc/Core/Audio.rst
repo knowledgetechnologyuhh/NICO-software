@@ -1,7 +1,7 @@
 Audio
 *****
 
-The *Audio* packet contains classes to control the audio interface of the NICO.
+The **Audio** packet contains classes to control the audio interface of the NICO.
 
 AudioPlayer
 ###########
