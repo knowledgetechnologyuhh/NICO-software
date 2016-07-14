@@ -21,7 +21,7 @@ class VideoRecorder:
         Returns the currently used colorspace
 
         :return: Colorspace
-        :rtype: :class:`Colorspace`
+        :rtype: :class:`vision.Colorspace`
         """
         # TODO: implement
         return Colorspace.RGB
@@ -61,7 +61,7 @@ class VideoRecorder:
         Sets the current color space
 
         :param colorspace: Colorspace
-        :type colorspace: class:`Colorspace`
+        :type colorspace: :class:`vision.Colorspace`
         """
         # TODO: implement
         pass
