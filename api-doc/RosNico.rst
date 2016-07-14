@@ -96,7 +96,7 @@ The following ROS services are exposed by RosNico - where $PREFIX stands for the
 Class documentation
 ###################
 
-.. automodule:: RosNico
+.. automodule:: Motion
     :members:
     :undoc-members:
     :show-inheritance:

@@ -3,7 +3,7 @@ Motion
 
 The Motion class allows direct control over the NICO motors.
 
-.. automodule:: Motion
+.. automodule:: motion.Motion
     :members:
     :undoc-members:
     :show-inheritance:
