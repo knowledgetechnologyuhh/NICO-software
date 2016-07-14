@@ -1,23 +1,23 @@
-RosNico
-*******
+rosnico - Motion
+****************
 
-The RosNico class allows control over the NICO robot by communicating through ROS.
+The Motion class allows control over the NICO robot by communicating through ROS.
 
 To start the interface run:
 
 .. code-block:: bash
    
-   rosrun high_nico RosNico.py
+   rosrun rosnico Motion.py
 
 Many options are available to change the behaviour of RosNico. For a list of them run:
 
 .. code-block:: bash
    
-   rosrun high_nico RosNico.py -h
+   rosrun rosnico Motion.py -h
 
 Exposed topics
 ##############
-The following ROS topics are exposed by RosNico - where $PREFIX stands for the prefix of the topics/services (Default: /nico):
+The following ROS topics are exposed by the class - where $PREFIX stands for the prefix of the topics/services (Default: /nico/motion):
 
 +------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
 | ROS topic name                                 | Message type                                   | Short description                                                                     |
@@ -67,7 +67,7 @@ The following ROS topics are exposed by RosNico - where $PREFIX stands for the p
 Exposed services
 ################
 
-The following ROS services are exposed by RosNico - where $PREFIX stands for the prefix of the topics/services (Default: /nico):
+The following ROS services are exposed by the class - where $PREFIX stands for the prefix of the topics/services (Default: /nico):
 
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
 | ROS service name                               | Service type                                   | Short description                                                          |

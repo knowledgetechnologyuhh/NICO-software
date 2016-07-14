@@ -27,7 +27,7 @@ class RosNicoMotion():
                 'vrepHost': '127.0.0.1',
                 'vrepPort': 19997,
                 'vrepScene': None,
-                'rostopicName': '/nico'
+                'rostopicName': '/nico/motion'
                 }
 
     def __init__(self, config = None):
