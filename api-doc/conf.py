@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# highNICO documentation build configuration file, created by
+# NICO documentation build configuration file, created by
 # sphinx-quickstart on Fri Jun 10 14:00:55 2016.
 #
 # This file is execfile()d with the current directory set to its
@@ -48,7 +48,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'highNICO'
+project = u'NICO'
 copyright = u'2016, Marcus Soll'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -181,7 +181,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'highNICOdoc'
+htmlhelp_basename = 'NICOdoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -201,7 +201,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'highNICO.tex', u'highNICO Documentation',
+  ('index', 'NICO.tex', u'NICO Documentation',
    u'Marcus Soll', 'manual'),
 ]
 
@@ -231,7 +231,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'highnico', u'highNICO Documentation',
+    ('index', 'nico', u'NICO Documentation',
      [u'Marcus Soll'], 1)
 ]
 
@@ -245,8 +245,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'highNICO', u'highNICO Documentation',
-   u'Marcus Soll', 'highNICO', 'One line description of project.',
+  ('index', 'NICO', u'NICO Documentation',
+   u'Marcus Soll', 'NICO', 'One line description of project.',
    'Miscellaneous'),
 ]
 
