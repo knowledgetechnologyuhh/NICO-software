@@ -1,5 +1,25 @@
 import logging
 import time
+import threading
+
+def _HAND_compliant(robot):
+    """
+    Removes the compliant from the hand. This function is used as a callback for the timer
+
+    :param robot: The robot
+    :type robot: pypot.robot
+    """
+    if hasattr(robot, 'r_indexfingers_x'):
+        robot.r_indexfingers_x.compliant = True
+
+    if hasattr(robot, 'r_thumb_x'):
+        robot.r_thumb_x.compliant = True
+
+    if hasattr(robot, 'l_indexfingers_x'):
+        robot.l_indexfingers_x.compliant = True
+
+    if hasattr(robot, 'l_thumb_x'):
+        robot.l_thumb_x.compliant = True
 
 def openHand(robot, handName, fractionMaxSpeed=1.0, percentage=1.0):
     """
@@ -26,23 +46,19 @@ def openHand(robot, handName, fractionMaxSpeed=1.0, percentage=1.0):
     if handName == 'RHand':
         robot.r_indexfingers_x.compliant = False
         robot.r_indexfingers_x.goal_speed = 1000.0 * fractionMaxSpeed
-        robot.r_indexfingers_x.goal_position = 130.0 * percentage
+        robot.r_indexfingers_x.goal_position = -130.0 * percentage
         robot.r_thumb_x.compliant = False
         robot.r_thumb_x.goal_speed = 1000.0 * fractionMaxSpeed
-        robot.r_thumb_x.goal_position = 130.0 * percentage
-        time.sleep(1)
-        robot.r_indexfingers_x.compliant = True
-        robot.r_thumb_x.compliant = True
+        robot.r_thumb_x.goal_position = -130.0 * percentage
+        threading.Timer(1.0, _HAND_compliant, [robot]).start()
     elif handName == 'LHand':
         robot.l_indexfingers_x.compliant = False
         robot.l_indexfingers_x.goal_speed = 1000.0 * fractionMaxSpeed
-        robot.l_indexfingers_x.goal_position = 130.0 * percentage
+        robot.l_indexfingers_x.goal_position = -130.0 * percentage
         robot.l_thumb_x.compliant = False
         robot.l_thumb_x.goal_speed = 1000.0 * fractionMaxSpeed
-        robot.l_thumb_x.goal_position = 130.0 * percentage
-        time.sleep(1)
-        robot.l_indexfingers_x.compliant = True
-        robot.l_thumb_x.compliant = True
+        robot.l_thumb_x.goal_position = -130.0 * percentage
+        threading.Timer(1.0, _HAND_compliant, [robot]).start()
     else:
         logging.warning('Unknown hand handle: %s' % handName)
         return
@@ -114,23 +130,20 @@ def closeHand(robot, handName, fractionMaxSpeed=1.0, percentage=1.0):
     if handName == 'RHand':
         robot.r_indexfingers_x.compliant = False
         robot.r_indexfingers_x.goal_speed = 1000.0 * fractionMaxSpeed
-        robot.r_indexfingers_x.goal_position = -130.0 * percentage
+        robot.r_indexfingers_x.goal_position = 130.0 * percentage
         robot.r_thumb_x.compliant = False
         robot.r_thumb_x.goal_speed = 1000.0 * fractionMaxSpeed
-        robot.r_thumb_x.goal_position = -130.0 * percentage
-        time.sleep(1)
-        robot.r_indexfingers_x.compliant = True
-        robot.r_thumb_x.compliant = True
+        robot.r_thumb_x.goal_position = 130.0 * percentage
+        threading.Timer(1.0, _HAND_compliant, [robot]).start()
+
     elif handName == 'LHand':
         robot.l_indexfingers_x.compliant = False
         robot.l_indexfingers_x.goal_speed = 1000.0 * fractionMaxSpeed
-        robot.l_indexfingers_x.goal_position = -130.0 * percentage
+        robot.l_indexfingers_x.goal_position = 130.0 * percentage
         robot.l_thumb_x.compliant = False
         robot.l_thumb_x.goal_speed = 1000.0 * fractionMaxSpeed
-        robot.l_thumb_x.goal_position = -130.0 * percentage
-        time.sleep(1)
-        robot.l_indexfingers_x.compliant = True
-        robot.l_thumb_x.compliant = True
+        robot.l_thumb_x.goal_position = 130.0 * percentage
+        threading.Timer(1.0, _HAND_compliant, [robot]).start()
     else:
         logging.warning('Unknown hand handle: %s' % handName)
         return

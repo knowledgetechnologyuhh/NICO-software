@@ -166,8 +166,6 @@ class Motion:
             motor.compliant = False
             motor.goal_speed = 1000.0 * min(fractionMaxSpeed, self._maximumSpeed)
             motor.goal_position = angle
-            time.sleep(1)
-            motor.compliant = True
         else:
             logging.warning('No joint "%s" found' % jointName)
             return
@@ -188,8 +186,6 @@ class Motion:
             motor.compliant = False
             motor.goal_speed = 1000.0 * min(fractionMaxSpeed, self._maximumSpeed)
             motor.goal_position = change + motor.present_position
-            time.sleep(1)
-            motor.compliant = True
         else:
             logging.warning('No joint "%s" found' % jointName)
             return
