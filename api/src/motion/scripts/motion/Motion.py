@@ -1,6 +1,9 @@
 import logging
 import json
 import time
+import re
+import pprint
+import StringIO
 
 import pypot.robot
 import pypot.vrep
@@ -39,7 +42,25 @@ class Motion:
             self._robot = pypot.vrep.from_vrep(config, vrepHost, vrepPort, vrepScene)
         else:
             logging.info('Using robot')
-            self._robot = pypot.robot.from_config(config)
+            try:
+                self._robot = pypot.robot.from_config(config)
+            except IndexError as e:
+                regex = re.compile('.*\[.*\].*\[(?P<ids>.*)\].*')
+                match = regex.match(e.message)
+                string = match.group('ids')
+                for id in string.split(','):
+                    id = int(id)
+                    for motor in config['motors'].keys():
+                        if config['motors'][motor]['id'] == id:
+                            logging.warning('Removing motor %s (%i)' %(motor, id))
+                            config['motors'].pop(motor)
+                            for group in config['motorgroups'].keys():
+                                config['motorgroups'][group] = [x for x in config['motorgroups'][group] if x != motor]
+                logging.warning('New config created:')
+                logging.warning(pprint.pformat(config))
+                self._robot = pypot.robot.from_config(config)
+
+
 
     def openHand(self, handName, fractionMaxSpeed=1.0, percentage=1.0):
         """
