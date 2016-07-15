@@ -27,3 +27,14 @@ The Colorspace class represents different colorspaces.
     :undoc-members:
     :show-inheritance:
     :private-members:
+
+VideoDevice
+===========
+
+The VideoDevice class handles low-level communication with the video capture devices.
+
+.. automodule:: nicovision.VideoDevice
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :private-members:
