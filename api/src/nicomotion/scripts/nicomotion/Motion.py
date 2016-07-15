@@ -349,6 +349,9 @@ class Motion:
                 motor.torque_limit = 100.0 * stiffness
             else:
                 logging.warning('Joint %s has no torque limit' % jointName)
+
+            if(stiffness < 0.001):
+                self.disableTorque(jointName)
         else:
             logging.warning('No joint "%s" found' % jointName)
             return
@@ -364,11 +367,13 @@ class Motion:
         """
         if hasattr(self._robot, jointName):
             motor = getattr(self._robot, jointName)
-            if hasattr(motor, 'torque_limit'):
+            if motor.compliant: # no torque
+                return 0.0
+            elif hasattr(motor, 'torque_limit'):
                 return motor.torque_limit / 100.0
             else:
                 logging.warning('Joint %s has no torque limit' % jointName)
-                return 0.0
+                return 1.0
         else:
             logging.warning('No joint "%s" found' % jointName)
             return 0.0
@@ -417,6 +422,46 @@ class Motion:
         else:
             logging.warning('No joint "%s" found' % jointName)
             return (0.0, 0.0, 0.0)
+
+    def enableTorqueAll(self):
+        """
+        Enables toruqe on all joints
+        """
+        for motor in self._robot.motors:
+            motor.compliant = False
+
+    def disableTorqueAll(self):
+        """
+        Disables toruqe on all joints
+        """
+        for motor in self._robot.motors:
+            motor.compliant = True
+
+    def enableTorque(self, jointName):
+        """
+        Enables torque on a single joint.
+
+        :param jointName: Name of the motor
+        :type jointName: str
+        """
+        if hasattr(self._robot, jointName):
+            motor = getattr(self._robot, jointName)
+            motor.compliant = False
+        else:
+            logging.warning('No joint "%s" found' % jointName)
+
+    def disableTorque(self, jointName):
+        """
+        Disables torque on a single joint.
+
+        :param jointName: Name of the motor
+        :type jointName: str
+        """
+        if hasattr(self._robot, jointName):
+            motor = getattr(self._robot, jointName)
+            motor.compliant = True
+        else:
+            logging.warning('No joint "%s" found' % jointName)
 
     def cleanup(self):
         """

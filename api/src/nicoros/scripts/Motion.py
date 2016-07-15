@@ -62,6 +62,10 @@ class NicoRosMotion():
         rospy.Subscriber('%s/setMaximumSpeed' % config['rostopicName'], nicomsg.msg.f, self._ROSPY_setMaximumSpeed)
         rospy.Subscriber('%s/setStiffness' % config['rostopicName'], nicomsg.msg.sf, self._ROSPY_setStiffness)
         rospy.Subscriber('%s/setPID' % config['rostopicName'], nicomsg.msg.sfff, self._ROSPY_setPID)
+        rospy.Subscriber('%s/enableTorque' % config['rostopicName'], nicomsg.msg.s, self._ROSPY__enableTorque)
+        rospy.Subscriber('%s/disableTorque' % config['rostopicName'], nicomsg.msg.s, self._ROSPY__disableTorque)
+        rospy.Subscriber('%s/enableTorqueAll' % config['rostopicName'], nicomsg.msg.empty, self._ROSPY__enableTorqueAll)
+        rospy.Subscriber('%s/disableTorqueAll' % config['rostopicName'], nicomsg.msg.empty, self._ROSPY__disableTorqueAll)
 
         # setup services
         logging.debug('Init services')
@@ -275,6 +279,42 @@ class NicoRosMotion():
         :rtype: tuple
         """
         return self.robot.getPID(message.param1)
+
+    def _ROSPY__enableTorque(self, message):
+        """
+        Callback handle for :meth:`nicomotion.Motion.enableTorque`
+
+        :param message: ROS message
+        :type message: nicomsg.msg.s
+        """
+        self.robot.enableTorque(message.param1)
+
+    def _ROSPY__disableTorque(self, message):
+        """
+        Callback handle for :meth:`nicomotion.Motion.disableTorque`
+
+        :param message: ROS message
+        :type message: nicomsg.msg.s
+        """
+        self.robot.disableTorque(message.param1)
+
+    def _ROSPY__enableTorqueAll(self, message):
+        """
+        Callback handle for :meth:`nicomotion.Motion.enableTorqueAll`
+
+        :param message: ROS message
+        :type message: nicomsg.msg.empty
+        """
+        self.robot.enableTorqueAll()
+
+    def _ROSPY__disableTorqueAll(self, message):
+        """
+        Callback handle for :meth:`nicomotion.Motion.disableTorqueAll`
+
+        :param message: ROS message
+        :type message: nicomsg.msg.empty
+        """
+        self.robot.disableTorqueAll()
 
     def __del__(self):
         self.robot.cleanup()
