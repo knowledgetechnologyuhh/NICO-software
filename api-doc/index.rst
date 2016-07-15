@@ -1,9 +1,9 @@
-.. highNICO documentation master file 
+.. NICO documentation master file 
 
-Welcome to highNICO's documentation!
+Welcome to NICO's documentation!
 ====================================
 
-highNICO is a high-level API to control the NICO robot.
+This is the documentation of the high-level API for the NICO robot.
 
 For more information you could look at the wiki at https://git.informatik.uni-hamburg.de/wtm/NICO-software/wikis/home
 

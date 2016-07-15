@@ -1,14 +1,14 @@
-Vision
-******
+nicovision
+**********
 
-The **Vision** packet contains classes to control the audio interface of the NICO.
+The **nicovision** packet contains classes to control the audio interface of the NICO.
 
 VideoRecorder
 #############
 
 The VideoRecorder class manages the caption of videos from the cameras of the NICO robot.
 
-.. automodule:: vision.VideoRecorder
+.. automodule:: nicovision.VideoRecorder
     :members:
     :undoc-members:
     :show-inheritance:
@@ -22,7 +22,7 @@ Colorspace
 
 The Colorspace class represents different colorspaces.
 
-.. automodule:: vision.Colorspace
+.. automodule:: nicovision.Colorspace
     :members:
     :undoc-members:
     :show-inheritance:

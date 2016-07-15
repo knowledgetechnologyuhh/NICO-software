@@ -1,7 +1,7 @@
-nico_msg
+nicomsg
 ********
 
-The **nico_msg** package contains common messages used in different parts of the API.
+The **nicomsg** package contains common messages used in different parts of the API.
 
 Message name convention
 #######################
@@ -23,7 +23,7 @@ A message with the parameters:
  * float64
  * int32
 
-will be called *nico_msg/sfi*. The parameter name is called **paramX**, where **X** is the position of the parameter.
+will be called *nicomsg/sfi*. The parameter name is called **paramX**, where **X** is the position of the parameter.
  
 
 Service name convention

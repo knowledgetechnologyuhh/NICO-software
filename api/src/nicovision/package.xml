@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>vision</name>
+  <name>nicovision</name>
   <version>0.0.1</version>
   <description>Audio controls for the NICO robot</description>
 

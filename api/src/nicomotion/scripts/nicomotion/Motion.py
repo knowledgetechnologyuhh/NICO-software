@@ -3,7 +3,6 @@ import json
 import time
 import re
 import pprint
-import StringIO
 
 import pypot.robot
 import pypot.vrep

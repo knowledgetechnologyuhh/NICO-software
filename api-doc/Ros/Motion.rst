@@ -7,13 +7,13 @@ To start the interface run:
 
 .. code-block:: bash
    
-   rosrun rosnico Motion.py
+   rosrun nicoros Motion.py
 
 Many options are available to change the behaviour of RosNico. For a list of them run:
 
 .. code-block:: bash
    
-   rosrun rosnico Motion.py -h
+   rosrun nicoros Motion.py -h
 
 Exposed topics
 ##############
@@ -22,44 +22,44 @@ The following ROS topics are exposed by the class - where $PREFIX stands for the
 +------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
 | ROS topic name                                 | Message type                                   | Short description                                                                     |
 +================================================+================================================+=======================================================================================+
-| $PREFIX/changeAngle                            | nico_msg/sff                                   | Changes the angle of a single joint. Parameters:                                      |
+| $PREFIX/changeAngle                            | nicomsg/sff                                    | Changes the angle of a single joint. Parameters:                                      |
 |                                                |                                                |  1. Name of joint                                                                     |
 |                                                |                                                |  2. Angle                                                                             |
 |                                                |                                                |  3. Fraction of max speed                                                             |
 +------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
-| $PREFIX/closeHand                              | nico_msg/s                                     | Closes the hand. Parameters:                                                          |
+| $PREFIX/closeHand                              | nicomsg/s                                      | Closes the hand. Parameters:                                                          |
 |                                                |                                                |  1. "RHand" or "LHand"                                                                |
 +------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
-| $PREFIX/disableForceControl                    | nico_msg/empty                                 | Disables force control for all joints                                                 |
+| $PREFIX/disableForceControl                    | nicomsg/empty                                  | Disables force control for all joints                                                 |
 +------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
-| $PREFIX/disableForceControlSingleJoint         | nico_msg/s                                     | Disables force control for a single joint. Parameters:                                |
+| $PREFIX/disableForceControlSingleJoint         | nicomsg/s                                      | Disables force control for a single joint. Parameters:                                |
 |                                                |                                                |  1. Name of joint                                                                     |
 +------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
-| $PREFIX/enableForceControl                     | nico_msg/i                                     | Enables force control on all supported joints. Parameters:                            |
+| $PREFIX/enableForceControl                     | nicomsg/i                                      | Enables force control on all supported joints. Parameters:                            |
 |                                                |                                                |  1. Goal force                                                                        |
 +------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
-| $PREFIX/enableForceControlSingleJoint          | nico_msg/si                                    | Enables force control on a single joint. Parameters:                                  |
+| $PREFIX/enableForceControlSingleJoint          | nicomsg/si                                     | Enables force control on a single joint. Parameters:                                  |
 |                                                |                                                |  1. Name of joint                                                                     |
 |                                                |                                                |  2. Goal force                                                                        |
 +------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
-| $PREFIX/openHand                               | nico_msg/s                                     | Opems the hand. Parameters:                                                           |
+| $PREFIX/openHand                               | nicomsg/s                                      | Opems the hand. Parameters:                                                           |
 |                                                |                                                |  1. "RHand" or "LHand"                                                                |
 +------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
-| $PREFIX/setAngle                               | nico_msg/sff                                   | Sets the angle of a single joint. Parameters:                                         |
+| $PREFIX/setAngle                               | nicomsg/sff                                    | Sets the angle of a single joint. Parameters:                                         |
 |                                                |                                                |  1. Name of joint                                                                     |
 |                                                |                                                |  2. angle                                                                             |
 |                                                |                                                |  3. Fraction of max speed                                                             |
 +------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
-| $PREFIX/setMaximumSpeed                        | nico_msg/f                                     | Sets the maximum allowed speed (in fraction of maximum possible speed). Parameters:   |
+| $PREFIX/setMaximumSpeed                        | nicomsg/f                                      | Sets the maximum allowed speed (in fraction of maximum possible speed). Parameters:   |
 |                                                |                                                |  1. Maximum speed                                                                     |
 +------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
-| $PREFIX/setPID                                 | nico_msg/sfff                                  | Sets the PID control of a single joint. Parameters:                                   |
+| $PREFIX/setPID                                 | nicomsg/sfff                                   | Sets the PID control of a single joint. Parameters:                                   |
 |                                                |                                                |  1. Name of joint                                                                     |
 |                                                |                                                |  2. *p* (proportional band)                                                           |
 |                                                |                                                |  3. *i* (integral action)                                                             |
 |                                                |                                                |  4. *d* (derivative action)                                                           |
 +------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
-| $PREFIX/setStifftness                          | nico_msg/sf                                    | Sets the stifftness of a single joint. Parameters:                                    |
+| $PREFIX/setStifftness                          | nicomsg/sf                                     | Sets the stifftness of a single joint. Parameters:                                    |
 |                                                |                                                |  1. Name of joint                                                                     |
 |                                                |                                                |  2. stifftness                                                                        |
 +------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
@@ -72,25 +72,25 @@ The following ROS services are exposed by the class - where $PREFIX stands for t
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
 | ROS service name                               | Service type                                   | Short description                                                          |
 +================================================+================================================+============================================================================+
-| $PREFIX/getAngle                               | nico_msg/GetValue                              | Returns the angle of a single joint                                        | 
+| $PREFIX/getAngle                               | nicomsg/GetValue                               | Returns the angle of a single joint                                        | 
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
-| $PREFIX/getAngleLowerLimit                     | nico_msg/GetValue                              | Returns the lower limit of the angle for a single joint                    |
+| $PREFIX/getAngleLowerLimit                     | nicomsg/GetValue                               | Returns the lower limit of the angle for a single joint                    |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
-| $PREFIX/getAngleUpperLimit                     | nico_msg/GetValue                              | Returns the upper limit of the angle for a single joint                    |
+| $PREFIX/getAngleUpperLimit                     | nicomsg/GetValue                               | Returns the upper limit of the angle for a single joint                    |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
-| $PREFIX/getCurrent                             | nico_msg/GetValue                              | Returns the present currency of a single joint                             |
+| $PREFIX/getCurrent                             | nicomsg/GetValue                               | Returns the present currency of a single joint                             |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
-| $PREFIX/getJointNames                          | nico_msg/GetNames                              | Returns a list with the names of all joints                                |
+| $PREFIX/getJointNames                          | nicomsg/GetNames                               | Returns a list with the names of all joints                                |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
-| $PREFIX/getPID                                 | nico_msg/GetPID                                | Returns the PID control of a single joint                                  |
+| $PREFIX/getPID                                 | nicomsg/GetPID                                 | Returns the PID control of a single joint                                  |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
-| $PREFIX/getSensorNames                         | nico_msg/GetNames                              | Returns a list with the names of all sensors                               |
+| $PREFIX/getSensorNames                         | nicomsg/GetNames                               | Returns a list with the names of all sensors                               |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
-| $PREFIX/getStifftness                          | nico_msg/GetValue                              | Returns the stifftness of a single joint                                   |
+| $PREFIX/getStifftness                          | nicomsg/GetValue                               | Returns the stifftness of a single joint                                   |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
-| $PREFIX/getTemperature                         | nico_msg/GetValue                              | Returns the present temperature of a single joint                          |
+| $PREFIX/getTemperature                         | nicomsg/GetValue                               | Returns the present temperature of a single joint                          |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
-| $PREFIX/getTorqueLimit                         | nico_msg/GetValue                              | Returns the torque limit of a single joint                                 |
+| $PREFIX/getTorqueLimit                         | nicomsg/GetValue                               | Returns the torque limit of a single joint                                 |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
 
 Class documentation

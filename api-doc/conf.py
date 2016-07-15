@@ -18,10 +18,10 @@ import os
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.abspath('../api/src/motion/scripts/motion'))
-sys.path.insert(0, os.path.abspath('../api/src/audio/scripts/audio'))
-sys.path.insert(0, os.path.abspath('../api/src/vision/scripts/vision'))
-sys.path.insert(0, os.path.abspath('../api/src/rosnico/scripts/'))
+sys.path.insert(0, os.path.abspath('../api/src/nicomotion/scripts/nicomotion'))
+sys.path.insert(0, os.path.abspath('../api/src/nicoaudio/scripts/nicoaudio'))
+sys.path.insert(0, os.path.abspath('../api/src/nicovision/scripts/nicovision'))
+sys.path.insert(0, os.path.abspath('../api/src/nicoros/scripts/'))
 
 # -- General configuration ------------------------------------------------
 
