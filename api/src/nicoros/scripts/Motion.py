@@ -53,10 +53,10 @@ class NicoRosMotion():
         logging.debug('Init subscriber')
         rospy.Subscriber('%s/openHand' % config['rostopicName'], nicomsg.msg.s, self._ROSPY_openHand)
         rospy.Subscriber('%s/closeHand' % config['rostopicName'], nicomsg.msg.s, self._ROSPY_closeHand)
-        rospy.Subscriber('%s/enableForceControl' % config['rostopicName'], nicomsg.msg.i, self._ROSPY_enableForceControl)
-        rospy.Subscriber('%s/disableForceControl' % config['rostopicName'], nicomsg.msg.empty, self._ROSPY_disableForceControl)
-        rospy.Subscriber('%s/enableForceControlSingleJoint' % config['rostopicName'], nicomsg.msg.si, self._ROSPY_enableForceControlSingleJoint)
-        rospy.Subscriber('%s/disableForceControlSingleJoint' % config['rostopicName'], nicomsg.msg.s, self._ROSPY_disableForceControlSingleJoint)
+        rospy.Subscriber('%s/enableForceControlAll' % config['rostopicName'], nicomsg.msg.i, self._ROSPY_enableForceControlAll)
+        rospy.Subscriber('%s/disableForceControlAll' % config['rostopicName'], nicomsg.msg.empty, self._ROSPY_disableForceControlAll)
+        rospy.Subscriber('%s/enableForceControl' % config['rostopicName'], nicomsg.msg.si, self._ROSPY_enableForceControl)
+        rospy.Subscriber('%s/disableForceControl' % config['rostopicName'], nicomsg.msg.s, self._ROSPY_disableForceControl)
         rospy.Subscriber('%s/setAngle' % config['rostopicName'], nicomsg.msg.sff, self._ROSPY_setAngle)
         rospy.Subscriber('%s/changeAngle' % config['rostopicName'], nicomsg.msg.sff, self._ROSPY_changeAngle)
         rospy.Subscriber('%s/setMaximumSpeed' % config['rostopicName'], nicomsg.msg.f, self._ROSPY_setMaximumSpeed)
@@ -100,41 +100,41 @@ class NicoRosMotion():
         """
         self.robot.closeHand(message.param1)
 
+    def _ROSPY_enableForceControlAll(self, message):
+        """
+        Callback handle for :meth:`nicomotion.Motion.enableForceControlAll`
+
+        :param message: ROS message
+        :type message: nicomsg.msg.i
+        """
+        self.robot.enableForceControlAll(message.param1)
+
+    def _ROSPY_disableForceControlAll(self, message):
+        """
+        Callback handle for :meth:`nicomotion.Motion.disableForceControlAll`
+
+        :param message: ROS message
+        :type message: nicomsg.msg.empty
+        """
+        self.robot.disableForceControlAll()
+
     def _ROSPY_enableForceControl(self, message):
         """
         Callback handle for :meth:`nicomotion.Motion.enableForceControl`
 
         :param message: ROS message
-        :type message: nicomsg.msg.i
+        :type message: nicomsg.msg.si
         """
-        self.robot.enableForceControl(message.param1)
+        self.robot.enableForceControl(message.param1, message.param2)
 
     def _ROSPY_disableForceControl(self, message):
         """
         Callback handle for :meth:`nicomotion.Motion.disableForceControl`
 
         :param message: ROS message
-        :type message: nicomsg.msg.empty
-        """
-        self.robot.disableForceControl()
-
-    def _ROSPY_enableForceControlSingleJoint(self, message):
-        """
-        Callback handle for :meth:`nicomotion.Motion.enableForceControlSingleJoint`
-
-        :param message: ROS message
-        :type message: nicomsg.msg.si
-        """
-        self.robot.enableForceControlSingleJoint(message.param1, message.param2)
-
-    def _ROSPY_disableForceControlSingleJoint(self, message):
-        """
-        Callback handle for :meth:`nicomotion.Motion.disableForceControlSingleJoint`
-
-        :param message: ROS message
         :type message: nicomsg.msg.s
         """
-        self.robot.disableForceControlSingleJoint(message.param1)
+        self.robot.disableForceControl(message.param1)
 
     def _ROSPY_setAngle(self, message):
         """

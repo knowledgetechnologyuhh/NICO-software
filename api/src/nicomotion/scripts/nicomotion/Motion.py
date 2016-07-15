@@ -93,7 +93,7 @@ class Motion:
         else:
             _internal.hand.closeHand(self._robot, handName, min(fractionMaxSpeed, self._maximumSpeed), percentage)
 
-    def enableForceControl(self, goalForce = 500):
+    def enableForceControlAll(self, goalForce = 500):
         """
         Enables force control for all joints which support this feature
 
@@ -105,7 +105,7 @@ class Motion:
                 motor.force_control_enable = True
                 motor.goal_force = goalForce
 
-    def disableForceControl(self):
+    def disableForceControlAll(self):
         """
         Disables force control for all joints which support this feature
         """
@@ -113,7 +113,7 @@ class Motion:
             if hasattr(motor, 'force_control_enable'):
                 motor.force_control_enable = False
 
-    def enableForceControlSingleJoint(self, jointName, goalForce):
+    def enableForceControl(self, jointName, goalForce):
         """
         Enables force control for a single joint
 
@@ -133,7 +133,7 @@ class Motion:
             logging.warning('No joint "%s" found' % jointName)
             return
 
-    def disableForceControlSingleJoint(self, jointName):
+    def disableForceControl(self, jointName):
         """
         Disables force control for a single joint
 

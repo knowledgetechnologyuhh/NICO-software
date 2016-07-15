@@ -30,22 +30,22 @@ The following ROS topics are exposed by the class - where $PREFIX stands for the
 | $PREFIX/closeHand                              | nicomsg/s                                      | Closes the hand. Parameters:                                                          |
 |                                                |                                                |  1. "RHand" or "LHand"                                                                |
 +------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
-| $PREFIX/disableForceControl                    | nicomsg/empty                                  | Disables force control for all joints                                                 |
-+------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
-| $PREFIX/disableForceControlSingleJoint         | nicomsg/s                                      | Disables force control for a single joint. Parameters:                                |
+| $PREFIX/disableForceControl                    | nicomsg/s                                      | Disables force control for a single joint. Parameters:                                |
 |                                                |                                                |  1. Name of joint                                                                     |
 +------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
-| $PREFIX/enableForceControl                     | nicomsg/i                                      | Enables force control on all supported joints. Parameters:                            |
-|                                                |                                                |  1. Goal force                                                                        |
-+------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
-| $PREFIX/enableForceControlSingleJoint          | nicomsg/si                                     | Enables force control on a single joint. Parameters:                                  |
-|                                                |                                                |  1. Name of joint                                                                     |
-|                                                |                                                |  2. Goal force                                                                        |
+| $PREFIX/disableForceControlAll                 | nicomsg/empty                                  | Disables force control for all joints                                                 |
 +------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
 | $PREFIX/disableTorque                          | nicomsg/s                                      | Disables torque on a single joint. Parameters:                                        |
 |                                                |                                                |  1. Name of joint                                                                     |
 +------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
 | $PREFIX/disableTorqueAll                       | nicomsg/empty                                  | Disables torque on all joints.                                                        |
++------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
+| $PREFIX/enableForceControl                     | nicomsg/si                                     | Enables force control on a single joint. Parameters:                                  |
+|                                                |                                                |  1. Name of joint                                                                     |
+|                                                |                                                |  2. Goal force                                                                        |
++------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
+| $PREFIX/enableForceControlAll                  | nicomsg/i                                      | Enables force control on all supported joints. Parameters:                            |
+|                                                |                                                |  1. Goal force                                                                        |
 +------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
 | $PREFIX/enableTorque                           | nicomsg/s                                      | Enables torque on a single joint. Parameters:                                         |
 |                                                |                                                |  1. Name of joint                                                                     |
