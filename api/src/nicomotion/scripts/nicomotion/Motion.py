@@ -38,6 +38,13 @@ class Motion:
 
         if vrep:
             logging.info('Using VREP')
+            # TODO Remove the filtering of l_wrist_x once the new model is updated
+            to_remove = ['l_virtualhand_x', 'r_virtualhand_x', 'l_wrist_x', 'r_wrist_x']
+            for motor in to_remove:
+                config['motors'].pop(motor)
+                for group in config['motorgroups'].keys():
+                    config['motorgroups'][group] = [x for x in config['motorgroups'][group] if x != motor]
+                logging.error(pprint.pformat(config))
             self._robot = pypot.vrep.from_vrep(config, vrepHost, vrepPort, vrepScene)
         else:
             logging.info('Using robot')
