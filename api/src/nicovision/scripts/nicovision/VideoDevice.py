@@ -16,9 +16,9 @@ class VideoDevice:
     """
 
     @staticmethod
-    def getAllPaths():
+    def getAllDevices():
         """
-        Returns a list containing the path of all video capturing devices
+        Returns a list containing the possible path of all video capturing devices
 
         :return: Paths of video devices
         :rtype: list
@@ -28,58 +28,58 @@ class VideoDevice:
             return []
         paths = []
         for file in os.listdir(VideoDevice._VIDEO_DEVICE_PATH):
-            paths += [os.path.realpath(VideoDevice._VIDEO_DEVICE_PATH + file)]
+            paths += [file]
         return paths
 
     @staticmethod
-    def resolveID(partID):
+    def resolveDevice(device):
         """
-        Returns the path of a partial string ID
+        Returns the id of a device
 
-        :param partID: Partial ID
-        :type partID: str
-        :return: Path to device
-        :rtype: str
+        :param device: device
+        :type device: str
+        :return: device id (-1 = error)
+        :rtype: int
         """
         if not os.path.isdir(VideoDevice._VIDEO_DEVICE_PATH):
-            logging.error('Video device path does not exists!')
+            logging.error('Video device device does not exists!')
             return ''
 
         candidates = []
         for file in os.listdir(VideoDevice._VIDEO_DEVICE_PATH):
-            if partID in file:
+            if device in file:
                 candidates += [file]
 
         if len(candidates) is 0:
             logging.error('No candidates found')
-            return ''
+            return -1
         elif len(candidates) is 1:
             return int(os.readlink(VideoDevice._VIDEO_DEVICE_PATH + candidates[0])[-1:])
         else:
             logging.error('Multiple candidates found: {}'.format(candidates))
-            return ''
+            return -1
 
     @staticmethod
-    def fromPartID(partID):
+    def fromDevice(device):
         """
-        Convenience method for creating a VideoDevice from a (partial) string ID
+        Convenience method for creating a VideoDevice from a device
 
-        :param partID: (Partial) ID
-        :type partID: str
-        :return: VideoDevice or None if ID is not valid / ambiguous
+        :param device: device
+        :type device: str
+        :return: VideoDevice or None if path is not valid / ambiguous
         :rtype: VideoDevice or None
         """
-        path = VideoDevice.resolveID(partID)
-        if path is '':
-            logging.error('Can not create VideoDevice from ID %s' % partID)
+        id = VideoDevice.resolveDevice(device)
+        if id is -1:
+            logging.error('Can not create VideoDevice from ID %s' % id)
             return None
-        return VideoDevice(path)
+        return VideoDevice(id)
 
     def __init__(self, id, framerate=20, width=640, height=480):
         """
         Initialises the VideoDevice. The device starts closed and has to be opened.
 
-        If you want to create a VideoDevice from a (partial) ID, use :meth:`nicovision.VideoDevice.fromPartID` instead.
+        If you want to create a VideoDevice from a (partial) ID, use :meth:`nicovision.VideoDevice.fromDevice` instead.
 
         :param id: device id
         :type id: int
@@ -189,7 +189,7 @@ class VideoDevice:
         :param function: Function to add as callback
         :type function: function
         """
-        if not inspect.isfunction(function):
+        if not (inspect.isfunction(function) or inspect.ismethod(function)):
             logging.warning('Trying to add non-function callback')
             return
         self._callback += [function]
