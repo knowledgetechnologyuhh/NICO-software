@@ -189,7 +189,7 @@
 			<origin rpy="0 0 0" xyz="-0.029511 0.002253 -0.023968"/>
 		</inertial>
 	</link>
-	<joint name="r_palm_x" type="revolute">
+	<joint name="r_wrist_x" type="revolute">
 		<parent link="right_wrist:11"/>
 		<child link="right_palm:11"/>
 		<origin rpy="-0.433097 0 0" xyz="0.023416 0.006052 -0.070337"/>
@@ -1030,7 +1030,7 @@
 			<origin rpy="0 0 0" xyz="-0.027199 0.000117 0.017191"/>
 		</inertial>
 	</link>
-	<joint name="l_palm_x" type="revolute">
+	<joint name="l_wrist_x" type="revolute">
 		<parent link="left_wrist:11"/>
 		<child link="left_palm:11"/>
 		<origin rpy="0.460941 0 0" xyz="0.023416 0.006052 0.070837"/>
