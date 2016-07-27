@@ -13,17 +13,17 @@ redefinedjoints:
    15: {name: l_arm_x, axis: "1 0 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.8675, upper: 3.002}}
    17: {name: l_elbow_y, axis: "0 -1 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.745, upper: 1.745}}
    69: {name: l_wrist_z, axis: "0 0 -1", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.571, upper: 1.571}}
-   67: {name: l_palm_x, axis: "1 0 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -0.872665, upper: 0}}
+   67: {name: l_wrist_x, axis: "1 0 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -0.872665, upper: 0}}
 
-   29: {name: l_indexfinger_base_x, axis: "0.99794 -0.0170003 -0.0618655", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
+   29: {name: l_indexfingers_x, axis: "0.99794 -0.0170003 -0.0618655", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
    25: {name: l_indexfinger_1st_x, axis: "0.99794 -0.0170003 -0.0618655", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
    27: {name: l_indexfinger_2nd_x, axis: "0.99794 -0.0170003 -0.0618655", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
 
-   35: {name: l_ringfinger_base_x, axis: "0.998051 0.00234199 0.0623629", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
+   35: {name: l_ringfingers_x, axis: "0.998051 0.00234199 0.0623629", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
    31: {name: l_ringfinger_1st_x, axis: "0.998051 0.00234199 0.0623629", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
    33: {name: l_ringfinger_2nd_x, axis: "0.998051 0.00234199 0.0623629", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
 
-   19: {name: l_thumb_base_x, axis: "1 0 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
+   19: {name: l_thumb_x, axis: "1 0 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
    21: {name: l_thumb_1st_x, axis: "1 0 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
    23: {name: l_thumb_2nd_x, axis: "1 0 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
 
@@ -40,17 +40,17 @@ redefinedjoints:
    41: {name: r_arm_x, axis: "1 0 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -3.002, upper: 1.8675}}
    37: {name: r_elbow_y, axis: "0 1 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.745, upper: 1.745}}
    39: {name: r_wrist_z, axis: "0 0 1", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.571, upper: 1.571}}
-   75: {name: r_palm_x, axis: "1 0 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: 0, upper: 0.872665}}
+   75: {name: r_wrist_x, axis: "1 0 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: 0, upper: 0.872665}}
 
-   65: {name: r_indexfinger_base_x, axis: "0.998022 0.00962907 0.0621208", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
+   65: {name: r_indexfingers_x, axis: "0.998022 0.00962907 0.0621208", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
    61: {name: r_indexfinger_1st_x, axis: "0.998022 0.00962907 0.0621208", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
    63: {name: r_indexfinger_2nd_x, axis: "0.998022 0.00962907 0.0621208", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
 
-   55: {name: r_ringfinger_base_x, axis: "0.998022 -0.00962907 -0.0621208", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
+   55: {name: r_ringfingers_x, axis: "0.998022 -0.00962907 -0.0621208", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
    57: {name: r_ringfinger_1st_x, axis: "0.998022 -0.00962907 -0.0621208", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
    59: {name: r_ringfinger_2nd_x, axis: "0.998022 -0.00962907 -0.0621208", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
 
-   77: {name: r_thumb_base_x, axis: "1 0 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
+   77: {name: r_thumb_x, axis: "1 0 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
    81: {name: r_thumb_1st_x, axis: "1 0 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
    79: {name: r_thumb_2nd_x, axis: "1 0 0", type: revolute, limits: {effort: 30, velocity: 1.0, lower: -1.309, upper: 0}}
 
