@@ -23,9 +23,12 @@ class ImageRecorder:
 
         The device must be contained in :meth:`getDevices`
 
-        :param device:
-        :param width:
-        :param height:
+        :param device: Device name
+        :type device: str
+        :param width: Width of image
+        :type width: float
+        :param height: Height of image
+        :type height: float
         """
         self._device = device
         self._target = 'picture.png'

@@ -42,12 +42,12 @@ class NicoRosMotion():
             config = NicoRosMotion.getConfig()
 
         # init Motion
-        logging.info('-- Init rosNICO --')
+        logging.info('-- Init NicoRosMotion --')
         self.robot = Motion(motorConfig=config['robotMotorFile'], vrep=config['vrep'], vrepHost=config['vrepHost'], vrepPort=config['vrepPort'], vrepScene=config['vrepScene'])
 
         # init ROS
         logging.debug('Init ROS')
-        rospy.init_node('ros_nico', anonymous=True)
+        rospy.init_node('nicorosmotion', anonymous=True)
 
         # setup subscriber
         logging.debug('Init subscriber')
@@ -323,8 +323,8 @@ if __name__ == '__main__':
     config = NicoRosMotion.getConfig()
 
     # Parse command line
-    parser = argparse.ArgumentParser(description='NICO ROS interface')
-    parser.add_argument('--log-level', dest='logLevel', help='Sets log level. Default: INFO', type=str)
+    parser = argparse.ArgumentParser(description='NICO ROS motion interface')
+    parser.add_argument('--log-level', dest='logLevel', help='Sets log level. Default: INFO', type=str, default='INFO')
     parser.add_argument('--log-file', dest='logFile', help='Path to log file. Default: %s' % config['logFile'], type=str)
     parser.add_argument('-m', '--motor-file', dest='robotMotorFile', help='Path to robot motor file. Default: %s' % config['robotMotorFile'], type=str)
     parser.add_argument('-v', '--vrep', dest='vrep', help='Connect to VREP rather than to a real robot', action='store_true')
