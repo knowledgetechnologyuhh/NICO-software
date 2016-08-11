@@ -44,7 +44,6 @@ class Motion:
                 config['motors'].pop(motor)
                 for group in config['motorgroups'].keys():
                     config['motorgroups'][group] = [x for x in config['motorgroups'][group] if x != motor]
-                logging.error(pprint.pformat(config))
             self._robot = pypot.vrep.from_vrep(config, vrepHost, vrepPort, vrepScene)
         else:
             logging.info('Using robot')
