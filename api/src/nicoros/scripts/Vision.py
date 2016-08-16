@@ -46,7 +46,7 @@ class NicoRosVision():
         rospy.init_node('nicorosvision', anonymous=True)
 
         logging.debug('Init ROS publisher')
-        self._publisher = rospy.Publisher(self._config['rostopicName'] + '/video_stream', sensor_msgs.msg.Image, queue_size = 1)
+        self._publisher = rospy.Publisher(self._config['rostopicName'] + '/videoStream', sensor_msgs.msg.Image, queue_size = 1)
 
         logging.info('-- All done --')
         pass
