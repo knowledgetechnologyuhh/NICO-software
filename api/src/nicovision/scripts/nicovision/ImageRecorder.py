@@ -17,6 +17,10 @@ def getDevices():
     return VideoDevice.getAllDevices()
 
 class ImageRecorder:
+    """
+    The ImageRecorder class enables the capturing of single images from a camera.
+    """
+
     def __init__(self, device='', width=640, height=480):
         """
         Initialises the ImageRecorder with a given device.
