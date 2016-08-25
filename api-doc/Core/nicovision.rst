@@ -14,7 +14,7 @@ The VideoRecorder class manages the caption of videos from the cameras of the NI
     :show-inheritance:
     :private-members:
 
-VideoRecorder
+ImageRecorder
 #############
 
 The ImageRecorder class enables the capturing of single images from a camera.
