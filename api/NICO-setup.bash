@@ -1,21 +1,31 @@
 #!/bin/bash
 
+CURRENT_GIT_COMMIT="06fbd0e8b4377adf2c65bf028f705c4fa09d7247"
+
 # get dir
 DIR=`dirname "$BASH_SOURCE"`
 WORKDIR=`pwd`
 VIRTUALENV="virtualenv"
 echo Running at: $WORKDIR/$DIR
 
-#install pypot patched version
 cd
+
+#test if we have to reset the setup
+if [ -d ".NICO/" ]; then
+    if [ ! -f ".NICO/.$CURRENT_GIT_COMMIT" ]; then
+        echo "Resetting enviroment"
+        rm -r ".NICO/"
+    fi
+fi
+
+#install pypot patched version
 if [ -d ".NICO/" ]; then
     echo "PyPot already installed"
     source ~/.NICO/bin/activate
 else
   echo "Installing patched pypot"
   # Test for virtualenv
-  command -v virtualenv
-  if ! [ -x "$(command -v foo)" ]; then
+  if ! [ -x "$(command -v virtualenv)" ]; then
     pip install --user virtualenv
     VIRTUALENV=".local/bin/virtualenv"
   fi
@@ -27,6 +37,10 @@ else
   rm -rf ~/.NICO/lib/python2.7/site-packages/pypot/
   mv /tmp/pypot/pypot ~/.NICO/lib/python2.7/site-packages/
 fi
+
+#Saving CURRENT_GIT_COMMIT
+cd
+touch ".NICO/.$CURRENT_GIT_COMMIT"
 
 #ROS + catkin
 echo "Setting up API"
