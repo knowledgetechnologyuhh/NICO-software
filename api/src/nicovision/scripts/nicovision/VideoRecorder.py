@@ -16,6 +16,8 @@ def getDevices():
 
 class VideoCodec:
     MPEG1 = 1
+    H264 = 2
+    DIVX = 3
 
 class VideoRecorder:
     def __init__(self, device='', colorspace=Colorspace.RGB, framerate=20, width=640, height=480, videoformat=VideoCodec.MPEG1):
@@ -159,7 +161,9 @@ class VideoRecorder:
         fourcc = None
         try:
             fourcc = {
-                VideoCodec.MPEG1: cv2.cv.FOURCC('P','I','M','1')
+                VideoCodec.MPEG1: cv2.cv.FOURCC('P','I','M','1'),
+                VideoCodec.H264: cv2.cv.FOURCC('X','2','6','4'),
+                VideoCodec.DIVX: cv2.cv.FOURCC('D','I','V','X'),
             }[self._format]
         except:
             logging.error('Unknown codec')
