@@ -5,7 +5,7 @@ if (sim_call_type==sim_childscriptcall_initialization) then
     r_indexfingers_handle = simGetObjectHandle('r_indexfingers_x')
     r_finger1_handle_1 = simGetObjectHandle('r_indexfinger_1st_x')
     r_finger1_handle_2 = simGetObjectHandle('r_indexfinger_2nd_x')
-    r_finger2_handle_0 = simGetObjectHandle('r_ringfinger_base_x')
+    r_finger2_handle_0 = simGetObjectHandle('r_ringfingers_x')
     r_finger2_handle_1 = simGetObjectHandle('r_ringfinger_1st_x')
     r_finger2_handle_2 = simGetObjectHandle('r_ringfinger_2nd_x')
 
@@ -18,7 +18,7 @@ if (sim_call_type==sim_childscriptcall_initialization) then
     l_indexfingers_handle = simGetObjectHandle('l_indexfingers_x')
     l_finger1_handle_1 = simGetObjectHandle('l_indexfinger_1st_x')
     l_finger1_handle_2 = simGetObjectHandle('l_indexfinger_2nd_x')
-    l_finger2_handle_0 = simGetObjectHandle('l_ringfinger_base_x')
+    l_finger2_handle_0 = simGetObjectHandle('l_ringfingers_x')
     l_finger2_handle_1 = simGetObjectHandle('l_ringfinger_1st_x')
     l_finger2_handle_2 = simGetObjectHandle('l_ringfinger_2nd_x')
 
