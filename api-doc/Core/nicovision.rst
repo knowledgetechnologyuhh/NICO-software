@@ -7,6 +7,7 @@ VideoRecorder
 #############
 
 The VideoRecorder class manages the caption of videos from the cameras of the NICO robot.
+To choose between different video codecs one can use the VideoCodec class
 
 .. automodule:: nicovision.VideoRecorder
     :members:

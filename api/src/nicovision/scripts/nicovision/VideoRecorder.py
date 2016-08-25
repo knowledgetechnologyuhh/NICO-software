@@ -15,9 +15,21 @@ def getDevices():
     return VideoDevice.getAllDevices()
 
 class VideoCodec:
+    """
+    The VideoCodec class represents different video codecs.
+    """
     MPEG1 = 1
+    """
+    MPEG-1 codec
+    """
     H264 = 2
+    """
+    H.264 codec
+    """
     DIVX = 3
+    """
+    DivX codec (Also known as MPEG-4)
+    """
 
 class VideoRecorder:
     def __init__(self, device='', colorspace=Colorspace.RGB, framerate=20, width=640, height=480, videoformat=VideoCodec.MPEG1):
