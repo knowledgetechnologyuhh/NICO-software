@@ -18,8 +18,23 @@ class VideoCodec:
     MPEG1 = 1
 
 class VideoRecorder:
-    @staticmethod
-    def __init__(self, device='', colorspace=Colorspace.RGB, framerate=30, width=640, height=480, videoformat=VideoCodec.MPEG1):
+    def __init__(self, device='', colorspace=Colorspace.RGB, framerate=20, width=640, height=480, videoformat=VideoCodec.MPEG1):
+        """
+        Initialises the VideoRecorder
+
+        :param device: Target video capture unit
+        :type device: str
+        :param colorspace: Used colorspace
+        :type colorspace: Colorspace
+        :param framerate: Framerate
+        :type framerate: float
+        :param width: With of captured stream
+        :type width: int
+        :param height: Height of captured stream
+        :type height: int
+        :param videoformat: Used video format
+        :type videoformat: VideoCodec
+        """
         self._deviceName = device
         self._running = False
         self._colorspace = colorspace
@@ -153,6 +168,8 @@ class VideoRecorder:
         self._device = VideoDevice.fromDevice(self._deviceName)
         self._encoder = cv2.VideoWriter(folder + file, fourcc, self._framerate, (self._width, self._height))
         self._device.addCallback(self._callback)
+        self._device.setResolution(self._width, self._height)
+        self._device.setFrameRate(self._framerate)
         self._device.open()
         self._running = True
 
