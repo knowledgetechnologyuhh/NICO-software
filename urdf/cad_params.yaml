@@ -1,7 +1,7 @@
 scale: "0.001 0.001 0.001"
 forcelowercase: No
 
-filenameformat: "package://NICO-models/%s"
+filenameformat: "package://NICO-models/meshes/%s"
 #filenameformat: "/informatik2/students/home/5wueppen/catkin_ws/src/sandbox/urdf/%s"
 
 redefinedjoints:
