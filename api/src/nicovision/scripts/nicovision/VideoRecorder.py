@@ -146,7 +146,8 @@ class VideoRecorder:
 
     def startRecording(self, folder, file, overwrite = True):
         """
-        Starts the recording into folder/file
+        Starts the recording into folder/file. 
+        File has to have the extension '.avi'. Extension will be attached automatically. 
 
         :param folder: Target folder. Will be created if none existent and overwrite is set to true
         :type folder: str
@@ -155,11 +156,14 @@ class VideoRecorder:
         :param overwrite: If set to False no files will be overwritten
         :type overwrite: bool
         """
-        if not self._running:
+        if self._running:
             logging.warning('Trying to start recording while already running')
             return
         if folder[-1] is not '/':
             folder += '/'
+        if not file.endswith(('.avi', '.AVI')):
+            logging.debug('Attaching ".avi" as file extension')
+            file += '.avi'
         if not os.path.isdir(folder):
             if overwrite:
                 os.makedirs(folder)
