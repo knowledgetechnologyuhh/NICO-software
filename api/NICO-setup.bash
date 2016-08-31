@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CURRENT_GIT_COMMIT="06fbd0e8b4377adf2c65bf028f705c4fa09d7247"
+CURRENT_GIT_COMMIT="ef0b22ca4f305f84c5073ed54ac242b6042ae002"
 
 # get dir
 DIR=`dirname "$BASH_SOURCE"`
