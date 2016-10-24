@@ -1,13 +1,13 @@
 import logging
 import json
-import time
 import re
 import pprint
 
 import pypot.robot
 import pypot.vrep
 
-import _internal.hand
+import _nicomotion_internal.hand
+
 
 class Motion:
     """
@@ -79,9 +79,9 @@ class Motion:
         :type percentage: float
         """
         if self._vrep:
-            _internal.hand.openHandVREP(self._robot, handName, min(fractionMaxSpeed, self._maximumSpeed), percentage)
+            _nicomotion_internal.hand.openHandVREP(self._robot, handName, min(fractionMaxSpeed, self._maximumSpeed), percentage)
         else:
-            _internal.hand.openHand(self._robot, handName, min(fractionMaxSpeed, self._maximumSpeed), percentage)
+            _nicomotion_internal.hand.openHand(self._robot, handName, min(fractionMaxSpeed, self._maximumSpeed), percentage)
 
     def closeHand(self, handName, fractionMaxSpeed=1.0, percentage=1.0):
         """
@@ -95,9 +95,9 @@ class Motion:
         :type percentage: float
         """
         if self._vrep:
-            _internal.hand.closeHandVREP(self._robot, handName, min(fractionMaxSpeed, self._maximumSpeed), percentage)
+            _nicomotion_internal.hand.closeHandVREP(self._robot, handName, min(fractionMaxSpeed, self._maximumSpeed), percentage)
         else:
-            _internal.hand.closeHand(self._robot, handName, min(fractionMaxSpeed, self._maximumSpeed), percentage)
+            _nicomotion_internal.hand.closeHand(self._robot, handName, min(fractionMaxSpeed, self._maximumSpeed), percentage)
 
     def enableForceControlAll(self, goalForce = 500):
         """
