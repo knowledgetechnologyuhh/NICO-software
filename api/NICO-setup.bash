@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CURRENT_GIT_COMMIT="06fbd0e8b4377adf2c65bf028f705c4fa09d7247"
+CURRENT_GIT_COMMIT="ef0b22ca4f305f84c5073ed54ac242b6042ae002"
 
 # get dir
 DIR=`dirname "$BASH_SOURCE"`
@@ -45,13 +45,18 @@ touch ".NICO/.$CURRENT_GIT_COMMIT"
 #ROS + catkin
 echo "Setting up API"
 cd $WORKDIR/$DIR
-catkin_make
-source $WORKDIR/$DIR/devel/setup.bash
+if [ -x "$(command -v catkin_make)" ]; then
+  catkin_make
+  source $WORKDIR/$DIR/devel/setup.bash
+fi
+if ! [ -x "$(command -v catkin_make)" ]; then
+  echo "Catkin not found - skipping API building"
+fi
 
 #cleanup
 echo "Cleanup"
 rm -rf /tmp/pypot
-cd $WORKDIR
+cd "$WORKDIR"
 
 echo "done"
 echo
