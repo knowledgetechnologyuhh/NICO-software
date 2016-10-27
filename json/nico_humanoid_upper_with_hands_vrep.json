@@ -95,7 +95,7 @@
       "orientation": "direct"
     },
     "r_arm_x": {
-      "offset": 0.0 ,
+      "offset": -32.0 ,
       "type": "MX-64",
       "id": 3,
       "angle_limit": [
@@ -135,7 +135,7 @@
       "orientation": "direct"
     },
     "l_arm_x": {
-      "offset": 0.0,
+      "offset": 32.0,
       "type": "MX-64",
       "id": 4,
       "angle_limit": [
