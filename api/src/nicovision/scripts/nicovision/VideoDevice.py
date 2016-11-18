@@ -43,7 +43,7 @@ class VideoDevice:
         """
         if not os.path.isdir(VideoDevice._VIDEO_DEVICE_PATH):
             logging.error('Video device device does not exists!')
-            return ''
+            return -1
 
         candidates = []
         for file in os.listdir(VideoDevice._VIDEO_DEVICE_PATH):
