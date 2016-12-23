@@ -23,6 +23,8 @@
     <param name="height" value="480"/>
     <param name="video_mode" value="uncompressed"/>
     <param name="frame_rate" value="15"/>
+    <param name="auto_exposure" value="3"/>
+    <param name="auto_white_balance" value="false"/>
   </node>
 
 </launch>
