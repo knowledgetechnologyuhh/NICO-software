@@ -17,15 +17,11 @@ class AudioReceiver:
       self._frames = []
       # init ROS
       rospy.init_node('audioreceiver', anonymous=True)
-      # wait for audiostream services
-      rospy.wait_for_service('nico/audiostream/startStream')
-      rospy.wait_for_service('nico/audiostream/stopStream')
+      # wait for audiostream services (stream needs to be running)
       rospy.wait_for_service('nico/audiostream/getSampleWidth')
       rospy.wait_for_service('nico/audiostream/getFrameRate')
       # initialize audio attributes
       try:
-          startStream = rospy.ServiceProxy('nico/audiostream/startStream', nicomsg.srv.StartAudioStream)
-          resp0 = startStream('stream.wav', 44100, True, True)
           getSampleWidth = rospy.ServiceProxy('nico/audiostream/getSampleWidth', nicomsg.srv.GetIntValue)
           getFrameRate = rospy.ServiceProxy('nico/audiostream/getFrameRate', nicomsg.srv.GetIntValue)
           resp1 = getSampleWidth()          
@@ -63,4 +59,4 @@ class AudioReceiver:
 if __name__ == '__main__':
     receiver = AudioReceiver()
     rospy.spin()
-    receiver.save('sound2.wav')
+    receiver.save('example.wav')

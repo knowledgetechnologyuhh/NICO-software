@@ -33,10 +33,10 @@ class AudioStream:
           sampleIndex += 1
           msg = nicomsg.msg.hs()
           msg.header.stamp = rospy.Time.now()
-          if self._publisherLeft:
+          if self._channels[0]:
             msg.param1 = audioop.tomono(sample, self._recorder.get_sample_width(), 1, 0)
             self._publisherLeft.publish(msg)
-          if self._publisherRight:
+          if self._channels[1]:
             msg.param1 = audioop.tomono(sample, self._recorder.get_sample_width(), 0, 1)
             self._publisherRight.publish(msg)
       if self._running:
@@ -58,7 +58,6 @@ class AudioStream:
       self._channels = channels
       self._recorder = RecordSound(rate = samplerate)
       self._recorder.start()
-      self._running  = True
       # enable publishers depending on channels
       if channels[0]:
         self._publisherLeft = rospy.Publisher('nico/audiostream/left', nicomsg.msg.hs, queue_size = 10)
@@ -70,6 +69,7 @@ class AudioStream:
       self._stopSrv     = rospy.Service('nico/audiostream/stopStream', nicomsg.srv.StopAudioStream, self._ROSPY_stopStream)
       # disable start service
       self._startSrv.shutdown()
+      self._running  = True
       return True
       
     def stopStream(self):
