@@ -1,0 +1,6 @@
+string filename
+int32 samplerate
+bool left
+bool right
+---
+bool success

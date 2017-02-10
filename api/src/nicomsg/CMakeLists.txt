@@ -54,6 +54,7 @@ add_message_files(
    sff.msg
    sfff.msg
    si.msg
+   hs.msg
  )
 
 ## Generate services in the 'srv' folder
@@ -62,6 +63,10 @@ add_service_files(
    GetNames.srv
    GetPID.srv
    GetValue.srv
+   GetIntValue.srv
+   StartAudioStream.srv
+   StopAudioStream.srv
+   GetChannelStates.srv
 )
 
 ## Generate actions in the 'action' folder
