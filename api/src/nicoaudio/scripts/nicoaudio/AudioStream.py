@@ -43,15 +43,16 @@ class AudioStream:
         self.stopStream()
 
     def startStream(self, filename, samplerate, channels):
-      '''
+      """
       Starts the audiostream, the source is saved after the stream ends
+      
       :param filename: name for the output file
       :type filename: str
       :param channels: channels that should be streamed (left,right)
       :type channels: tuple(bool, bool)
       :return: success      
       :rtype: bool
-      '''
+      """
       if self._running:    
         return False
       self._filename = filename
@@ -73,10 +74,12 @@ class AudioStream:
       return True
       
     def stopStream(self):
-      '''Stops the audiostream and saves the file
+      """
+      Stops the audiostream and saves the file
+      
       :return: success      
       :rtype: bool   
-      '''
+      """
       if not self._running:
         return False
       self._running = False
@@ -98,54 +101,52 @@ class AudioStream:
 #----------------------------------------Service Callbacks----------------------------------------#
     
     def _ROSPY_startStream(self,msg):
-      '''
+      """
       ROS service handle to start the audio stream
+      
       :param message: ROS message
       :type message: nicomsg.srv.StartAudioStream
       :return: success      
       :rtype: bool     
-      '''
+      """
       return self.startStream(msg.filename,msg.samplerate,(msg.left, msg.right))
 
     def _ROSPY_stopStream(self,_):
-      '''
+      """
       ROS service handle to stop the audio stream
+      
       :param message: ROS message
       :type message: nicomsg.srv.StopAudioStream
       :return: success      
       :rtype: bool      
-      '''
+      """
       return self.stopStream()
 
     def _ROSPY_getSampleWidth(self,_):
-        '''
+        """
         ROS service handle to get the sample width of the stream (needed for wave)
+        
+        :param message: ROS message
+        :type message: nicomsg.srv.GetIntValue
         :return: sample width of the audio stream      
         :rtype: int        
-        '''
+        """
         if self._recorder:
           return self._recorder.get_sample_width()
         return 0
 
     def _ROSPY_getFrameRate(self,_):
-      '''
+      """
       ROS service handle to get the sampling frequency of the stream (needed for wave)
+      
+      :param message: ROS message
+      :type message: nicomsg.srv.GetIntValue
       :return: sampling rate of audio stream      
       :rtype: int
-      '''
+      """
       if self._recorder:          
         return self._recorder._rate
-      return 0
-
-    def _ROSPY_getChannelStates(self,_):
-      '''
-      ROS Service to see which channels are currently streamed
-      :return: streaming status of the two channels
-      :rtype: tuple(bool left, bool right)
-      '''
-      if self._recorder:          
-        return self._channels
-      return False, False       
+      return 0       
 
 if __name__ == '__main__':
   stream = AudioStream()
