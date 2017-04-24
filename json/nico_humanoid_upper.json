@@ -95,14 +95,14 @@
       "orientation": "direct"
     },
     "r_arm_x": {
-      "offset": -32.0 ,
+      "offset": 0.0 ,
       "type": "MX-64",
       "id": 3,
       "angle_limit": [
         -140,
         75
       ],
-      "orientation": "direct"
+      "orientation": "indirect"
     },
     "r_elbow_y": {
       "offset": 0.0,
@@ -135,14 +135,14 @@
       "orientation": "direct"
     },
     "l_arm_x": {
-      "offset": 32.0,
+      "offset": 0.0,
       "type": "MX-64",
       "id": 4,
       "angle_limit": [
         -75,
         140
       ],
-      "orientation": "direct"
+      "orientation": "indirect"
     },
     "l_elbow_y": {
       "offset": 0.0,
