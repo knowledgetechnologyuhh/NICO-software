@@ -8,34 +8,30 @@ echo Running at: $WORKDIR/$DIR
 
 cd
 
-#test if we have to reset the setup
+#virtualenv setup
+echo "Checking for virtualenv"
 if [ -d ".NICO/" ]; then
-    if [ ! -f ".NICO/.$CURRENT_GIT_COMMIT" ]; then
-        echo "Resetting enviroment"
-        rm -r ".NICO/"
-    fi
-fi
-
-#install pypot version
-if [ -d ".NICO/" ]; then
-    echo "PyPot already installed"
-    source ~/.NICO/bin/activate
+    echo "Existing virtualenv found"
 else
-  echo "Installing pypot"
+  echo "No virtualenv found - setting up new virtualenv"
   # Test for virtualenv
   if ! [ -x "$(command -v virtualenv)" ]; then
     pip install --user virtualenv
     VIRTUALENV=".local/bin/virtualenv"
   fi
   $VIRTUALENV -p /usr/bin/python2.7 --system-site-packages ~/.NICO
-  source ~/.NICO/bin/activate
-  pip install 'pyserial==3.1'
-  pip install 'pypot>=3.0.0'
 fi
+echo "Activating virtualenv"
+source ~/.NICO/bin/activate
 
-#Saving CURRENT_GIT_COMMIT
-cd
-touch ".NICO/.$CURRENT_GIT_COMMIT"
+#install python packages
+if [ $VIRTUAL_ENV == ~/.NICO ]; then
+  echo "Checking python packages"
+  pip install 'pyserial<=3.1' # versions 3.2 and 3.3 (most recent as of writing) are missing __init__.pyc for tools
+  pip install 'pypot>=3.0.0'
+else
+  echo "Activation failed - skipping python package installations"
+fi
 
 #ROS + catkin
 echo "Setting up API"
