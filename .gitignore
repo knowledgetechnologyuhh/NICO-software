@@ -11,6 +11,13 @@ __pycache__
 #api doc
 api-doc/_build
 
+#generated json files
+json/generated/
+
+# documentation branch folders
+/_pages/
+/_site/
+
 # catkin generated files
 api/build
 api/devel
