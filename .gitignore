@@ -14,9 +14,12 @@ api-doc/_build
 #generated json files
 json/generated/
 
+# rotation test images
+rotation_images/
+
 # documentation branch folders
-/_pages/
-/_site/
+_pages/
+_site/
 
 # catkin generated files
 api/build
