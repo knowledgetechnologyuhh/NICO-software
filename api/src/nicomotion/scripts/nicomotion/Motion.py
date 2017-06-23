@@ -66,8 +66,8 @@ class Motion:
                 logging.warning('New config created:')
                 logging.warning(pprint.pformat(config))
                 self._robot = pypot.robot.from_config(config)
-        if hasattr(self._robot, "r_middlefingers_x"):
-            self._handModel = "RH7D" 
+        if hasattr(self._robot, "r_middlefingers_x") or hasattr(self._robot, "l_middlefingers_x"):
+            self._handModel = "RH7D"
 
     def thumbsUp(self, handName, fractionMaxSpeed=1.0):
         """
