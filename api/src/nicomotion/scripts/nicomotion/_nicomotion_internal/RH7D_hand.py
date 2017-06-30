@@ -28,6 +28,16 @@ def _HAND_compliant(robot):
         robot.l_thumb_z.compliant = True
 
 def _move(motor, position, fractionMaxSpeed):
+    """
+    Moves motor to given position.
+
+    :param motor: Motor object
+    :type motor: pypot.robot.motor
+    :param position: goal position/angle
+    :type position: float
+    :param fractionMaxSpeed: Percentage of goal speed at which the motor should operate [0.0, 1.0]
+    :type position: float
+    """
     motor.compliant = False
     motor.goal_speed = 1000.0 * fractionMaxSpeed
     motor.goal_position = position

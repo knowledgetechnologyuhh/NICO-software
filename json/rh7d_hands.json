@@ -37,7 +37,7 @@
   "motors": {
     "l_virtualhand": {
       "offset": 0.0,
-      "type": "MX-28",
+      "type": "SR-EROSBRD",
       "id": 40,
       "angle_limit": [
         -180,
@@ -77,7 +77,7 @@
     },
     "l_thumb_z": {
       "offset": 0.0,
-      "type": "MX-28",
+      "type": "SR-SEED28",
       "id": 44,
       "angle_limit": [
         -180,
@@ -87,7 +87,7 @@
     },
     "l_thumb_x": {
       "offset": 0.0,
-      "type": "MX-28",
+      "type": "SR-SEED28",
       "id": 45,
       "angle_limit": [
         -180,
@@ -97,7 +97,7 @@
     },
     "l_indexfinger_x": {
       "offset": 0.0,
-      "type": "MX-28",
+      "type": "SR-SEED28",
       "id": 46,
       "angle_limit": [
         -180,
@@ -107,7 +107,7 @@
     },
     "l_middlefingers_x": {
       "offset": 0.0,
-      "type": "MX-28",
+      "type": "SR-SEED28",
       "id": 47,
       "angle_limit": [
         -180,
@@ -117,7 +117,7 @@
     },
     "r_virtualhand": {
       "offset": 0.0,
-      "type": "MX-28",
+      "type": "SR-EROSBRD",
       "id": 30,
       "angle_limit": [
         -180,
@@ -157,7 +157,7 @@
     },
     "r_thumb_z": {
       "offset": 0.0,
-      "type": "MX-28",
+      "type": "SR-SEED28",
       "id": 34,
       "angle_limit": [
         -180,
@@ -167,7 +167,7 @@
     },
     "r_thumb_x": {
       "offset": 0.0,
-      "type": "MX-28",
+      "type": "SR-SEED28",
       "id": 35,
       "angle_limit": [
         -180,
@@ -177,7 +177,7 @@
     },
     "r_indexfinger_x": {
       "offset": 0.0,
-      "type": "MX-28",
+      "type": "SR-SEED28",
       "id": 36,
       "angle_limit": [
         -180,
@@ -187,7 +187,7 @@
     },
     "r_middlefingers_x": {
       "offset": 0.0,
-      "type": "MX-28",
+      "type": "SR-SEED28",
       "id": 37,
       "angle_limit": [
         -180,
