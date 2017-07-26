@@ -39,7 +39,7 @@
       "r_indexfingers_x",
       "r_thumb_x",
       "r_virtualhand_x"
-      
+
     ],
     "l_hand": [
       "l_wrist_z",
@@ -193,7 +193,7 @@
         160
       ],
       "orientation": "direct"
-    },  
+    },
      "l_virtualhand_x": {
       "offset": 0.0,
       "type": "SR-EROSBRD",
@@ -258,5 +258,3 @@
     }
    }
 }
-
-
