@@ -500,7 +500,7 @@ class Motion:
     def setPID(self, jointName, p, i, d):
         """
         Sets the PID controller for a single motor. For more information see
-        http://support.robotis.com/en/product/dynamixel/mx_series/mx-64.htm#Actuator_Address_1A
+        http://support.robotis.com/en/product/actuator/dynamixel/mx_series/mx-64at_ar.htm#Actuator_Address_1A
 
         :param jointName: Name of the joint
         :type jointName: str
@@ -524,7 +524,7 @@ class Motion:
     def getPID(self, jointName):
         """
         Returns the current stifftness of a motor. For more information see
-        http://support.robotis.com/en/product/dynamixel/mx_series/mx-64.htm#Actuator_Address_1A
+        http://support.robotis.com/en/product/actuator/dynamixel/mx_series/mx-64at_ar.htm#Actuator_Address_1A
 
         :param jointName: Name of the joint
         :type jointName: str
