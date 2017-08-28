@@ -2,7 +2,7 @@
 
 This git contains the software to run the NICO (Neuro Inspired COmpanion) robot.
 
-## Academic citadation
+## Academic Citadation
 
 If you use the NICO robot, this software or parts of it or the NICO CAD files for your research, please cite the paper 
 
