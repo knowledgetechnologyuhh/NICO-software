@@ -2,7 +2,7 @@
 
 This git contains the software to run the NICO (Neuro Inspired COmpanion) robot.
 
-[![](https://www.inf.uni-hamburg.de/7011170/nicobody-6e15c94d03871634ba78a28af1e15ff9b82d5e48.png)](https://www.inf.uni-hamburg.de/en/inst/ab/wtm/research/neurobotics/nico.html)
+[![](https://www2.informatik.uni-hamburg.de/wtm/pictures/nico_tomato.jpg)](https://www.inf.uni-hamburg.de/en/inst/ab/wtm/research/neurobotics/nico.html)
 
 ## Academic Citation
 
