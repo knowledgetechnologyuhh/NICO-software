@@ -15,9 +15,10 @@ Proceedings of the IEEE International Symposium on Robot and Human Interactive C
 ```
 @InProceedings\{KSMNHW17,
   author       = "Kerzel, Matthias and Strahl, Erik and Magg, Sven and Navarro-Guerrero, Nicol\'as and Heinrich, Stefan and Wermter, Stefan",
-  title        = "NICO -- Neuro-Inspired COmpanion: A Developmental Humanoid Robot Platform for Multimodal Interaction",
+  title        = "NICO - Neuro-Inspired COmpanion: A Developmental Humanoid Robot Platform for Multimodal Interaction",
   booktitle    = "Proceedings of the IEEE International Symposium on Robot and Human Interactive Communication (RO-MAN)",
-  pages        = "accepted",
+  pages        = "113--120",
+  month        = "Aug",
   year         = "2017",
   url          = "https://www2.informatik.uni-hamburg.de/wtm/publications/2017/KSMNHW17/"
 }
