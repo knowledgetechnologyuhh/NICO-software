@@ -10,7 +10,7 @@ If you use the NICO robot, this software or parts of it or the NICO CAD files fo
 
 NICO - Neuro-Inspired COmpanion: A Developmental Humanoid Robot Platform for Multimodal Interaction  
 Matthias Kerzel, Erik Strahl, Sven Magg, Nicolás Navarro-Guerrero, Stefan Heinrich, Stefan Wermter
-Proceedings of the IEEE International Symposium on Robot and Human Interactive Communication (RO-MAN), pages accepted - 2017.
+Proceedings of the IEEE International Symposium on Robot and Human Interactive Communication (RO-MAN), pages 113-120, 2017.
 
 > BibTeX Style Citation
 
