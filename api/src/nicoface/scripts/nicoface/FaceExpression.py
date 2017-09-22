@@ -18,6 +18,9 @@ from PIL import Image
 
 
 class faceExpression:
+    """
+    The faceExpression class provides an interface to manipulate NICO's facial expressions
+    """
     def __init__(self, devicename='/dev/ttyACM0',mode="real"):
         self.mode = mode
         self.comm_mode=2
@@ -39,10 +42,14 @@ class faceExpression:
 
 
     def setCommMode(self, mode):
-        # Sets the communication mode (0-2)
-        # the lower it is, the faster
-        # the higher it is, the higher the information from the arduino
+        """
+        Sets the communication mode (0-2)
+        the lower it is, the faster
+        the higher it is, the higher the information from the arduino
 
+        :param mode: communication mode
+        :type mode: int
+        """
         self.comm_mode=mode
         expression="mod"+str(mode)
         print "Sending " + expression
@@ -53,6 +60,13 @@ class faceExpression:
         sleep(.2)  # Delay for one tenth of a second
 
     def sendFaceExpression(self, expression):
+        """
+        Changes NICO's facial expression to the given preset. The presets consist of:
+        'happiness','sadness','anger','disgust','surprise','fear','neutral','clean'
+
+        :param expression: name of the desired facial expression (happiness,sadness,anger,disgust,surprise,fear,neutral,clean)
+        :type expression: str
+        """
         # try:
         print "Sending " + expression
 
@@ -66,12 +80,28 @@ class faceExpression:
     #	print "Could not interface with arduino device. Reason:" + str(sys.exc_info()[0])
 
     def PIL_to_np(self, Img):
+        """
+        Converts a PIL image into a numpy array
+
+        :param Img: image to convert
+        :type Img: PIL.Image
+        :return: Image as numpy array
+        :rtype: numpy.array
+        """
         pix = np.array(Img.getdata()).reshape(Img.size[0], Img.size[1])
 
         return pix
 
 
     def np_to_str(self, pix):
+        """
+        Packs a numpy array into a String for serialization
+
+        :param pix: array to pack
+        :type pix: numpy.array
+        :return: Numpy array packed into a string
+        :rtype: str
+        """
         pix_pack = np.packbits(pix)
         lcd_string = ""
         for n in pix_pack:
@@ -88,7 +118,13 @@ class faceExpression:
         return Img
 
     def send(self,address="all"):
+        """
+        Send current expression ("all") or a specific part of it to display. ("m" for mouth,
+        "l" or "r" for left or right eyebrow)
 
+        :param address: part of face to send (all, l, r, m)
+        :type address: str
+        """
         import time
 
 
@@ -107,13 +143,25 @@ class faceExpression:
 
 
     def show_PIL(self, Img):
+        """
+        Displays a PIL image
+
+        :param Img: Image to display
+        :type Img: PIL.Image
+        """
         Img_l = Img.resize((Img.size[0] * 25, Img.size[1] * 25))
 
         Img_l.show()
 
-
-    # Send an image to a display. Can be "l" or "r" for left and right elbrow or "m" for mouth
     def send_PIL(self, Img, disp):
+        """
+        Send an image to a display. Can be "l" or "r" for left and right elbrow or "m" for mouth
+
+        :param Img: Image to display
+        :type Img: PIL.Image
+        :param disp: part of face to send (l, r, m)
+        :type disp: PIL.Image
+        """
         import timeit
         start = timeit.default_timer()
         pix = self.PIL_to_np(Img)
@@ -165,17 +213,39 @@ class faceExpression:
             # except:
             #	print "Could not interface with arduino device. Reason:" + str(sys.exc_info()[0])
 
-    def ricker(self,f, length=0.512, dt=0.001,sca=1,level=0,xoff=0,xstr=1,yoff=0,ystr=1):
+    def ricker(self,f, length=0.512, dt=0.001,xoff=0,xstr=1,yoff=0,ystr=1):
+        """
+        Generates a Ricker wavelet (based on https://agilescientific.com/blog/2013/12/10/to-plot-a-wavelet.html)
+
+        :param f: peak frequency
+        :type f: float
+        :param length: timeframe
+        :type length: float
+        :param dt: samplerate
+        :type dt: float
+        :param xoff: offset in x position
+        :type xoff: float
+        :param xstr: stretch in x position
+        :type xstr: float
+        :param yoff: offset y position
+        :type yoff: float
+        :param ystr: stretch in y position
+        :type ystr: float
+        :return: Tuple: time_axis, function_values
+        :rtype: tuple
+        """
         t = np.linspace(-length/2, (length-dt)/2, length/dt)
-        y = ((1.-2.*(np.pi**2)*(f**2)*(t**2))*np.exp(-(np.pi**2)*(f**2)*(t**2))*sca)+level
+        y = (1.-2.*(np.pi**2)*(f**2)*(t**2))*np.exp(-(np.pi**2)*(f**2)*(t**2))
         return t*xstr+xoff, y*ystr+yoff
 
     def fig2data(self,fig):
         """
-        @brief Convert a Matplotlib figure to a 4D numpy array with RGBA channels and return it
-        @param fig a matplotlib figure
-        @return a numpy 3D array of RGBA values
+        Convert a Matplotlib figure to a 4D numpy array with RGBA channels and return it
         http://www.icare.univ-lille1.fr/wiki/index.php/How_to_convert_a_matplotlib_figure_to_a_numpy_array_or_a_PIL_image
+
+        :param fig: a matplotlib figure
+        :return: a numpy 3D array of RGBA values
+        :rtype: numpy.array
         """
         # draw the renderer
         fig.canvas.draw()
@@ -192,10 +262,12 @@ class faceExpression:
 
     def fig2img(self,fig,xsize=16,ysize=8,type="m"):
         """
-        @brief Convert a Matplotlib figure to a PIL Image in RGBA format and return it
-        @param fig a matplotlib figure
-        @return a Python Imaging Library ( PIL ) image
+        Convert a Matplotlib figure to a PIL Image in RGBA format and return it
         http://www.icare.univ-lille1.fr/wiki/index.php/How_to_convert_a_matplotlib_figure_to_a_numpy_array_or_a_PIL_image
+
+        :param fig: a matplotlib figure
+        :return: a Python Imaging Library ( PIL ) image
+        :rtype: PIL.Image
         """
         # put the figure pixmap into a numpy array
 
@@ -232,6 +304,14 @@ class faceExpression:
         return image_file
 
     def fig2png(self,fig,fileName):
+        """
+        Saves a Matplotlib figure as image file
+
+        :param fig: a matplotlib figure
+        :type fig: object
+        :param fileName: name of the saved image file
+        :type fileName: str
+        """
         import PIL
 
         buf = self.fig2data(fig)
@@ -262,10 +342,18 @@ class faceExpression:
         return numpy_array
 
     def gen_mouth(self,ml1=(-1.4,0.7,1.0,0),ml2=(None,None,None,None),fileName=None):
+        """
+        Generation of the mouth. One or two lines can be generated.
 
-        # Generation of the mouth
-        # one or two lines can be generated
-        # tuple = (stretch_in_y_position , offset_y_position,stretch_in_x_position , offset_x_position,)
+        :param ml1: first line of the mouth (stretch_in_y_position, offset_y_position, stretch_in_x_position , offset_x_position)
+        :type ml1: tuple(float,float,float,float)
+        :param ml2: second line of the mouth (stretch_in_y_position, offset_y_position, stretch_in_x_position , offset_x_position)
+        :type ml2: tuple
+        :param fileName: name of the file to save the resulting plot to (if desired)
+        :type fileName: str
+        :return: PIL image of the mouth
+        :rtype: PIL.Image
+        """
 
         ystr1,yoff1,xstr1,xoff1=ml1
         ystr2, yoff2, xstr2, xoff2 = ml2
@@ -303,8 +391,17 @@ class faceExpression:
 
     def gen_eyebrowse(self,ml1=(0.1,0.4,1,-0.55), fileName=None,type="l"):
 
-        # Generation of the eyebrowse
-        # tuple = (stretch_in_y_position , offset_y_position,stretch_in_x_position , offset_x_position,)
+        """
+        Generation of the specified eyebrow. The eyebrow is specified by setting
+        type to "l" or "r" for left or right eyebrow.
+
+        :param ml1: line of the eyebrow (stretch_in_y_position, offset_y_position, stretch_in_x_position , offset_x_position)
+        :type ml1: tuple(float,float,float,float)
+        :param fileName: name of the file to save the resulting plot to (if desired)
+        :type fileName: str
+        :param type: specifies which eyebrow to generate ("l", "r")
+        :type type: str
+        """
 
         ystr1,yoff1,xstr1,xoff1=ml1
         if type == "r":

@@ -1,7 +1,7 @@
 .. NICO documentation master file
 
 Welcome to the NICO documentation
-====================================
+=================================
 
 This is the documentation of the high-level API for the NICO robot.
 
