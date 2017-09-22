@@ -1,7 +1,7 @@
 nicoaudio
 *********
 
-The **nicoaudio** packet contains classes to control the audio interface of the NICO.
+The **nicoaudio** package contains classes to control the audio interface of the NICO.
 
 AudioPlayer
 ###########
@@ -34,7 +34,7 @@ The AudioStream class allows to send the audio data through ROS.
 To start the interface run:
 
 .. code-block:: bash
-   
+
    rosrun nicoaudio AudioStream.py
 
 Exposed topics

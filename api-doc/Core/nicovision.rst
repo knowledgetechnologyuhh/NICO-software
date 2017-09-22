@@ -1,7 +1,7 @@
 nicovision
 **********
 
-The **nicovision** packet contains classes to control the audio interface of the NICO.
+The **nicovision** package contains classes to control the audio interface of the NICO.
 
 VideoRecorder
 #############
