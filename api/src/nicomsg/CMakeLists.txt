@@ -48,7 +48,9 @@ add_message_files(
    FILES
    empty.msg
    f.msg
+   fff.msg
    i.msg
+   iii.msg
    s.msg
    sf.msg
    sff.msg
