@@ -5,7 +5,7 @@ import rospy
 import nicomsg.msg
 import nicomsg.srv
 import audioop
-from _nicoaudio_internal.record_sound import RecordSound
+from nicoaudio._nicoaudio_internal.record_sound import RecordSound
 
 class AudioStream:
     def __init__(self):
@@ -18,14 +18,14 @@ class AudioStream:
       # init ROS
       rospy.init_node('audiostream', anonymous=True)
       # global publisher variables (initialized in startStream)
-      self._publisherLeft = None     
-      self._publisherRight= None 
+      self._publisherLeft = None
+      self._publisherRight= None
       # global service variables (startStream initializes the other ones)
       self._getWidthSrv   = None
       self._getRateSrv    = None
       self._startSrv      = rospy.Service('nico/audiostream/startStream', nicomsg.srv.StartAudioStream, self._ROSPY_startStream)
       self._stopSrv       = None
-      # actual streaming      
+      # actual streaming
       sampleIndex = 0
       while not rospy.is_shutdown():
         if self._running and self._recorder.get_number_of_samples() > sampleIndex:
@@ -45,15 +45,15 @@ class AudioStream:
     def startStream(self, filename, samplerate, channels):
       """
       Starts the audiostream, the source is saved after the stream ends
-      
+
       :param filename: name for the output file
       :type filename: str
       :param channels: channels that should be streamed (left,right)
       :type channels: tuple(bool, bool)
-      :return: success      
+      :return: success
       :rtype: bool
       """
-      if self._running:    
+      if self._running:
         return False
       self._filename = filename
       self._channels = channels
@@ -72,13 +72,13 @@ class AudioStream:
       self._startSrv.shutdown()
       self._running  = True
       return True
-      
+
     def stopStream(self):
       """
       Stops the audiostream and saves the file
-      
-      :return: success      
-      :rtype: bool   
+
+      :return: success
+      :rtype: bool
       """
       if not self._running:
         return False
@@ -97,39 +97,39 @@ class AudioStream:
       # reenable start service
       self._startSrv = rospy.Service('nico/audiostream/startStream', nicomsg.srv.StartAudioStream, self._ROSPY_startStream)
       return True
-    
+
 #----------------------------------------Service Callbacks----------------------------------------#
-    
+
     def _ROSPY_startStream(self,msg):
       """
       ROS service handle to start the audio stream
-      
+
       :param message: ROS message
       :type message: nicomsg.srv.StartAudioStream
-      :return: success      
-      :rtype: bool     
+      :return: success
+      :rtype: bool
       """
       return self.startStream(msg.filename,msg.samplerate,(msg.left, msg.right))
 
     def _ROSPY_stopStream(self,_):
       """
       ROS service handle to stop the audio stream
-      
+
       :param message: ROS message
       :type message: nicomsg.srv.StopAudioStream
-      :return: success      
-      :rtype: bool      
+      :return: success
+      :rtype: bool
       """
       return self.stopStream()
 
     def _ROSPY_getSampleWidth(self,_):
         """
         ROS service handle to get the sample width of the stream (needed for wave)
-        
+
         :param message: ROS message
         :type message: nicomsg.srv.GetIntValue
-        :return: sample width of the audio stream      
-        :rtype: int        
+        :return: sample width of the audio stream
+        :rtype: int
         """
         if self._recorder:
           return self._recorder.get_sample_width()
@@ -138,15 +138,15 @@ class AudioStream:
     def _ROSPY_getFrameRate(self,_):
       """
       ROS service handle to get the sampling frequency of the stream (needed for wave)
-      
+
       :param message: ROS message
       :type message: nicomsg.srv.GetIntValue
-      :return: sampling rate of audio stream      
+      :return: sampling rate of audio stream
       :rtype: int
       """
-      if self._recorder:          
+      if self._recorder:
         return self._recorder._rate
-      return 0       
+      return 0
 
 if __name__ == '__main__':
   stream = AudioStream()
