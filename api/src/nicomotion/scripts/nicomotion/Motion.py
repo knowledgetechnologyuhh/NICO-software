@@ -92,7 +92,7 @@ class Motion:
         """
         Sets the timeframe which one simulation step represents. Only works while the simulation is stopped and dt is set to custom in V-REP.
 
-        :param dt:
+        :param dt: timeframe of one simulation step
         :type dt: int
         """
         if self._vrep:
