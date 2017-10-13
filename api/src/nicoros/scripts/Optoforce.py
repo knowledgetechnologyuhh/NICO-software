@@ -50,4 +50,4 @@ if __name__ == '__main__':
     try:
         NicoRosOptoforce(args.device,args.serial)
     except Exception as e:
-        pass
+        raise
