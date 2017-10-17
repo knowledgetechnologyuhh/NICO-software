@@ -5,6 +5,7 @@ import pprint
 
 import pypot.robot
 import pypot.vrep
+from pypot.vrep.remoteApiBindings import vrep as remote_api
 
 import _nicomotion_internal.hand
 import _nicomotion_internal.RH7D_hand
@@ -68,6 +69,63 @@ class Motion:
                 self._robot = pypot.robot.from_config(config)
         if hasattr(self._robot, "r_middlefingers_x") or hasattr(self._robot, "l_middlefingers_x"):
             self._handModel = "RH7D"
+
+    def startSimulation(self, synchronize=False):
+        """
+        Starts the V-REP Simulation. If 'synchronize' is set True the simulation steps
+        will not advance until nextSimulationStep() is called.
+
+        :param synchronize: Enables control over simulation time steps
+        :type synchronize: bool
+        """
+        if self._vrep:
+            if synchronize:
+                clientID = self._robot._controllers[0].io.client_id
+                remote_api.simxSynchronous(clientID,True)
+                remote_api.simxStartSimulation(clientID, remote_api.simx_opmode_blocking)
+            else:
+                self._robot.start_simulation()
+        else:
+            logging.warning('startSimulation() has no effect on a real robot')
+
+    def setSimulationDeltatime(self, dt):
+        """
+        Sets the timeframe which one simulation step represents. Only works while the simulation is stopped and dt is set to custom in V-REP.
+
+        :param dt: timeframe of one simulation step
+        :type dt: int
+        """
+        if self._vrep:
+            self._robot._controllers[0].io.call_remote_api('simxSetFloatingParameter', remote_api.sim_floatparam_simulation_time_step, dt)
+        else:
+            logging.warning('nextSimulationStep() has no effect on a real robot')
+
+    def nextSimulationStep(self):
+        """
+        Advances the V-REP simulation by one step if synchronize was set on startSimulation().
+        """
+        if self._vrep:
+            remote_api.simxSynchronousTrigger(self._robot._controllers[0].io.client_id)
+        else:
+            logging.warning('nextSimulationStep() has no effect on a real robot')
+
+    def stopSimulation(self):
+        """
+        Stops the V-REP simulation
+        """
+        if self._vrep:
+            remote_api.simxStopSimulation(self._robot._controllers[0].io.client_id, remote_api.simx_opmode_blocking)
+        else:
+            logging.warning('stopSimulation() has no effect on a real robot')
+
+    def resetSimulation(self):
+        """
+        Restarts the V-REP simulation
+        """
+        if self._vrep:
+            self._robot.reset_simulation
+        else:
+            logging.warning('resetSimulation() has no effect on a real robot')
 
     def thumbsUp(self, handName, fractionMaxSpeed=1.0):
         """
