@@ -17,9 +17,11 @@ from subprocess import call
 
 #experiment definitions (Objects and number of graspings)
 #definition of objects
-objects =["red_tomato","green_sausage","red_ball", "yellow_dice","yellow_banana"]
+objects =["red_tomato","green_sausage","red_ball","yellow_banana","red_banana","yellow_dice","green_pepper","blue_ball","red_dice","puple_grapes","red_sponge","orange_carrot","black_hat","purple_duck","orange_fish","green_figure"]
+
 #definition for numbers per object
-number_of_samples_per_object=3
+number_of_samples_per_object=10
+
 #definition of Maximum current - This protects the hands from breaking!! Do not change this, if you do not know!
 MAX_CUR_FINGER=120
 MAX_CUR_THUMB=100
