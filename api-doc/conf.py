@@ -21,6 +21,8 @@ import os
 sys.path.insert(0, os.path.abspath('../api/src/nicomotion/scripts/nicomotion'))
 sys.path.insert(0, os.path.abspath('../api/src/nicoaudio/scripts/nicoaudio'))
 sys.path.insert(0, os.path.abspath('../api/src/nicovision/scripts/nicovision'))
+sys.path.insert(0, os.path.abspath('../api/src/nicoface/scripts/nicoface'))
+sys.path.insert(0, os.path.abspath('../api/src/nicotouch/scripts/nicotouch'))
 sys.path.insert(0, os.path.abspath('../api/src/nicoros/scripts/'))
 
 # -- General configuration ------------------------------------------------
