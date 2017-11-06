@@ -27,4 +27,3 @@ The following ROS services are exposed by the class - where $PREFIX stands for t
     :members:
     :undoc-members:
     :show-inheritance:
-    :private-members:
