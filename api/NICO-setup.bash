@@ -29,6 +29,7 @@ if [ $VIRTUAL_ENV == ~/.NICO ]; then
   echo "Checking python packages"
   pip install 'pyserial<=3.1' # versions 3.2 and 3.3 (most recent as of writing) are missing __init__.pyc for tools
   pip install 'pypot>=3.0.0'
+  pip install 'sphinx' # required inside virtualenv to find all modules
 else
   echo "Activation failed - skipping python package installations"
 fi
