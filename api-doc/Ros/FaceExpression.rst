@@ -31,6 +31,8 @@ The following ROS services are exposed by the class - where $PREFIX stands for t
 |                                                |                                                |   1. 'happiness','sadness','anger','disgust','surprise','fear','neutral', or 'clean'  |
 +------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
 
+Class documentation
+===================
 
 .. automodule:: FaceExpression
     :members:
