@@ -1,0 +1,50 @@
+BIO-IK
+
+Install:
+
+cd NICO-software/api/src/nicomoveit
+git clone https://github.com/TAMS/bio_ik.git
+cd NICO-software/api/
+catkin_make
+
+Usage:
+
+cd NICO-software/api/src/nicomoveit
+python setKinematicsSolver.py bio_ik
+
+OR
+
+When using the moveitWrapper the IK solver can be changed using the function
+
+OR
+
+gedit NICO-software/api/src/nicomoveit/moveitgenerated/config/kinematics.yaml
+Replace kinematics_solver: kdl_kinematics_plugin/KDLKinematicsPlugin (or similar) with kinematics_solver: bio_ik/BioIKKinematicsPlugin
+
+----------------------------------------------------------------------------------------------
+
+Trac-IK
+
+Install:
+
+for ROS Indigo (Ubuntu 14): sudo apt-get install ros-indigo-trac-ik
+for ROS Kinetic (Ubuntu 16): sudo apt-get install ros-kinetic-trac-ik
+
+cd NICO-software/api/src/nicomoveit
+git clone https://github.com/TAMS/bio_ik.git
+cd NICO-software/api/
+catkin_make
+
+Usage:
+
+cd NICO-software/api/src/nicomoveit
+python setKinematicsSolver.py trac_ik
+
+OR
+
+When using the moveitWrapper the IK solver can be changed using the function
+
+OR
+
+gedit NICO-software/api/src/nicomoveit/moveitgenerated/config/kinematics.yaml
+Replace kinematics_solver: kdl_kinematics_plugin/KDLKinematicsPlugin (or similar) with kinematics_solver: trac_ik_kinematics_plugin/TRAC_IKKinematicsPlugin
