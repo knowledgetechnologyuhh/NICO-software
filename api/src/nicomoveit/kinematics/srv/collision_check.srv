@@ -1,0 +1,4 @@
+std_msgs/String planning_group
+kinematics/FloatList joint_angles
+---
+std_msgs/Bool collision_state

@@ -1,0 +1,5 @@
+std_msgs/String planning_group
+std_msgs/String tip
+kinematics/FloatList joint_angles
+---
+geometry_msgs/Pose pose

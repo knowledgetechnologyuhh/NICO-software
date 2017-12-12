@@ -38,11 +38,13 @@ class Motion:
 
         with open(motorConfig, 'r') as config_file:
             config = json.load(config_file)
+            
+        self._config = config
 
         if vrep:
             logging.info('Using VREP')
             # TODO Remove the filtering of l_wrist_x once the new model is updated
-            to_remove = ['l_virtualhand_x', 'r_virtualhand_x', 'l_wrist_x', 'r_wrist_x']
+            to_remove = ['l_virtualhand_x', 'r_virtualhand_x']
             for motor in to_remove:
                 config['motors'].pop(motor)
                 for group in config['motorgroups'].keys():
@@ -421,7 +423,22 @@ class Motion:
             return motor.upper_limit
         else:
             logging.warning('No joint "%s" found' % jointName)
-            return 0.0
+            return 0.0                
+                
+    def setAngleUpperLimit(self, jointName, angle):
+        """
+        Sets the upper angle limit of a joint (in degree)
+
+        :param jointName: Name of the joint
+        :type jointName: str
+        :param angle: Angle (in degree)
+        :type angle: float
+        """
+        if hasattr(self._robot, jointName):
+            motor = getattr(self._robot, jointName)
+            motor.upper_limit = angle
+        else:
+            logging.warning('No joint "%s" found' % jointName)
 
     def getAngleLowerLimit(self, jointName):
         """
@@ -437,7 +454,22 @@ class Motion:
             return motor.lower_limit
         else:
             logging.warning('No joint "%s" found' % jointName)
-            return 0.0
+            return 0.0            
+                
+    def setAngleLowerLimit(self, jointName, angle):
+        """
+        Sets the lower angle limit of a joint (in degree)
+
+        :param jointName: Name of the joint
+        :type jointName: str
+        :param angle: Angle (in degree)
+        :type angle: float
+        """
+        if hasattr(self._robot, jointName):
+            motor = getattr(self._robot, jointName)
+            motor.lower_limit = angle
+        else:
+            logging.warning('No joint "%s" found' % jointName)
 
     def getTorqueLimit(self, jointName):
         """
@@ -639,6 +671,19 @@ class Motion:
             motor.compliant = True
         else:
             logging.warning('No joint "%s" found' % jointName)
+
+    def getPose(self, objectName, relativeToObject=None):
+      """
+        Returns the current pose of the scene object with given name relative to the second given object
+
+        :param objectName: Name of the object
+        :type objectName: str
+        :param relativeToObject: Name of the object that the position should be relative to
+        :type relativeToObject: str
+        :return: Position of the requestet object in x,y,z coordinates relative to the second object
+        :rtype: list of three floats
+        """                
+      return self._robot.get_object_position(objectName,relativeToObject)
 
     def cleanup(self):
         """
