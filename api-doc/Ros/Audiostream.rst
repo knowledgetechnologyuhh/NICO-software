@@ -51,6 +51,8 @@ The following ROS topics are exposed by the class - where $PREFIX stands for the
 | $PREFIX/getSampleWidth                         | nicomsg/GetIntValue                            | Returns the samplewidth at which the stream is recorded. (only visible while running) |
 +------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
 
+Class documentation
+===================
 
 .. automodule:: AudioStream
     :members:

@@ -1,0 +1,3 @@
+<launch>
+  <node name="experiments" pkg="kinematics" type="experiments" output="screen" respawn="true" respawn_delay="10" />
+</launch>
