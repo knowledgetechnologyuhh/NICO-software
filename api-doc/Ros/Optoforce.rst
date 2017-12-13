@@ -22,6 +22,8 @@ The following ROS services are exposed by the class - where $PREFIX stands for t
 | $PREFIX/newton                                 | nicomsg/fff                                    | sensor data in newton (make sure the serial is correct as conversion is based on it)  |
 +------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
 
+Class documentation
+===================
 
 .. automodule:: Optoforce
     :members:
