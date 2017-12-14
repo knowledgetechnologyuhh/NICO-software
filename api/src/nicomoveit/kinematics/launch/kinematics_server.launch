@@ -1,0 +1,6 @@
+<launch>
+  <arg name="output" default="log"/>
+  
+  <node name="kinematics_server" pkg="kinematics" type="kinematics_server" output="$(arg output)" />
+
+</launch>
