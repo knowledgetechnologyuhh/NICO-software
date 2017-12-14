@@ -1,4 +1,4 @@
-# Touch Sensor Experiment Number 1
+# Shake Experiment Number
 
 # Erik Strahl
 
@@ -17,56 +17,54 @@ from subprocess import call
 
 #experiment definitions (Objects and number of graspings)
 #definition of objects
-objects =["red_tomato","green_sausage","red_ball","yellow_banana","red_banana","yellow_dice","green_pepper","blue_ball","red_dice","puple_grapes","red_sponge","orange_carrot","black_hat","purple_duck","orange_fish","green_figure"]
+objects =["sugar","screws","sand"]
+weights =["1","10","50"]
+
+#Combination of objects and weights to make this countable and usable in database
+object_weights=[o+"_"+w for o in objects for w in weights]
+
+#for o in objects:
+#	for w in weights:
+#		ow=o + "_" + w
+#		object_weights.append(ow)
+
 
 #definition for numbers per object
-number_of_samples_per_object=10
+number_of_samples_per_object=2
+number_shakes_per_sample=5
+
+#Sampling frequency for touch and robotis sensors
+move_frequency=48
 
 #definition of Maximum current - This protects the hands from breaking!! Do not change this, if you do not know!
 MAX_CUR_FINGER=120
 MAX_CUR_THUMB=100
 
 # Data for SQlite Access
-# Experiment Data will be stored in two table database
+# Experiment Data will be stored in two three database
 # with samples for every sample of a grasped onject and subsample for every motor step (like for 10 degrees)
 
 ###########!!! Enable for database connection
-#connection = sqlite3.connect("./egg_data/experiment.db")
-#cursor = connection.cursor()
-# status: 0-succesful , 1- overload, 2 - former_overload
-format_str_subsample = """INSERT INTO subsample (subsample_number, sample_number , subsample_iteration, thumb_position, finger_position, 
-thumb_current,finger_current, timecode_local, status,status_touch, counter_touch,x_touch,y_touch,z_touch, 
+connection = sqlite3.connect("./data_shake/experiment.db")
+cursor = connection.cursor()
+#status: 0-succesful , 1- overload, 2 - former_overload
+
+
+format_str_move = """INSERT INTO move (move_number, subsample_number , subsample_iteration, l_wrist_x_pos, 
+l_wrist_z_pos, l_elbow_y_pos, l_arm_x_pos, l_shoulder_z_pos, l_shoulder_y_pos, l_elbow_y_cur, timecode_local, status,status_touch, counter_touch,x_touch,y_touch,z_touch, 
 timecode_touch )
-    VALUES (NULL, "{sample_number}",  "{subsample_iteration}", "{thumb_position}", "{finger_position}", 
-"{thumb_current}","{finger_current}", "{timecode_local}", "{status}","{status_touch}", "{counter_touch}","{x_touch}","{y_touch}","{z_touch}", 
+  VALUES (NULL, "{sample_number}",  "{subsample_iteration}", "{l_wrist_x_pos}", "{l_wrist_z_pos}", 
+"{l_elbow_y_pos}","{l_arm_x_posn}", "{l_shoulder_z_pos}", "{l_shoulder_y_pos}", 
+"{l_elbow_y_cur}", "{timecode_local}", "{status}","{status_touch}", "{counter_touch}","{x_touch}","{y_touch}","{z_touch}", 
 "{timecode_touch}");"""
 
 
-sql_command = """
-CREATE TABLE subsample_arm ( 
-subsample_number INTEGER PRIMARY KEY,
-sample_number INTEGER,
-subsample_iteration INTEGER,
-r_elbow_y_position FLOAT,
-r_arm_x_position FLOAT,
-r_shoulder_z_position FLOAT,
-r_shoulder_y_position FLOAT,
-r_elbow_y_current FLOAT,
-r_arm_x_current FLOAT,
-r_shoulder_z_current FLOAT,
-r_shoulder_y_current FLOAT,
-timecode_local VARCHAR(30));"""
+format_str_subsample = """INSERT INTO subsample (subsample_number, sample_number , subsample_iteration, timecode_local )
+  VALUES (NULL, "{sample_number}",  "{subsample_iteration}", "{timecode_local}");"""
 
 
-format_str_subsample_arm = """INSERT INTO subsample_arm (subsample_number, sample_number , subsample_iteration, r_elbow_y_position, 
-r_arm_x_position, r_shoulder_z_position, r_shoulder_y_position, r_elbow_y_current, r_arm_x_current, r_shoulder_z_current, r_shoulder_y_current, timecode_local )
-  VALUES (NULL, "{sample_number}",  "{subsample_iteration}", "{r_elbow_y_position}", "{r_arm_x_position}", 
-"{r_shoulder_z_position}","{r_shoulder_y_position}", "{r_elbow_y_position}", "{r_arm_x_position}", 
-"{r_shoulder_z_position}","{r_shoulder_y_position}", "{timecode_touch}");"""
-
-
-format_str_sample = """INSERT INTO sample (sample_number,object_name , timecode)
-    VALUES (NULL, "{object_name}", "{timecode}");"""
+format_str_sample = """INSERT INTO sample (sample_number,object_name , object_weight , or_comb, timecode)
+    VALUES (NULL, "{object_name}", "{object_weight}","{or_comb}","{timecode}");"""
 
 
 # Data for robot movement in high level mode
@@ -83,27 +81,30 @@ import pygame.camera
 #cam = pygame.camera.Camera("/dev/video0",(640,480))
 #cam.start()
 
-###########!!! Enable for database connection
-#def get_sampled_numbers_for_object(object_name):
+def get_object_weight_comb(one_object,one_weight):
+	return(one_object+"_"+one_weight)
 
-#    sql="SELECT * FROM sample where object_name='" + object_name + "';"
-#    cursor.execute(sql)
-#    result = cursor.fetchall()
-#    return len(result)
+def get_splitted_object_weight_comb(object_weight):
+	return(tuple(object_weight.split("_")[:-1])
+
+def get_sampled_numbers_for_object(object_comb):
+
+    sql="SELECT * FROM sample where or_comb='" + object_comb + "';"
+    cursor.execute(sql)
+    result = cursor.fetchall()
+    return len(result)
 
 def get_needed_numbers_for_object(object_name):
 
     num = number_of_samples_per_object - get_sampled_numbers_for_object(object_name)
     return (num)
 
-def get_needed_overall_numbers():
-    sum=0
-    for o in objects:
-        sum+=get_needed_numbers_for_object(o)
-    return(sum)
+def get_needed_overall_numbers(ek):
+    
+    return(len(ek))
 
-def print_progress():
-    for o in objects:
+def print_progress(object_weights):
+    for o in object_weights:
         print " For " + o + " - samples needed: " + str(get_needed_numbers_for_object(o))
         " - samples finished: " + str(get_sampled_numbers_for_object(o))
 
@@ -111,13 +112,13 @@ def print_progress():
     #Print out was is still needed
 print "\n\nWe still need the following samples:"
 
-#print_progress()
+print_progress()
 
-#if get_needed_overall_numbers()>0:
-#    print "\n\nOverall there are still " +str(get_needed_overall_numbers()) + " samples needed.\n\n"
-#else:
-#    print "\n\nAll samples recorded. Thank you. If you needed more, adapt the number_of_samples_per_object parameter on the programm.\n\n"
-#    exit(0)
+if get_needed_overall_numbers()>0:
+    print "\n\nOverall there are still " +str(get_needed_overall_numbers()) + " samples needed.\n\n"
+else:
+    print "\n\nAll samples recorded. Thank you. If you needed more, adapt the number_of_samples_per_object parameter on the programm.\n\n"
+    exit(0)
 
 
 # Instructions for the experimenter. Brig the robot in Initial position
@@ -143,37 +144,30 @@ mov.move_file_position(mover_path + "pos_left_arm_base.csv",
                                    subsetfname=mover_path + "subset_left_arm_and_head.csv",
                                    move_speed=0.05)
 
-# Instructions for the experimenter. Brig the robot in Initial position
+# Instructions for the experimenter. Bring the robot in Initial position
 print "\n OK. The robot is positioned. We will start the experiment now.\n\n"
 raw_input()
 
 
-
-
-
-
-
-
 # Data for touch sensor
-# Adapt this for the srial Interface you need for the sensor
+# Adapt this for the serial Interface you need for the sensor
 
-#optsens = optoforce("/dev/ttyACM1", "DSE0A125")
+optsens = optoforce("/dev/ttyACM1", "DSE0A125")
 
 while ( True ):
 
 
         #Select an object
-        #o=random.choice(objects)
-        #while (get_needed_numbers_for_object(o)<1):
-        #    o = random.choice(objects)
+        o=random.choice(object_weights)
+        while (get_needed_numbers_for_object(o)<1):
+            o = random.choice(object_weights)
 
-        #print "Randomly chosen object : " + o + "\n"
+        print "Randomly chosen object : " + o + "\n"
 
 		mov.move_file_position(mover_path + "pos_left_arm_base.csv",
                                    subsetfname=mover_path + "subset_left_arm_and_head.csv",
                                    move_speed=0.05)
-                                   
-        
+                                
 
         #print "\n\n Please put the " + o + " on the robot fingers. Then press RETURN."
 		print "\n\n Please exchange the egg on the robot fingers. Then press RETURN."
@@ -197,19 +191,96 @@ while ( True ):
                                    move_speed=0.1)
                                    
 		sleep(2.5)
+		
+		
+		
+		#!!!!Write Sample data in database
+        
+		sql_command = format_str_sample.format(object_name=o, object_weight=o, timecode= datetime.datetime.now().isoformat())
+		#print "\n " +sql_command
+		cursor.execute(sql_command)
+		sample_number=cursor.lastrowid
+		
+		########## ToDo:  Start Audio Recording (Sample Based) here
+		
 
-		for t in range (5):                              
-	
+		for itr in range (number_shakes_per_sample):
+
+			#Write the subsample data to the database
+			sql_command = format_str_subsample.format(sample_number=sample_number, subsample_iteration = itr, 
+                                                      timecode_local=datetime.datetime.now().isoformat())
+			print sql_command
+			cursor.execute(sql_command)
+			subsample_number = cursor.lastrowid
+
+			########## ToDo:  Start Audio Recording (Subsample Based) here	
+			
 			mov.move_file_position(mover_path + "pos_left_arm_ear_1.csv",
                                    subsetfname=mover_path + "subset_left_arm_and_head.csv",
                                    move_speed=0.3)
 
-			sleep(0.2)
+			s_wait_time=0.2
+			number_of_moves=move_frequency * s_wait_time
+			o_wait_time = s_wait_time / number_of_moves
+			
+			it=0
+			for i in range (int(number_of_moves)):
+				
+				## Get and write move- an sensordata
+				
+				# Get the sensor data
+				(x, y, z) = optsens.get_sensor_values_hex()
+				print "Sensor " + str((x, y, z))
+				(time_touch, counter, sensor_status, x, y, z, checksum) = optsens.get_sensor_all()
+				print str(time_touch) + "," + str(counter) + "," + str(sensor_status) + "," + str(x) + "," + str(y) + "," + str(z) + "," + str(checksum)
+				
+				# Write the subsample data to the database
+				sql_command = format_str_move.format(subsample_number=subsample_number, subsample_iteration=i,
+														l_wrist_x_pos=robot.getAngle("l_wrist_x"),
+														l_wrist_z_pos=robot.getAngle("l_wrist_z"),
+														l_elbow_y_pos=robot.getAngle("l_elbow_y"),
+														l_arm_x_pos=robot.getAngle("l_arm_x_pos"),
+														l_shoulder_z_pos=robot.getAngle("l_shoulder_z"),
+														l_shoulder_y_pos=robot.getAngle("l_shoulder_y"),
+														l_shoulder_y_pos=robot.getCurrent("l_elbow_y"),
+														timecode_local=datetime.datetime.now().isoformat(),
+														status=sensor_status,
+														status_touch=sensor_status,
+														counter_touch=counter,
+														x_touch=x,
+														y_touch=y,
+														z_touch=z,
+														timecode_touch=time_touch)
+														
+
+				print sql_command
+				cursor.execute(sql_command)
+				subsample_number = cursor.lastrowid
+				
+				sleep(o_wait_time)
+				it=i
+
 
 			mov.move_file_position(mover_path + "pos_left_arm_ear_2.csv",
                                    subsetfname=mover_path + "subset_left_arm_and_head.csv",
                                    move_speed=0.3)
-			sleep(3)
+			
+			s_wait_time=3.0
+			number_of_moves=move_frequency * s_wait_time
+			o_wait_time = s_wait_time / number_of_moves
+			
+			for i in range (int(number_of_moves)):
+				
+				## Get and write move- an sensordata
+				
+				# Get the sensor data
+				(x, y, z) = optsens.get_sensor_values_hex()
+				print "Sensor " + str((x, y, z))
+				(time_touch, counter, sensor_status, x, y, z, checksum) = optsens.get_sensor_all()
+				print str(time_touch) + "," + str(counter) + "," + str(sensor_status) + "," + str(x) + "," + str(y) + "," + str(z) + "," + str(checksum)
+				sleep(o_wait_time)
+			
+			########## ToDo:  Stop Audio Recording (Subsample Based) here	
 		
 		mov.move_file_position(mover_path + "pos_left_arm_ear_3.csv",
                                    subsetfname=mover_path + "subset_left_arm_and_head.csv",
@@ -217,7 +288,7 @@ while ( True ):
 
 		sleep(2)
 		
-		for t in range (5):                              
+		for t in range (number_shakes_per_sample):                              
 	
 			mov.move_file_position(mover_path + "pos_left_arm_ear_3.csv",
                                    subsetfname=mover_path + "subset_left_arm_and_head.csv",
@@ -230,16 +301,14 @@ while ( True ):
                                    move_speed=0.3)
 			sleep(3)
 		
+		connection.commit()
+		
 
 
 
 while (True):
 
-        #!!!!Write Sample data in database
-        sql_command = format_str_sample.format(object_name=o, timecode= datetime.datetime.now().isoformat())
-        #print "\n " +sql_command
-        cursor.execute(sql_command)
-        sample_number=cursor.lastrowid
+
 
         #Status no overload
         status=0
@@ -281,23 +350,13 @@ while (True):
 
 
             #print "Sensor raw" + str((x,y,z))
-            (x, y, z) = optsens.get_sensor_values_hex()
-            print "Sensor " + str((x, y, z))
-            (time_touch, counter, sensor_status, x, y, z, checksum) = optsens.get_sensor_all()
-            print str(time_touch) + "," + str(counter) + "," + str(sensor_status) + "," + str(x) + "," + str(y) + "," + str(z) + "," + str(checksum)
+
 
             if ((cur_thumb>MAX_CUR_THUMB) or (cur_finger>MAX_CUR_FINGER)) and status==0:
                 status=1
                 print "!!Reached Overload!!"
 
-            #Write the subsample data to the database
-            sql_command = format_str_subsample_arm.format(sample_number=sample_number, subsample_iteration = it, thumb_position=thumb_pos,finger_position=finger_pos,
-                                                          thumb_current=cur_thumb, finger_current=cur_finger,
-                                                      timecode_local=datetime.datetime.now().isoformat(),status=status,status_touch=sensor_status,
-                                                          counter_touch=counter,x_touch=x,y_touch=y,z_touch=z,timecode_touch=time_touch)
-            print sql_command
-            cursor.execute(sql_command)
-            subsample_number = cursor.lastrowid
+            
 
             #take 5 pictures (error in the driver)
             for t in range(5):
@@ -395,7 +454,7 @@ while (True):
         # print str(time_touch) + "," + str(counter) + "," + str(sensor_status) + "," + str(x) + "," + str(y) + "," + str(z) + "," + str(checksum)
 
 
-        connection.commit()
+        
 	connection.close()
 	print "\n\n Great! I got all samples together! Finishing experiment.\n"
 	print_progress()
