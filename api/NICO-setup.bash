@@ -47,6 +47,20 @@ else
   echo "Activation failed - skipping python package installations"
 fi
 
+#MoveIt!
+MOVEIT_indigo=$(dpkg-query -W --showformat='${Status}\n' ros-indigo-moveit 2>/dev/null|grep "install ok
+installed")
+MOVEIT_kinetic=$(dpkg-query -W --showformat='${Status}\n' ros-kinetic-moveit 2>/dev/null|grep "install ok
+installed")
+if [ "" == "$MOVEIT_indigo" ] && [ "" == "$MOVEIT_kinetic" ]; then
+  echo "MoveIt! is not installed"
+else
+  mv $WORKDIR/$DIR/src/nicomoveit/kinematics/package_.xml $WORKDIR/$DIR/src/nicomoveit/kinematics/package.xml
+  echo "MoveIt! is installed"
+  echo "To use MoveIt! with visualization run: roslaunch moveitgenerated demo.launch"
+  echo "otherwise run: roscore"
+fi 
+
 #ROS + catkin
 echo "Setting up API"
 cd $WORKDIR/$DIR
