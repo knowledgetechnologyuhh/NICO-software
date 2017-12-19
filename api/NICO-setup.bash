@@ -64,6 +64,10 @@ fi
 #ROS + catkin
 echo "Setting up API"
 cd $WORKDIR/$DIR
+if [ -x "$(command -v rosversion)" ]; then
+  ROS_VERSION=$(rosversion -d)
+  source /opt/ros/${ROS_VERSION}/setup.bash
+fi
 if [ -x "$(command -v catkin_make)" ]; then
   catkin_make
   source $WORKDIR/$DIR/devel/setup.bash
