@@ -4,6 +4,8 @@ from _nicoemotionrecognition_internal import modelLoader, modelDictionary, image
 import sys
 import tensorflow as tf
 from nicovision.VideoDevice import VideoDevice
+from nicoface.FaceExpression import faceExpression
+import logging
 
 class EmotionRecognition:
     def __init__(self, device='', faceDetectionDelta = 10):
@@ -23,6 +25,7 @@ class EmotionRecognition:
         self._categoricalRecognition = None
         self._dimensionalRecognition = None
         self._running = False
+        self._facialExpression = faceExpression("/dev/ttyACM0")
 
         self._modelCategorical = modelLoader.modelLoader(modelDictionary.CategoricaModel)
         self._modelDimensional = modelLoader.modelLoader(modelDictionary.DimensionalModel)
@@ -33,12 +36,15 @@ class EmotionRecognition:
 
         self._GUIController = GUIController.GUIController()
 
-    def start(self, showGUI=True):
+
+    def start(self, showGUI=True, mirrorEmotion=False):
         """
         Starts the emotion recognition
 
         :param showGUI: Whether or not the GUI should be displayed
         :type showGUI: bool
+        :param mirrorEmotion: Whether or not the robot should mirror the detected emotion
+        :type mirrorEmotion: bool
         """
         if self._running:
             logging.warning('Trying to start emotion recognition while already running')
@@ -48,6 +54,7 @@ class EmotionRecognition:
         self._device.open()
         self._showGUI = showGUI
         self._running = True
+        self._mirrorEmotion = mirrorEmotion
 
     def stop(self):
         """
@@ -93,6 +100,24 @@ class EmotionRecognition:
             return None
         return dict(zip(self._modelCategorical.modelDictionary.classsesOrder, self._categoricalRecognition[0]))
 
+    def getHighestMatchingEmotion(self):
+        """
+        Returns the name of the highest matching emotion for the currently detected face (or None if there is none)
+
+        :return: Neutral, Happiness, Surprise, Sadness, Anger, Disgust, Fear or Contempt (or None if no face detected)
+        :rtype: String
+        """
+        if self._categoricalRecognition is not None:
+            max_index = numpy.argmax(self._categoricalRecognition[0])
+            print max_index
+            print type(max_index)
+            max_classname = self._modelCategorical.modelDictionary.classsesOrder[max_index]
+            print max_classname
+            print type(max_classname)
+            return self._modelCategorical.modelDictionary.classsesOrder[numpy.argmax(self._categoricalRecognition[0])].lower()
+        return None
+
+
     def _callback(self, rval, frame):
         if frame is not None:
             facePoints, face = self._imageProcessing.detectFace(frame)
@@ -109,6 +134,9 @@ class EmotionRecognition:
                 with self._graph.as_default():
                     self._categoricalRecognition = self._modelCategorical.classify(face)
                     self._dimensionalRecognition = self._modelDimensional.classify(face)
+
+                if self._mirrorEmotion:
+                    self._facialExpression.sendFaceExpression(self.getHighestMatchingEmotion())
 
                 if self._showGUI:
                     frame = self._GUIController.createDetectedFacGUI(frame,facePoints,self._modelCategorical.modelDictionary, self._categoricalRecognition)
