@@ -132,7 +132,7 @@ class AudioRecorder:
             wfile.close()
 
     @threaded
-    def start_recording(self, label, rec_id=0, fname="test.wav",dir_name="./data_shake/"):
+    def start_recording(self, label, rec_id=0, fname="test.wav",dir_name="./"):
         print("Starting to record {} as id {}.".format(label, rec_id))
         self.rec_running[rec_id] = label
         frames = self.rec_from_mic(n_sec=24 * 60 * 60, rec_id=rec_id)

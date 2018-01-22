@@ -20,7 +20,16 @@ from subprocess import call
 objects =["red_tomato","green_sausage","red_ball","yellow_banana","red_banana","yellow_dice","green_pepper","blue_ball","red_dice","puple_grapes","red_sponge","orange_carrot","black_hat","purple_duck","orange_fish","green_figure"]
 
 #definition for numbers per object
-number_of_samples_per_object=10
+#Samples taken:
+#0-9 Schulpraktikant Lars
+#10-19 Schulpraktikant Lars
+#20-29 SHK Karen
+#30-39 SHK Ju
+#40-49 SHK Ju
+#50-59 B.Sc. Emil 	
+#60-69 B.Sc. Emil
+
+number_of_samples_per_object=70
 
 #definition of Maximum current - This protects the hands from breaking!! Do not change this, if you do not know!
 MAX_CUR_FINGER=120
@@ -49,14 +58,16 @@ format_str_sample = """INSERT INTO sample (sample_number,object_name , timecode)
 fMS = 0.01
 fMS_hand=1.0
 
+wait_time=0.15
+
 #get the camera ready
-import pygame
-import pygame.camera
+#import pygame
+#import pygame.camera
 
-pygame.camera.init()
+#pygame.camera.init()
 
-cam = pygame.camera.Camera("/dev/video0",(640,480))
-cam.start()
+#cam = pygame.camera.Camera("/dev/video0",(320,200))
+#cam.start()
 
 def get_sampled_numbers_for_object(object_name):
 
@@ -80,7 +91,38 @@ def print_progress():
     for o in objects:
         print " For " + o + " - samples needed: " + str(get_needed_numbers_for_object(o))
         " - samples finished: " + str(get_sampled_numbers_for_object(o))
+        
+def get_position_safe(dxo,joint):
+	
+	succes=False
+	while not succes:		
+		try:
+			pos=dxo.get_present_position(joint)[0]
+			return pos
+		except:
+			sleep(0.2)
+	
+			
+def get_present_thumb_current_safe(dxo,joint):
+	
+	succes=False
+	while not succes:		
+		try:
+			pos=dxo.get_present_thumb_current(joint)[0]
+			return pos
+		except:
+			sleep(0.2)	
 
+def get_present_finger_current_safe(dxo,joint):
+	
+	succes=False
+	while not succes:		
+		try:
+			pos=dxo.get_present_finger_current(joint)[0]
+			return pos
+		except:
+			sleep(0.2)	
+	
 
     #Print out was is still needed
 print "\n\nWe still need the following samples:"
@@ -168,22 +210,26 @@ with pypot.dynamixel.DxlIO('/dev/ttyACM0') as dxl_io:
                 while (dxl_io.get_present_speed([27])<0.01 and dxl_io.get_present_speed([29])<0.01):
                     sleep(0.1)
             # !!!! Take a photo here - name = ID
-            thumb_pos=dxl_io.get_present_position([27])[0]
-            finger_pos=dxl_io.get_present_position([29])[0]
+            thumb_pos=get_position_safe(dxl_io,[27])
+            #thumb_pos=dxl_io.get_present_position([27])[0]
+            
+            finger_pos=get_position_safe(dxl_io,[29])
             #(x,y,z) = optsens.get_sensor_values_raw()
             #print "Motor Temperature " + str(dxl_io.get_present_temperature([27]))
             #for id in range (30,33):
             #    try:
             id=31
-            cur_thumb=dxl_io.get_present_thumb_current([id])[0]
+            
+            
+            cur_thumb=get_present_thumb_current_safe(dxl_io,[id])
             print "Motor Thumb Current " + str(cur_thumb) + " id " + str(id)
-            cur_finger = dxl_io.get_present_finger_current([id])[0]
+            cur_finger = get_present_finger_current_safe(dxl_io,[id])
             print "Motor Finger Current " + str(cur_finger) + " id " + str(id)
             #    except:
             #        pass
             #    sleep(0.1)
             #print "Motor Speed " + str(dxl_io.get_present_speed([27]))
-            print "Motor Goal Position " + str(dxl_io.get_goal_position([27]))
+            #print "Motor Goal Position " + str(dxl_io.get_goal_position([27]))
             print "Thumb Present Position " + str(thumb_pos)
             print "Finger Present Position " + str(finger_pos)
             #print "Motor Max Torque" + str(dxl_io.get_max_torque([27]))
@@ -207,12 +253,12 @@ with pypot.dynamixel.DxlIO('/dev/ttyACM0') as dxl_io:
             subsample_number = cursor.lastrowid
 
             #take 5 pictures (error in the driver)
-            for t in range(5):
-                img = cam.get_image()
+            #for t in range(5):
+            #    img = cam.get_image()
 
-            pygame.image.save(img, "./data/" + str(subsample_number) + ".jpg")
-            #call(["fswebcam", "-r", "640x480", "-d", "/dev/video0", "--jpeg", "95", "-D", "1",
-            #      "./data/" + str(subsample_number) + ".jpg"])
+            #pygame.image.save(img, "./data/" + str(subsample_number) + ".jpg")
+            call(["fswebcam", "-r", "640x480", "-d", "/dev/video0", "--jpeg", "95", "-D", "0.1",
+                  "./data/" + str(subsample_number) + ".jpg"])
             sleep(.1)
 
             # !!!! Take a photo here - name = ID of the subsample
