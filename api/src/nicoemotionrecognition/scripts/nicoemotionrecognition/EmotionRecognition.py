@@ -1,14 +1,18 @@
+#!/usr/bin/env python
+
 import numpy
 import cv2
 from _nicoemotionrecognition_internal import modelLoader, modelDictionary, imageProcessingUtil, GUIController
 import sys
 import tensorflow as tf
 from nicovision.VideoDevice import VideoDevice
-from nicoface.FaceExpression import faceExpression
 import logging
 
+from nicomotion import Motion
+from os.path import dirname, abspath
+
 class EmotionRecognition:
-    def __init__(self, device='', faceDetectionDelta = 10):
+    def __init__(self, device='', robot=None, face=None, faceDetectionDelta = 10):
         """
         Initialises the EmotionRecognition
 
@@ -25,19 +29,20 @@ class EmotionRecognition:
         self._categoricalRecognition = None
         self._dimensionalRecognition = None
         self._running = False
-        self._facialExpression = faceExpression("/dev/ttyACM0")
+        self._facialExpression = face
+        self._robot = robot
 
         self._modelCategorical = modelLoader.modelLoader(modelDictionary.CategoricaModel)
         self._modelDimensional = modelLoader.modelLoader(modelDictionary.DimensionalModel)
         self._graph = tf.get_default_graph()
 
-
+        self._faceDetectionDelta = faceDetectionDelta
         self._imageProcessing = imageProcessingUtil.imageProcessingUtil(faceDetectionDelta)
 
         self._GUIController = GUIController.GUIController()
 
 
-    def start(self, showGUI=True, mirrorEmotion=False):
+    def start(self, showGUI=True, faceTracking=False, mirrorEmotion=False):
         """
         Starts the emotion recognition
 
@@ -49,12 +54,14 @@ class EmotionRecognition:
         if self._running:
             logging.warning('Trying to start emotion recognition while already running')
             return
+        self._mirrorEmotion = mirrorEmotion
+        self._faceTracking = faceTracking
+        self._trackingCounter = 0
         self._device = VideoDevice.fromDevice(self._deviceName)
         self._device.addCallback(self._callback)
         self._device.open()
         self._showGUI = showGUI
         self._running = True
-        self._mirrorEmotion = mirrorEmotion
 
     def stop(self):
         """
@@ -109,11 +116,7 @@ class EmotionRecognition:
         """
         if self._categoricalRecognition is not None:
             max_index = numpy.argmax(self._categoricalRecognition[0])
-            print max_index
-            print type(max_index)
             max_classname = self._modelCategorical.modelDictionary.classsesOrder[max_index]
-            print max_classname
-            print type(max_classname)
             return self._modelCategorical.modelDictionary.classsesOrder[numpy.argmax(self._categoricalRecognition[0])].lower()
         return None
 
@@ -130,12 +133,25 @@ class EmotionRecognition:
 
 
             if not len(face) == 0:
+                if self._faceTracking and self._trackingCounter == 0:
+                    if self._robot is not None:
+                        # (width - center_x)/width * FOV - FOV/2
+                        angle_z = (640-facePoints[0].center().x)/640.0 * 60 - 60/2.0 # horizontal
+                        angle_y = (480-facePoints[0].center().y)/480.0 * 50 - 50/2.0 # vertikal
+                        self._robot.changeAngle("head_z", angle_z, 0.02)
+                        self._robot.changeAngle("head_y", -angle_y, 0.02)
+                    else:
+                        logging.warning("No robot given on initialisation - skipping face tracking")
+                if self._trackingCounter == self._faceDetectionDelta:
+                    self._trackingCounter = 0
+                else:
+                    self._trackingCounter += 1
                 face = self._imageProcessing.preProcess(face, self._faceSize)
                 with self._graph.as_default():
                     self._categoricalRecognition = self._modelCategorical.classify(face)
                     self._dimensionalRecognition = self._modelDimensional.classify(face)
 
-                if self._mirrorEmotion:
+                if self._mirrorEmotion and self._facialExpression is not None:
                     self._facialExpression.sendFaceExpression(self.getHighestMatchingEmotion())
 
                 if self._showGUI:
@@ -145,6 +161,12 @@ class EmotionRecognition:
             else:
                 self._categoricalRecognition = None
                 self._dimensionalRecognition = None
+                if self._faceTracking:
+                    if self._robot is not None:
+                        self._robot.setAngle("head_z", 0, 0.05)
+                        self._robot.setAngle("head_y", 10, 0.05)
+                    else:
+                        logging.warning("No robot given on initialisation - skipping face tracking")
 
             if self._showGUI:
                 # Display the resulting frame
