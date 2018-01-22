@@ -132,26 +132,34 @@ class AudioRecorder:
             wfile.close()
 
     @threaded
-    def start_recording(self, label, rec_id=0):
+    def start_recording(self, label, rec_id=0, fname="test.wav",dir_name="./data_shake/"):
         print("Starting to record {} as id {}.".format(label, rec_id))
         self.rec_running[rec_id] = label
         frames = self.rec_from_mic(n_sec=24 * 60 * 60, rec_id=rec_id)
         self.rec_to_stop.remove(rec_id)
         del self.rec_running[rec_id]
-        if label not in self.class_indexes.keys():
-            label_idx = 0
-            if len(self.class_indexes.values()) > 0:
-                label_idx = max(self.class_indexes.values()) + 1
-            self.class_indexes[label] = label_idx
-            self.class_sample_filenames[label] = []
-        subdirname = "{} - {}".format(self.class_indexes[label], label)
-        ensure_dir(self.datadir + "/" + subdirname)
-        fname = ""
-        label_idx = len(self.class_sample_filenames[label])
-        while fname == "" or fname in self.class_sample_filenames[label]:
-            label_idx += 1
-            fname = "{}-{}.wav".format(label_idx, label)
-        f_path_name = "{}/{}/{}".format(self.datadir, subdirname, fname)
+ 
+        #### ERIK: simplified fielnames   
+        
+        #if label not in self.class_indexes.keys():
+        #    label_idx = 0
+        #    if len(self.class_indexes.values()) > 0:
+        #        label_idx = max(self.class_indexes.values()) + 1
+        #    self.class_indexes[label] = label_idx
+        #    self.class_sample_filenames[label] = []
+            
+  
+        #subdirname = "{} - {}".format(self.class_indexes[label], label)
+        #ensure_dir(self.datadir + "/" + subdirname)
+        #fname = ""
+        #label_idx = len(self.class_sample_filenames[label])
+        #while fname == "" or fname in self.class_sample_filenames[label]:
+        #    label_idx += 1
+        #    fname = "{}-{}.wav".format(label_idx, label)
+        #f_path_name = "{}/{}/{}".format(self.datadir, subdirname, fname)
+        
+        
+        f_path_name=dir_name+fname
         wfile = wave.open(f_path_name, 'wb')
         wfile.setnchannels(self.audio_channels)
         wfile.setframerate(self.samplerate)
@@ -216,6 +224,7 @@ class AudioRecorder:
 
 
 if __name__ == '__main__':
+	
     print("The following sound devices are available.")
     p = pyaudio.PyAudio()
     info = p.get_host_api_info_by_index(0)
@@ -225,10 +234,14 @@ if __name__ == '__main__':
         if (p.get_device_info_by_host_api_device_index(0, i).get('maxInputChannels')) > 0:
             device_name = p.get_device_info_by_host_api_device_index(0, i).get('name')
             print("Input Device id ", i, " - ", device_name)
-            if device_name.find("USB") != -1:
+            if device_name.find("pulse") != -1:
                 audio_device = i
+     
+    #SET IT Explicitly here            
+    #audio_device=8
     dev_idx = audio_device
-    ar = AudioRecorder(audio_channels=1, samplerate=48000, datadir="datasets/nico_shaking_0", audio_device=dev_idx)
+    #ar = AudioRecorder(audio_channels=1, samplerate=48000, datadir="datasets/nico_shaking_0", audio_device=dev_idx)
+    ar = AudioRecorder(audio_channels=2, samplerate=48000, datadir="./.", audio_device=dev_idx)
 
     # For recoring several streams at once (does not yet work with alsaaudio)
     # while True:
@@ -259,7 +272,7 @@ if __name__ == '__main__':
         if label == "0":
             break
         rec_id = 0
-        ar.start_recording(label)
+        ar.start_recording(label,fname=label+".wav")
         print("Press Enter to stop recording")
         raw_input()
         ar.stop_recording(0)
