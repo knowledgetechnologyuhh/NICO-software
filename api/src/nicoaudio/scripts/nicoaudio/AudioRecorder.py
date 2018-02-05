@@ -6,13 +6,13 @@ class AudioRecorder:
         self._record = None
         self._running = False
 
-    def startMicrophonesRecording(self, filename="sound.wav", type="wav(not implemented yet)", samplerate=44100, channels=(True,True)):
+    def startMicrophonesRecording(self, filename="sound.wav", type="wav (not implemented yet, file is always saved as wav)", samplerate=44100, channels=(True,True)):
         """
         Starts the microphone recording to a given file
 
         :param filename: Name of target file
         :type filename: str
-        :param type: Type of recording (not implemented yet)
+        :param type: Type of recording (not implemented yet, file is always saved as wav)
         :type type: str
         :param samplerate: Target samplerate
         :type samplerate: int
@@ -37,4 +37,4 @@ class AudioRecorder:
             self._record.save(self._filename, self._channels)
             self._running = False
         else:
-            logging.warning("Stop recording failed: Record is not running")          
+            logging.warning("Stop recording failed: Record is not running")
