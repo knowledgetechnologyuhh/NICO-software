@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import sys
 import math
 import time
@@ -12,9 +13,14 @@ import geometry_msgs.msg
 import std_msgs.msg
 import rosservice
 import roslaunch
+import logging
 import rospkg
+import ast
 
-from nicomotion import Motion
+import sensor_msgs.msg
+import nicomsg.msg
+import nicomsg.srv
+
 from collections import OrderedDict
 from kinematics.srv import IK_request
 from kinematics.srv import FK_request
@@ -50,181 +56,150 @@ class groupHandle:
   The groupHandle class provides a high level interface for path planning.
   Plans are given for and executed on certain groups of joints
   """
-  def __init__(self, groupName, nicomotion = None, realNICO = False):
+  def __init__(self, groupName, robotMotorFile=None, vrep=False, vrepScene=None, kinematicsOnly=False,
+   visualize=False, rosnicoPrefix='/nico/motion', jointStateName='/joint_states', sittingPosition=True):
     """
     :param groupName: Name of the planning group that should be moved.
                       Possible movement groups to use are: 
                       'leftArm', 'rightArm', 'leftLeg', 'rightLeg'
     :type groupName: str
-    :param nicomotion: If provided, the movements will be executed on the corresponding robot,
-                       otherwise a list of points on the planned trajectory is returned
-    :type nicomotion: A nicomotion.Motion.Motion object
-    :param realNICO: Boolean value that can be set to True, if the real physicial NICO is used
-                     instead of the simulated one. 
-    :type realNICO:  boolean
-    """      
-    self.nicomotion = nicomotion
-    self.realNICO = realNICO    
+    :param robotMotorFile: Motor configuration file in json format
+    :type robotMotorFile: str
+    :param vrep: Should movements be done in V-Rep simulation or on the real robot
+    :type vrep: boolean
+    :param vrepScene: V-Rep scene to load if simulation is used
+    :type vrepScene: str
+    :param kinematicsOnly: Do not perform movements in simulated or real robot
+    :type kinematicsOnly: boolean
+    :param visualize: Visualize internal MoveIt! state in R-Viz
+    :type visualize: boolean
+    :param rosnicoPrefix: Topic prefix for motion handling in ROS
+    :type rosnicoPrefix: str
+    :param jointStateName: ROS topic for joint state information
+    :type jointStateName: str
+    :param sittingPosition: Should the legs be in sitting or standing position? Default is True
+    :type sittingPosition: boolean
+    """
+    if robotMotorFile is None:
+      print("Please provide a motor configuration file!")
+      return
+    self.vrep = vrep
+    self.rosnicoPrefix = rosnicoPrefix
     rospy.init_node('moveitWrapper', anonymous=True)    
+    rospy.set_param(rosnicoPrefix+'/sittingPosition', sittingPosition)    
+    
+    # find packages
     uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
     roslaunch.configure_logging(uuid)
     rospack = rospkg.RosPack()   
-    moveit_pkg = rospack.get_path('moveitgenerated')
+    nicoros_pkg = rospack.get_path('nicoros')
+    
+    service_list = rosservice.get_service_list()
+    # checking if nicomotion server is already running
+    nicomotion = False
+    if rosnicoPrefix+'/getAngle' in service_list:
+      nicomotion = True
+    # checking if moveit server is already running
+    nicomoveit = False
+    if '/plan_kinematic_path' in service_list:
+      nicomoveit = True
+      if not nicomotion and not kinematicsOnly:
+        print("Please do not launch MoveIt! in demo mode, if you want to perform path planning!")
+        return
     
     # checking if MoveIt! is running and launch if not
-    service_list = rosservice.get_service_list()
-    if '/plan_kinematic_path' not in service_list:
-      print "Starting MoveIt! service"
-      self.launch = roslaunch.parent.ROSLaunchParent(uuid, [moveit_pkg+"/launch/nico.launch"])
-      self.launch.start()
-      rospy.wait_for_service('/plan_kinematic_path')
+    if not nicomoveit:
+      if robotMotorFile is None:
+        print("Please provide a motor configuration file or start rosnico with moveit capabilities")
+      elif vrep is True and vrepScene is None:
+        print("You want to use V-Rep, but did not provide a V-Rep scene name. Please do that or start rosnico with moveit capabilities")
+      else:
+        print("Starting MoveIt! service")
+        if kinematicsOnly:
+          if visualize:
+            self.launch = roslaunch.parent.ROSLaunchParent(uuid, [nicoros_pkg+"/launch/nicomoveit_demo_visual.launch"])
+          else:
+            self.launch = roslaunch.parent.ROSLaunchParent(uuid, [nicoros_pkg+"/launch/nicomoveit_demo.launch"])
+        else:
+          rospy.set_param(rosnicoPrefix+'/robotMotorFile', nicoros_pkg+'/../../../json/'+robotMotorFile)
+          rospy.set_param(rosnicoPrefix+'/vrep', vrep)
+          rospy.set_param(rosnicoPrefix+'/vrepScene', nicoros_pkg+'/../../../v-rep/'+vrepScene)   
+          
+          if visualize:
+            self.launch = roslaunch.parent.ROSLaunchParent(uuid, [nicoros_pkg+"/launch/nicoros_moveit_visual.launch"])
+          else:
+            self.launch = roslaunch.parent.ROSLaunchParent(uuid, [nicoros_pkg+"/launch/nicoros_moveit.launch"])
+        self.launch.start()
+        rospy.wait_for_service('/plan_kinematic_path')
     
+    if not kinematicsOnly:
+      logging.info('Waiting for rosnico')
+      rospy.wait_for_service('%s/getAngle' % rosnicoPrefix)
+      
+      logging.debug('Init publishers')
+      self._setAngle = rospy.Publisher('%s/setAngle' % rosnicoPrefix, nicomsg.msg.sff, queue_size=10)
+
+      logging.debug('Init service proxies')
+      self._getAngle = rospy.ServiceProxy('%s/getAngle' % rosnicoPrefix, nicomsg.srv.GetValue )
+      self._getJointNames = rospy.ServiceProxy('%s/getJointNames' % rosnicoPrefix, nicomsg.srv.GetNames )
+      self._getConfig = rospy.ServiceProxy('%s/getConfig' % rosnicoPrefix, nicomsg.srv.GetString )      
+      self._getPose = rospy.ServiceProxy('%s/getPose' % rosnicoPrefix, nicomsg.srv.GetValues )
+      
+      # get json configuration
+      self.jsonConfig = ast.literal_eval(self._getConfig().data)
+    else:
+      with open(nicoros_pkg+'/../../../json/'+robotMotorFile, 'r') as config_file:
+        self.jsonConfig = json.load(config_file)    
+            
     moveit_commander.roscpp_initialize(sys.argv)
     self.scene = moveit_commander.PlanningSceneInterface()
     self.robot = moveit_commander.RobotCommander()
     self.groupName = groupName
     self.group = moveit_commander.MoveGroupCommander(groupName)
-    self.group.set_start_state_to_current_state()
     # set default position tolerance to 1cm
     self.group.set_goal_position_tolerance(0.01) 
     # set default orientation tolerance to 0.1 radians ~ 5.7 degrees
     self.group.set_goal_orientation_tolerance(0.1)
     # set default movement speed of joints
-    self.fractionMaxSpeed = 0.03
+    rospy.set_param(rosnicoPrefix+'/fractionMaxSpeed', 0.1)
     self.defaultPose = self.group.get_current_pose()
-    self.__adoptStartState()
     self.planningTime = None
     self.executionTime = None
     
   def __exit__(self):
     self.launch.shutdown()
-  
-  def __adoptStartState(self):
-    """
-    Internal function to update the start state with the current joint values
-    """
-    if self.nicomotion != None:
-      # get json configuration
-      self.jsonConfig = self.nicomotion._config     
-      # get current joint values 
-      joints = self.nicomotion.getJointNames()
-      startState = {}
-      for joint in joints:
-        startState[joint] = self.nicomotion.getAngle(joint)
-      self.setStartState(startState)
-    else:
-      self.jsonConfig = None
-  
-  def __moveitToVrepAngle(self, jointName, value):
-    """
-    Internal function to convert an angle from the MoveIt! simulation to an angle for the V-Rep simulation or the real robot
-
-    :param jointName: Name of the joint of interest
-    :type jointName: str
-    :param value: Joint angle from MoveIt! (in radians) that should be converted to a corresponding joint angle in V-Rep (in degrees)
-    :type value: float
-    """
-    value = math.degrees(value)
-    if self.jsonConfig != None:
-      if jointName == u'l_arm_x' or jointName == u'r_arm_x': 
-        value = -value
-    if self.realNICO:
-      if jointName == u'l_wrist_x' or jointName == u'r_wrist_x': 
-        value = value*7+164
-      if jointName == u'l_wrist_z' or jointName == u'r_wrist_z': 
-        value = value*2
-    if self.jsonConfig != None:
-      if jointName in self.jsonConfig[u'motors']:        
-        if self.jsonConfig[u'motors'][jointName][u'orientation'] == u'indirect':
-          value = -value
-        value = value - self.jsonConfig[u'motors'][jointName][u'offset']
-    return value  
-  
-  def __vrepToMoveitAngle(self, jointName, value):  
-    """
-    Internal function to convert an angle from the V-Rep simulation or the real robot to an angle for the MoveIt! simulation 
-
-    :param jointName: Name of the joint of interest
-    :type jointName: str
-    :param value: Joint angle from V-Rep (in degrees) that should be converted to a corresponding joint angle in MoveIt! (in radians)
-    :type value: float
-    """  
-    if self.realNICO:
-      if jointName == u'l_wrist_x' or jointName == u'r_wrist_x': 
-        value = (value-164)/7
-      if jointName == u'l_wrist_z' or jointName == u'r_wrist_z': 
-        value = value/2
-    if self.jsonConfig != None:
-      if jointName in self.jsonConfig[u'motors']:     
-        value = value + self.jsonConfig[u'motors'][jointName][u'offset']   
-        if self.jsonConfig[u'motors'][jointName][u'orientation'] == u'indirect':
-          value = -value 
-      if jointName == u'l_arm_x' or jointName == u'r_arm_x': 
-        value = -value 
-    return  math.radians(value)  
-      
+     
   def __planAndExecute(self, plan = None):
     """
     Internal function to execute path planning to a previously defined pose. If a plan has successfully been found it will be executed.
 
     :param plan: In case the planning was already done it can be commited with this parameter.
     :type plan: a RobotTrajectory
-    """
+    """    
     if plan == None:
-      self.__adoptStartState()
-      start = time.clock()
       plan = self.group.plan()
-      self.planningTime = (time.clock() - start)
     if plan.joint_trajectory.points == []:
-      print "No valid plan has been found"
+      print("No valid plan has been found") 
       return None    
     # If a plan has been found execute the plan and return a list of points on the path
-    print "Plan has been found"
+    print("Plan has been found")
     self.group.execute(plan)
-    # the next plan should start from here, if nothing else is set as start state
-    self.group.set_start_state_to_current_state()
-    pointList = list()
-    for point in plan.joint_trajectory.points:
-      pointList.append(point.positions)    
-    # move robot corresponding to nicomotion object
-    if self.nicomotion != None and len(pointList) > 0:
-      start = time.clock()
-      joints = self.group.get_active_joints() 
-      for point_idx in range(len(pointList)):
-        values = []
-        for joint_idx in range(len(pointList[point_idx])):
-          value = self.__moveitToVrepAngle(joints[joint_idx], pointList[point_idx][joint_idx])
-          values.append(value)
-          self.nicomotion.setAngle(joints[joint_idx], value, self.fractionMaxSpeed)
-          #self.nicomotion.setAngle(joints[joint_idx], value, math.degrees(plan.joint_trajectory.points[point_idx].velocities[joint_idx]))          
-          #print joints[joint_idx] + " " + str(value)
-          #print "Current joint angle: " + str(self.nicomotion.getAngle(joints[joint_idx]))
-        pointList[point_idx] = tuple(values)
-        #if (point_idx > 0):
-          #timeToWait = (plan.joint_trajectory.points[point_idx].time_from_start.secs + plan.joint_trajectory.points[point_idx].time_from_start.nsecs / 1000000000.0) - (plan.joint_trajectory.points[point_idx-1].time_from_start.secs + plan.joint_trajectory.points[point_idx-1].time_from_start.nsecs / 1000000000.0)
-          #print(timeToWait)
-          #time.sleep(timeToWait+0.1)
-        time.sleep(1) # wait with execution of goal
-      self.executionTime = (time.clock() - start)
-      return True 
-    else:
-      return pointList    
       
-  def getMoveitAngles(self):
+  def getROSAngles(self):
     """
-    Prints the current joint angles of Nico in the moveit simulation
-    :return: Current MoveIt! joint angles
+    Prints the current joint angles of NICO as they are represented in ROS
+    :return: Current NICO joint angles in ROS 
     :rtype: dictionary 
     """
     dic = OrderedDict(zip(self.group.get_active_joints(), self.group.get_current_joint_values()))
     return dic
   
-  def getVrepAngles(self, convertToMoveitAngles = False):
+  def getNICOAngles(self, convertToMoveitAngles = False):
     """
-    Prints the current joint angles of Nico in vrep or from the real robot
+    Prints the current joint angles of NICO in vrep or from the real robot
 
     :param convertToMoveitAngles: If set to True the angles are converted to the values that
-                                  are used for Moveit!
+                                  are used for ROS
     :type convertToMoveitAngles: boolean
     :return: Current Vrep joint angles
     :rtype: dictionary
@@ -232,54 +207,33 @@ class groupHandle:
     dic = {}
     joints = self.group.get_active_joints()
     for joint in joints:
-      angle = self.nicomotion.getAngle(joint)
+      angle = self._getAngle(joint).value
       if convertToMoveitAngles:
-        angle = self.__vrepToMoveitAngle(joint, angle)
+        angle = nicoToRosAngle(joint, angle, self.jsonConfig, self.vrep)
       dic[joint] = angle
     return dic
-    
-  def setStartState(self, startState):
-    """
-    Sets an alternative start state for the movement. The planned path with start from this state
-
-    :param startState: List with the joint value for each joint in the correct order,
-                       or a dictionary mapping joint names to joint values
-                       (the default value for joints that are not included in the mapping is their current value)
-    :type startState: list of floats or dict mapping str to float
-    :param moveitValues: If this parameter is set to True, the joint values stated in startState include any
-                         joint offsets or indirect orientations and the value is given in radians
-    :type moveitValues: Boolean              
-    """
-    if type(startState) == list:
-      startState = dict(zip(self.group.get_active_joints(), startState))
-    state = self.robot.get_current_state()
-    dic = OrderedDict(zip(state.joint_state.name, state.joint_state.position))
-    for key in startState:
-      if key in dic:
-        dic[key] = self.__vrepToMoveitAngle(key, startState[key])
-    state.joint_state.position = dic.values()
-    self.group.set_start_state(state)
     
   def setMaxSpeed(self, fractionMaxSpeed):
     """
     Defines the movement speed of joints that is used if movement is executed on the real 
-    or simulated (in vrep) robot
+    or simulated robot
 
-    :param fractionMaxSpeed: movement speed of joints
+    :param fractionMaxSpeed: movement speed of joints as fraction of maximum velocity
     :type fractionMaxSpeed: float
     """
-    self.fractionMaxSpeed = fractionMaxSpeed
+    rospy.set_param(rosnicoPrefix+'/fractionMaxSpeed', fractionMaxSpeed)
     
   def getMaxSpeed(self):
     """
     Returns the movement speed of joints that is used if movement is executed on the real 
-    or simulated (in vrep) robot
+    or simulated robot
 
-    :return: movement speed of joints
+    :return: movement speed of joints as fraction of maximum velocity
     :rtype: float
     """
-    return self.fractionMaxSpeed
-  
+    return rospy.get_param(rosnicoPrefix+'/fractionMaxSpeed')
+
+      
   def setMotionPlanner(self, plannerID):
     """
     Specify which planner to use when motion planning 
@@ -290,6 +244,26 @@ class groupHandle:
     :type plannerID: string
     """
     self.group.set_planner_id(plannerID)
+
+  def setPathTolerance(self, pathTolerance):
+    """
+    Defines the maximum joint angle that the real/or simulated joint is allowed to
+    deviate from the path plan. Set this value to enable automated stopping of motion
+    in case of a collision
+
+    :param pathTolerance: maximum allowed joint angle deviation in degree
+    :type pathTolerance: float
+    """
+    rospy.set_param(self.rosnicoPrefix+'/pathTolerance', math.radians(pathTolerance))
+    
+  def getPathTolerance(self):
+    """
+    Returns path tolerance currently used during path execution
+
+    :return pathTolerance: maximum allowed joint angle deviation in degree
+    :type pathTolerance: float
+    """
+    return math.degrees(rospy.get_param(self.rosnicoPrefix+'/pathTolerance', 0))
 
   def setPositionTolerance(self, positionTolerance):
     """
@@ -329,6 +303,24 @@ class groupHandle:
     """
     return math.degrees(self.group.get_goal_orientation_tolerance())
     
+  def setPlanningGroup(self, groupName):
+    """
+    Defines the current planning group that is used for all path planning and kinematic capabilities.
+    
+    :param groupName: Name of the planning group that should be moved.
+                      Possible movement groups to use are: 
+                      'leftArm', 'rightArm', 'leftLeg', 'rightLeg'
+    :type groupName: str
+    """
+    self.groupName = groupName
+    self.group = moveit_commander.MoveGroupCommander(groupName)
+    
+  def getPlanningGroup(self, groupName):
+    """
+    Returns the name of the current planning group.
+    """
+    return self.groupName
+    
   def computeIK(self, position, orientation, IKsolver = None, tip = None, ignoreCollisions = False, initialJointValues = [0,0,0,0,0,0]):
     """
     Computes inverse kinematics and return the corresponding joint angles
@@ -363,7 +355,7 @@ class groupHandle:
       elif IKsolver == 'bio_ik' or IKsolver == 'BIO_IK' or IKsolver == 'bio' or IKsolver == 'BIO':
         rospy.set_param('/robot_description_kinematics/'+self.groupName+'/kinematics_solver', 'bio_ik/BioIKKinematicsPlugin')
       else:
-        print "Please use either KDL, trac_ik or bio_ik as kinematic solvers"
+        print("Please use either KDL, trac_ik or bio_ik as kinematic solvers")
         
     jointNames = self.group.get_active_joints()        
     if type(initialJointValues) == list:
@@ -372,13 +364,13 @@ class groupHandle:
     dic = OrderedDict(zip(jointNames, self.group.get_current_joint_values()))
     # Set goal joint values
     for key in initialJointValues:
-        dic[key] = self.__vrepToMoveitAngle(key, initialJointValues[key])
+        dic[key] = nicoToRosAngle(key, initialJointValues[key], self.jsonConfig, self.vrep)
        
     initialJointValues = dic.values()
     
     service_list = rosservice.get_service_list()
     if '/moveit/compute_ik' not in service_list:
-      print "Error: /moveit/compute_ik service is not available"
+      print("Error: /moveit/compute_ik service is not available")
       return None
     
     if tip is None:
@@ -433,17 +425,17 @@ class groupHandle:
         ik_service = rospy.ServiceProxy('moveit/compute_ik', IK_request)
         rsp = ik_service(groupName, tipName, pose, ignoreCollisionsMsg, initialJointValuesMsg)
         if rsp.found_solution.data:
-          print "Found IK solution"
+          print("Found IK solution")
           joint_angles = []
           for jointIdx in range(0, len(rsp.joint_angles)):
-            joint_angles.append(self.__moveitToVrepAngle(jointNames[jointIdx], rsp.joint_angles[jointIdx].data))
-          print "Joint angles: "
-          print joint_angles
+            joint_angles.append(rosToNicoAngle(jointNames[jointIdx], rsp.joint_angles[jointIdx].data, self.jsonConfig, self.vrep))
+          print("Joint angles: ")
+          print(joint_angles)
           return joint_angles
         else:
-          print "No IK solution found"
+          print("No IK solution found")
     except rospy.ServiceException, e:
-        print "Service call failed: %s"%e
+        print("Service call failed: %s"%e)
         
     return None
 
@@ -467,13 +459,13 @@ class groupHandle:
     dic = OrderedDict(zip(self.group.get_active_joints(), self.group.get_current_joint_values()))
     # Set goal joint values
     for key in jointCoordinates:
-        dic[key] = self.__vrepToMoveitAngle(key, jointCoordinates[key])
+        dic[key] = nicoToRosAngle(key, jointCoordinates[key], self.jsonConfig, self.vrep)
        
     jointCoordinates = dic.values()
     
     service_list = rosservice.get_service_list()
     if '/moveit/compute_fk' not in service_list:
-      print "Error: /moveit/compute_fk service is not available"
+      print("Error: /moveit/compute_fk service is not available")
       return None
       
     if tip is None:
@@ -503,7 +495,7 @@ class groupHandle:
     try:
         ik_service = rospy.ServiceProxy('moveit/compute_fk', FK_request)
         rsp = ik_service(groupName, tipName, jointValues)
-        print "Found FK solution"
+        print("Found FK solution")
         pose = rsp.pose
         position = []
         position.append(pose.position.x)
@@ -516,18 +508,15 @@ class groupHandle:
         orientation.append(pose.orientation.z)
         orientation.append(pose.orientation.w)
         
-        print "Position: "
-        print position
-        print "Orientation: "
-        print orientation
+        print("Position: ")
+        print(position)
+        print("Orientation: ")
+        print(orientation)
         
         return position, orientation
     except rospy.ServiceException, e:
-        print "Service call failed: %s"%e
-        
-        
+        print("Service call failed: %s"%e)
     return None   
-
 
   def moveToPose(self, position, orientation):
     """
@@ -544,8 +533,8 @@ class groupHandle:
              Each point is a list with one joint parameter for each joint of the planning group
     :rtype: list of lists of floats
     """
-    print "Trying to reach position", "x =", position[0], "y =", \
-           position[1], "z =", position[2], "with group" , self.groupName
+    print("Trying to reach position", "x =", position[0], "y =", \
+           position[1], "z =", position[2], "with group" , self.groupName)
     if type(orientation) is str:
       o_x = predefinedOrientations[self.groupName][orientation]["x"]
       o_y = predefinedOrientations[self.groupName][orientation]["y"]
@@ -583,8 +572,8 @@ class groupHandle:
              Each point is a list with one joint parameter for each joint of the planning group
     :rtype: list of lists of floats
     """
-    print "Trying to reach position", "x =", position[0], "y =", position[1], \
-          "z =", position[2], "with group" , self.groupName
+    print("Trying to reach position", "x =", position[0], "y =", position[1], \
+          "z =", position[2], "with group" , self.groupName)
     # Set goal pose
     self.group.clear_pose_targets()
     self.group.set_position_target(position)
@@ -603,14 +592,14 @@ class groupHandle:
              Each point is a list with one joint parameter for each joint of the planning group
     :rtype: list of lists of floats
     """
-    print "Trying to reach joint coordinates", jointCoordinates ,"with group" , self.groupName
+    print("Trying to reach joint coordinates", jointCoordinates ,"with group" , self.groupName)
     if type(jointCoordinates) == list:
       jointCoordinates = dict(zip(self.group.get_active_joints(),jointCoordinates))
     # Get current joint values
     dic = OrderedDict(zip(self.group.get_active_joints(), self.group.get_current_joint_values()))
     # Set goal joint values
     for key in jointCoordinates:
-        dic[key] = self.__vrepToMoveitAngle(key, jointCoordinates[key])
+        dic[key] = nicoToRosAngle(key, jointCoordinates[key], self.jsonConfig, self.vrep)
     self.group.clear_pose_targets()
     self.group.set_joint_value_target(dic.values())
     # Plan to goal pose and execute plan if found
@@ -634,7 +623,7 @@ class groupHandle:
            3 : 'Roll',
            4 : 'Pitch',
            5 : 'Yaw'}
-    print "Trying to shift axis", options[axis] ,"with value",value, "for group", self.groupName
+    print("Trying to shift axis", options[axis] ,"with value",value, "for group", self.groupName)
     if axis in [3,4,5]:
       value = math.radians(value)
     self.group.shift_pose_target(axis,value)
@@ -665,7 +654,7 @@ class groupHandle:
     elif axis == 2:
       z = z + value
     else:
-      print "Please use an axis between 0 and 2 (0 -> x, 1 -> y, 2 ->z)"
+      print("Please use an axis between 0 and 2 (0 -> x, 1 -> y, 2 ->z)")
     return self.moveToPosition([x,y,z])  
   
   def computeCartesianPath(self,axis,value, sufficient = False,
@@ -734,7 +723,7 @@ class groupHandle:
     elif axis == 2:
       poseTarget.position.z = poseTarget.position.z + value
     else:
-      print "Please use an axis between 0 and 2 (0 -> x, 1 -> y, 2 ->z)"
+      print("Please use an axis between 0 and 2 (0 -> x, 1 -> y, 2 ->z)")
     # the second waypoint is our desired goal
     waypoints.append(copy.deepcopy(poseTarget))
     # the fraction contains information about the fraction of the path that was followed
@@ -744,22 +733,22 @@ class groupHandle:
     # usually distances of about 10cm are planned,
     # to reach the goal with 1mm tolerance at least 99% of the way should be followed
     if fraction < 0.99 and sufficient == False:
-      print "Only "+str(fraction*100)+" percent of the catersian path can be followed,"+ \
-            " if this is sufficient for you, call this method again with third argument 'True'"
+      print("Only "+str(fraction*100)+" percent of the catersian path can be followed,"+ \
+            " if this is sufficient for you, call this method again with third argument 'True'")
       return None
     else:
       return self.__planAndExecute(plan)
       
   def moveToDefault(self):
     """
-    Plan a path to the zero/default position
+    Plan a path to the default pose, which is the pose NICO had when initializing the moveitWrapper
 
     :return: List of points on the planned path or None if planning was not successful.
              Each point is a list with one joint parameter for each joint of the planning group
     :rtype: list of lists of floats
     """
   
-    print "Trying to find path to default pose of group", self.groupName
+    print("Trying to find path to default pose of group", self.groupName)
     positionTolerance = self.getPositionTolerance()
     orientationTolerance = self.getOrientationTolerance()    
     self.setPositionTolerance(0.001)
@@ -771,79 +760,6 @@ class groupHandle:
     self.setPositionTolerance(positionTolerance)
     self.setOrientationTolerance(orientationTolerance)
     return self.__planAndExecute()
- 
-  def pickAndPresent(self, position, orientation, startAbove = 0.1):
-    """
-    This function can be used to move an arm to a certain position provided.
-    Then the arm will be moved into a presenting pose and then into default positon
-
-    :param position: A list with 3 parameters: [p_x,p_y,p_z]
-                     Cartesian coordinates of the goal position
-    :type position: list of floats       
-    :param orientation: A list with 4 parameters: [o_x,o_y,o_z,o_w]:
-                        Goal orientation quaternion
-                        or one of the predefined orientations (sideGrasp, topGrasp)
-    :type orientation: list of floats or string         
-    :param startAbove: Defines the distance (in meters) how far above the actual target
-                       the first movement is planned 
-    :type startAbove: float              
-    :return: List of points on the planned path or None if planning was not successful.
-             Each point is a list with one joint parameter for each joint of the planning group
-    :rtype: list of lists of floats
-    """
-    # go to position above goal
-    positionAbove = position
-    positionAbove[2] = position[2] + startAbove
-    self.setPositionTolerance(0.001)
-    self.setOrientationTolerance(math.degrees(0.02))
-    response = self.moveToPose(positionAbove, orientation)
-    i = 0
-    while i < 6 and response == None:
-      i = i + 1
-      self.setOrientationTolerance(2 * self.getOrientationTolerance())
-      self.setPositionTolerance(0.001 + self.getPositionTolerance())
-      response = self.moveToPose(positionAbove, orientation)
-    if response == None:          
-      print "Can't find path to area above goal."
-      self.moveToDefault()
-      return 0
-    print "Found path with orientation tolerance "+ str(self.getOrientationTolerance()) + \
-          " and position tolerance " + str(self.getPositionTolerance())
-    time.sleep(4)
-    self.setPositionTolerance(0.001)
-    self.setOrientationTolerance(math.degrees(0.2))
-    # go to goal in a straight line
-    if self.computeCartesianPath(2,-startAbove, False, positionAbove, orientation) == None:
-      print "Trying to shift pose with ordinary path planning" 
-      response = self.moveToPose(position, orientation)
-      i = 0
-      while i < 6 and response == None:
-        i = i + 1
-        self.setOrientationTolerance(2 * self.getOrientationTolerance())
-        self.setPositionTolerance(0.001 + self.getPositionTolerance())
-        response = self.moveToPose(position, orientation)
-      if response == None:          
-        print "Can't find path to area above goal."
-        self.moveToDefault()
-        return 0
-      print "Found path with orientation tolerance "+ str(self.getOrientationTolerance()) + \
-            " and position tolerance " + str(self.getPositionTolerance())
-    time.sleep(4)
-    self.setPositionTolerance(0.001)
-    self.setOrientationTolerance(math.degrees(0.1))
-    # present 
-    p_x = 0.43085057313
-    p_y = 0.134845567708
-    p_z = 0.802798506593 
-    o_x = 0.587817663801
-    o_y = 0.489151593275
-    o_z = 0.466306524902
-    o_w = 0.444701402915
-    self.moveToPose([p_x,p_y,p_z],[o_x,o_y,o_z,o_w])
-    time.sleep(4)
-    # go back to default positon
-    self.moveToDefault()
-    time.sleep(4)
     
   def isColliding(self, jointCoordinates):
     """
@@ -860,7 +776,7 @@ class groupHandle:
     """      
     service_list = rosservice.get_service_list()
     if '/moveit/collision_check' not in service_list:
-      print "Error: /moveit/collision_check service is not available"
+      print("Error: /moveit/collision_check service is not available")
       return None
     
     if type(jointCoordinates) == list:
@@ -868,10 +784,10 @@ class groupHandle:
     # Get current joint values
     dic = OrderedDict(zip(self.group.get_active_joints(), self.group.get_current_joint_values()))
     for key in jointCoordinates:
-        dic[key] = self.__vrepToMoveitAngle(key, jointCoordinates[key])
+        dic[key] = nicoToRosAngle(key, jointCoordinates[key], self.jsonConfig, self.vrep)
        
     jointCoordinates = dic.values()
-
+    print(jointCoordinates)
     jointValues = FloatList()
     jointValues.data = []
     
@@ -887,36 +803,14 @@ class groupHandle:
         collision_check_service = rospy.ServiceProxy('moveit/collision_check', collision_check)
         rsp = collision_check_service(groupName, jointValues)
         if rsp.collision_state.data:
-          print "The planning group " + self.groupName + " is in a collision state"
+          print("The planning group " + self.groupName + " is in a collision state")
         else:
-          print "The planning group " + self.groupName + " is not in a collision state"
+          print("The planning group " + self.groupName + " is not in a collision state")
         return rsp.collision_state.data
     except rospy.ServiceException, e:
-        print "Service call failed: %s"%e
+        print("Service call failed: %s"%e)
         
     return None
-    
-    #oldPositionTolerance = self.getPositionTolerance()
-    #oldOrientationTolerance = self.getOrientationTolerance()
-    
-    #self.setPositionTolerance(0.00001)
-    #self.setOrientationTolerance(0.00001)
-    
-    #oldState = self.robot.get_current_state()
-    ## start path at pose of provided joint coordinates
-    #self.setStartState(jointCoordinates)
-    ## search a valid path to the pose the arm already has
-    ## this should always be possible if the arm is not in collision
-    #plan = self.moveToJointCoordinates(jointCoordinates)
-    #self.group.set_start_state(oldState)
-    
-    #self.setPositionTolerance(oldPositionTolerance)
-    #self.setOrientationTolerance(oldOrientationTolerance)
-    
-    #if plan is None:
-    #  return True
-    #else:
-    #  return False
       
   def getRandomJointValues(self):
     """
@@ -929,114 +823,196 @@ class groupHandle:
     joints = self.group.get_active_joints()
     # the joint values are given in MoveIt! reference system
     for jointIdx in range(0, len(randomPose)):
-      randomPose[jointIdx] = self.__moveitToVrepAngle(joints[jointIdx], randomPose[jointIdx])
+      randomPose[jointIdx] = rosToNicoAngle(joints[jointIdx], randomPose[jointIdx], self.jsonConfig, self.vrep)
     return randomPose
     
-def addBox(name, position, size):
+  def addBox(self, name, position, size):
+    """
+    Includes a box as an obstacle in the simulation environment.
+    Planned paths should recognize obstacles.
+
+    :param name: Name of the object that is added to the scene
+    :type name: str
+    :param position: A list with 3 parameters: [p_x,p_y,p_z]
+                     Cartesian coordinates of the goal position
+    :type position: list of floats 
+    :param size: A list with 3 parameters: [s_x,s_y,s_z]
+                 Scaling factors for the size of the box in the scene
+    :type size: list of floats             
+    """
+    pose = geometry_msgs.msg.PoseStamped()
+    pose.header.frame_id = '/world'
+    pose.pose.position.x = position[0]
+    pose.pose.position.y = position[1]
+    pose.pose.position.z = position[2]
+    self.scene.add_box(name,pose,size)
+
+  def addMesh(self, name, fileName, position=[0,0,0], size=[1,1,1]):
+    """
+    Includes a mesh model as an obstacle in the simulation environment.
+    Planned paths should recognize obstacles.
+    To include a mesh from a vrep-scene, export the mesh 
+
+    :param name: Name of the object that is added to the scene
+    :type name: str
+    :param fileName: File with the mesh
+    :type fileName: str
+    :param position: A list with 3 parameters: [p_x,p_y,p_z]
+                     Cartesian coordinates of the goal position
+    :type position: list of floats 
+    :param size: A list with 3 parameters: [s_x,s_y,s_z]
+                 Scaling factors for the size of the box in the scene
+    :type size: list of floats                 
+    """
+    pose = geometry_msgs.msg.PoseStamped()
+    pose.header.frame_id = '/world'
+    pose.pose.position.x = position[0]
+    pose.pose.position.y = position[1]
+    pose.pose.position.z = position[2]    
+    self.scene.add_mesh(name,pose,fileName,size)
+
+  def removeObject(self, name):
+    """
+    Removes an object from the MoveIt! scene
+
+    :param name: Name of the object that is removed from the scene
+    :type name: str
+    """
+    self.scene.remove_world_object(name)
+    
+  def __test(self):
+    """
+    Method for testing the MoveIt! functionalities.
+    """
+    
+    self.group.set_planner_id("RRTConnectkConfigDefault")
+
+    print("increase tolerance")
+    self.group.set_goal_position_tolerance(0.1)
+    self.group.set_goal_orientation_tolerance(0.2)
+
+    values = [ -0.7417967536653856, 2.2122617473316843, 0.3553677613749635, -1.4112707151742188, -1.3299268114123495, -0.3222468796948495]
+    self.group.set_joint_value_target(values)
+    print("plan")
+    plan = self.group.plan()
+    print("execute")
+    self.group.execute(plan)
+    rospy.sleep(2)
+
+
+    print("Known constraints: ")
+    print(self.group.get_known_constraints())
+
+    for i in range(10):
+      pose_target = group.get_random_pose()
+      #print(pose_target)
+      self.group.set_pose_target(pose_target)
+      self.group.go()
+
+    pose_target = geometry_msgs.msg.Pose()
+    pose_target.orientation.x = 0.158434282046
+    pose_target.orientation.y = 0.807295567431
+    pose_target.orientation.z = 0.258856217432
+    pose_target.orientation.w = 0.506128347138
+    pose_target.position.x = 0.390251923048
+    pose_target.position.y = 0.339816569177
+    pose_target.position.z = 0.760846647956
+
+    self.group.set_pose_target(pose_target)
+    print("1")
+    self.group.go()
+    rospy.sleep(2)
+
+    pose_target.orientation.x = -0.973379789458
+    pose_target.orientation.y = -0.0139847757448
+    pose_target.orientation.z = 0.00340166727638
+    pose_target.orientation.w = 0.228745798172
+    pose_target.position.x = 0.0718405144708
+    pose_target.position.y = 0.153894236006
+    pose_target.position.z = 0.395156039253
+
+    self.group.set_pose_target(pose_target)
+    print("2")
+    self.group.go()
+    
+  def sittingPosition(self):
+    """
+    This function can be used to bring the simulated robot into a sitting pose.
+    Does currently not work, because leg motors are not available.
+
+    :param jointName: Name of the joint
+    :type jointName: str
+    :return: Angle of the joint (degree)
+    :rtype: float
+    """
+    # [0.0601951067222 -0.084078543203 -1.53735464204 1.24698948964 0.305836083766 0.0223105563298]
+    p_x = 0.27417440386
+    p_y = 0.0576193877269
+    p_z = 0.227848717945
+    o_x = 0.0020579646314
+    o_y = -0.00255815230453
+    o_z = 2.94616341365e-05
+    o_w = 0.999994609871
+    oldPlanningGroup = self.getPlanningGroup()
+    self.setPlanningGroup('leftLeg')
+    self.moveToPose([p_x,p_y,p_z],[o_x,o_y,o_z,o_w])
+    
+    # [-0.031318849578 0.0614412972261 -1.50805089035 1.20882593629 0.387770525688 -0.0962579440558]
+    p_x = 0.274107814509
+    p_y = -0.0547849446914
+    p_z = 0.227952902805 
+    o_x = -0.00276895075104
+    o_y = -0.00276769274683
+    o_z = -4.37108219655e-05
+    o_w = 0.99999233541
+    self.setPlanningGroup('rightLeg')
+    self.moveToPose([p_x,p_y,p_z],[o_x,o_y,o_z,o_w])
+    self.setPlanningGroup(oldPlanningGroup)
+
+def rosToNicoAngle(jointName, value, jsonConfig = None, vrep = True):
   """
-  Includes a box as an obstacle in the simulation environment.
-  Planned paths should recognize obstacles.
+  Internal function to convert an angle from the MoveIt! simulation to an angle for the V-Rep simulation or the real robot
 
-  :param name: Name of the object that is added to the scene
-  :type name: str
-  :param position: A list with 3 parameters: [p_x,p_y,p_z]
-                   Cartesian coordinates of the goal position
-  :type position: list of floats 
-  :param size: A list with 3 parameters: [s_x,s_y,s_z]
-               Scaling factors for the size of the box in the scene
-  :type size: list of floats             
-  """
-  moveit_commander.roscpp_initialize(sys.argv)
-  rospy.init_node('moveit_robot_commands', anonymous=True)
-  scene = moveit_commander.PlanningSceneInterface()
-  rospy.sleep(1)
-  pose = geometry_msgs.msg.PoseStamped()
-  pose.header.frame_id = '/world'
-  pose.pose.position.x = position[0]
-  pose.pose.position.y = position[1]
-  pose.pose.position.z = position[2]
-  scene.add_box(name,pose,size)
-
-def addMesh(name, fileName, position=[0,0,0], size=[1,1,1], nicomotion=None):
-  """
-  Includes a mesh model as an obstacle in the simulation environment.
-  Planned paths should recognize obstacles.
-  To include a mesh from a vrep-scene, export the mesh as fileName.stl
-  and provide the nicomotion.Motion.Motion object that uses this vrep-scene. 
-  The position of the mesh in the MoveIt! scene will then correspond to the 
-  position in the vrep-scene 
-
-  :param name: Name of the object that is added to the scene
-  :type name: str
-  :param fileName: File with the mesh
-  :type fileName: str
-  :param position: A list with 3 parameters: [p_x,p_y,p_z]
-                   Cartesian coordinates of the goal position
-  :type position: list of floats 
-  :param size: A list with 3 parameters: [s_x,s_y,s_z]
-               Scaling factors for the size of the box in the scene
-  :type size: list of floats             
-  :param nicomotion: A nicomotion.Motion.Motion object to position the mesh
-                     at the same place as in a vrep-scene
-  :type nicomotion: nicomotion.Motion.Motion      
-  """
-  leftArm = groupHandle("leftArm")
-  pose = geometry_msgs.msg.PoseStamped()
-  pose.header.frame_id = '/world'
-  pose.pose.position.x = position[0]
-  pose.pose.position.y = position[1]
-  pose.pose.position.z = position[2]
-  if nicomotion != None:
-    # to bring the left arm in the simulation environment of MoveIt! and V-Rep together
-    leftArm.shiftPose(0,0)
-    vrep_z = nicomotion.getPose('left_palm_11_visual')[2]
-    moveit_z = leftArm.group.get_current_pose().pose.position.z
-    offset_z = moveit_z - vrep_z
-    pose.pose.position.z = position[2] + offset_z
-  leftArm.scene.add_mesh(name,pose,fileName,size)
-
-
-def removeObject(name):
-  """
-  Removes an object from the MoveIt! scene
-
-  :param name: Name of the object that is removed from the scene
-  :type name: str
-  """
-  moveit_commander.roscpp_initialize(sys.argv)
-  rospy.init_node('moveit_robot_commands', anonymous=True)
-  scene = moveit_commander.PlanningSceneInterface()
-  scene.remove_world_object(name)
-
-
-def sittingPosition():
-  """
-  This function can be used to bring the simulated robot into a sitting pose
-
-  :param jointName: Name of the joint
+  :param jointName: Name of the joint of interest
   :type jointName: str
-  :return: Angle of the joint (degree)
-  :rtype: float
+  :param value: Joint angle from MoveIt! (in radians) that should be converted to a corresponding joint angle in V-Rep (in degrees)
+  :type value: float
   """
-  p_x = 0.27417440386
-  p_y = 0.0576193877269
-  p_z = 0.227848717945
-  o_x = 0.0020579646314
-  o_y = -0.00255815230453
-  o_z = 2.94616341365e-05
-  o_w = 0.999994609871
-  leftLeg = groupHandle("leftLeg")
-  leftLeg.moveToPose([p_x,p_y,p_z],[o_x,o_y,o_z,o_w])
+  value = math.degrees(value)
+  if jsonConfig != None:
+    if jointName == u'l_wrist_z' or jointName == u'l_wrist_z': 
+      value = -value
+  if not vrep:
+    if jointName == u'l_wrist_x' or jointName == u'r_wrist_x': 
+      value = value*7+164
+    if jointName == u'l_wrist_z' or jointName == u'r_wrist_z': 
+      value = value*2
+  if jsonConfig != None:
+    if jointName in jsonConfig[u'motors']:        
+      if jsonConfig[u'motors'][jointName][u'orientation'] == u'indirect':
+        value = -value
+      value = value - jsonConfig[u'motors'][jointName][u'offset']
+  return value  
+  
+def nicoToRosAngle(jointName, value, jsonConfig = None, vrep = True):  
+  """
+  Internal function to convert an angle from the V-Rep simulation or the real robot to an angle for the MoveIt! simulation 
 
-  p_x = 0.274107814509
-  p_y = -0.0547849446914
-  p_z = 0.227952902805 
-  o_x = -0.00276895075104
-  o_y = -0.00276769274683
-  o_z = -4.37108219655e-05
-  o_w = 0.99999233541
-  rightLeg = groupHandle("rightLeg")
-  rightLeg.moveToPose([p_x,p_y,p_z],[o_x,o_y,o_z,o_w])
-  
-  
-  
+  :param jointName: Name of the joint of interest
+  :type jointName: str
+  :param value: Joint angle from V-Rep (in degrees) that should be converted to a corresponding joint angle in MoveIt! (in radians)
+  :type value: float
+  """  
+  if not vrep:
+    if jointName == u'l_wrist_x' or jointName == u'r_wrist_x': 
+      value = (value-164)/7
+    if jointName == u'l_wrist_z' or jointName == u'r_wrist_z': 
+      value = value/2
+  if jsonConfig != None:
+    if jointName in jsonConfig[u'motors']:     
+      value = value + jsonConfig[u'motors'][jointName][u'offset']   
+      if jsonConfig[u'motors'][jointName][u'orientation'] == u'indirect':
+        value = -value 
+    if jointName == u'l_wrist_z' or jointName == u'r_wrist_z': 
+      value = -value 
+  return  math.radians(value)  

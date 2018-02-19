@@ -2,6 +2,7 @@ import logging
 import json
 import re
 import pprint
+import collections
 
 import pypot.robot
 import pypot.vrep
@@ -71,6 +72,25 @@ class Motion:
                 self._robot = pypot.robot.from_config(config)
         if hasattr(self._robot, "r_middlefingers_x") or hasattr(self._robot, "l_middlefingers_x"):
             self._handModel = "RH7D"
+
+    def getVrep(self):
+        """
+        Returns if vrep simulation is used or not 
+
+        :return: is vrep or real NICO used
+        :rtype: boolean
+        """        
+        return self._vrep
+
+
+    def getConfig(self):
+        """
+        Returns the JSON configuration of motors 
+
+        :return: motor configuration
+        :rtype: dict
+        """        
+        return self._config
 
     def startSimulation(self, synchronize=False):
         """

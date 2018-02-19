@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!--launches NICO ROS capabilities-->
+<launch>
+    <!-- Arguments -->
+    <arg name="json_path" default="$(find moveitgenerated)/../../../../json/nico_humanoid_legged_with_hands_mod-vrep.json" doc="Path to the JSON which describes the motors in a way PyPot understands it. Path must be absolute or relative to python working path (~/.ros)" /> 
+    <arg name="urdf_path" default="$(find moveiturdf)/urdf/complete.urdf" doc="Path to URDF file describing the robot. Path must be relative to current path." />
+    <arg name="motion_args" default="" doc="Additional arguments for nico ros motion interface. For example use the '-v' parameter to use the simulated robot (VREP) instead of the real one" />
+    <arg name="vrep" default="true" />
+    <arg name="vrep-scene" default="$(find moveitgenerated)/../../../../v-rep/NICO-seated.ttt" />
+    
+    <!-- Put important parameter on parameter server -->
+    <param name="robot_description" command="cat $(arg urdf_path)" />
+    
+    <!-- Given the published joint states, publish tf for the robot links -->
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen" />
+
+    <!-- Nodes -->
+    <node name="motion" pkg="nicoros" args="-m $(arg json_path) -v $(arg vrep) --vrep-scene $(arg vrep-scene) $(arg motion_args)" type="Motion.py" required="true" /> 
+    <!--<node name="motion" pkg="nicoros" type="Motion.py" required="true" />-->
+    <node name="jointstatepublisher" pkg="nicoros" type="JointStatePublisher.py" required="true" />
+    <node name="trajectory" pkg="nicoros" type="TrajectoryServer.py" required="true" />
+    
+</launch>
