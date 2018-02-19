@@ -4,6 +4,7 @@
 DIR=`dirname "$BASH_SOURCE"`
 WORKDIR=`pwd`
 VIRTUALENV="virtualenv"
+INSTALL_PACKAGES=true
 echo Running at: $WORKDIR/$DIR
 
 cd
@@ -12,6 +13,7 @@ cd
 echo "Checking for virtualenv"
 if [ -d ".NICO/" ]; then
     echo "Existing virtualenv found"
+    INSTALL_PACKAGES=false
 else
   echo "No virtualenv found - setting up new virtualenv"
   # Test for virtualenv
@@ -26,22 +28,26 @@ source ~/.NICO/bin/activate
 
 #install python packages
 if [ $VIRTUAL_ENV == ~/.NICO ]; then
-  echo "Checking python packages"
-  pip install 'pyserial<=3.1' # versions 3.2 and 3.3 (most recent as of writing) are missing __init__.pyc for tools
-  pip install 'sphinx' # required inside virtualenv to find all modules
-  # install/update custom pypot
-  cd /tmp
-  git clone https://git.informatik.uni-hamburg.de/wtm-robots-and-equipment/pypot.git
-  cd pypot
-  CURRENT_GIT_COMMIT=`git show --name-status | grep commit`
-  CURRENT_GIT_COMMIT=${CURRENT_GIT_COMMIT#'commit '}
-  if [ ! -f ~/.NICO/.current_git_commit ] || [ ! `cat ~/.NICO/.current_git_commit` == $CURRENT_GIT_COMMIT ]; then
-    echo "Custom pypot outdated - updating to commit $CURRENT_GIT_COMMIT"
-    rm -rf ~/.NICO/lib/python2.7/site-packages/pypot/
-    ~/.NICO/bin/python setup.py install
-    echo $CURRENT_GIT_COMMIT >| ~/.NICO/.current_git_commit
-  else
-    echo "Latest custom pypot already installed - skipping installation"
+  if $INSTALL_PACKAGES; then
+    echo "Checking python packages"
+    pip install 'pyserial<=3.1' # versions 3.2 and 3.3 (most recent as of writing) are missing __init__.pyc for tools
+    pip install 'sphinx' # required inside virtualenv to find all modules    
+    # install/update custom pypot
+    cd /tmp
+    git clone https://git.informatik.uni-hamburg.de/wtm-robots-and-equipment/pypot.git
+    cd pypot
+    CURRENT_GIT_COMMIT=`git show --name-status | grep commit`
+    CURRENT_GIT_COMMIT=${CURRENT_GIT_COMMIT#'commit '}
+    if [ ! -f ~/.NICO/.current_git_commit ] || [ ! `cat ~/.NICO/.current_git_commit` == $CURRENT_GIT_COMMIT ]; then
+      echo "Custom pypot outdated - updating to commit $CURRENT_GIT_COMMIT"
+      rm -rf ~/.NICO/lib/python2.7/site-packages/pypot/
+      ~/.NICO/bin/python setup.py install
+      echo $CURRENT_GIT_COMMIT >| ~/.NICO/.current_git_commit
+    else
+      echo "Latest custom pypot already installed - skipping installation"
+    fi
+    pip install 'pyassimp'
+    pip install pyassimp --upgrade
   fi
 else
   echo "Activation failed - skipping python package installations"
@@ -55,10 +61,12 @@ installed")
 if [ "" == "$MOVEIT_indigo" ] && [ "" == "$MOVEIT_kinetic" ]; then
   echo "MoveIt! is not installed"
 else
-  mv $WORKDIR/$DIR/src/nicomoveit/kinematics/package_.xml $WORKDIR/$DIR/src/nicomoveit/kinematics/package.xml
+  if [ -f $WORKDIR/$DIR/src/nicomoveit/kinematics/package_.xml ]; then
+    mv $WORKDIR/$DIR/src/nicomoveit/kinematics/package_.xml $WORKDIR/$DIR/src/nicomoveit/kinematics/package.xml
+  fi
   echo "MoveIt! is installed"
-  echo "To use MoveIt! with visualization run: roslaunch moveitgenerated demo.launch"
-  echo "otherwise run: roscore"
+  echo "To use MoveIt! with visualization run: roslaunch nicoros nicoros_moveit_visual.launch"
+  echo "To use MoveIt! without visualization run: roslaunch nicoros nicoros_moveit.launch"
 fi 
 
 #ROS + catkin
