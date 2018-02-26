@@ -56,6 +56,7 @@ class groupHandle:
   The groupHandle class provides a high level interface for path planning.
   Plans are given for and executed on certain groups of joints
   """
+  
   def __init__(self, groupName, robotMotorFile=None, vrep=False, vrepScene=None, kinematicsOnly=False,
    visualize=False, rosnicoPrefix='/nico/motion', jointStateName='/joint_states', sittingPosition=True):
     """
@@ -447,7 +448,7 @@ class groupHandle:
                        or a dictionary mapping joint names to joint values
                        (the default value for joints that are not included in the mapping is their current value)
     :type jointCoordinates: list of floats or dict mapping str to float    
- :param tip: Frame (link) of the planning group for which the pose for the given joint values is requested
+    :param tip: Frame (link) of the planning group for which the pose for the given joint values is requested
     :type tip: string   
     :return: A list containing the position and a list containing the rotation as quaternion
              or None if the service is not available

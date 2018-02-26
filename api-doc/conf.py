@@ -24,6 +24,7 @@ sys.path.insert(0, os.path.abspath('../api/src/nicovision/scripts/nicovision'))
 sys.path.insert(0, os.path.abspath('../api/src/nicoface/scripts/nicoface'))
 sys.path.insert(0, os.path.abspath('../api/src/nicotouch/scripts/nicotouch'))
 sys.path.insert(0, os.path.abspath('../api/src/nicoros/scripts/'))
+sys.path.insert(0, os.path.abspath('../api/src/nicomotion/scripts/nicomoveit/moveitwrapper'))
 
 # -- General configuration ------------------------------------------------
 
@@ -129,7 +130,7 @@ html_theme = 'pyramid'
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-html_favicon = 'uhh-logo-favicon1.jpg'
+html_favicon = '_static/uhh-logo-favicon1.jpg'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
