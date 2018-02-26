@@ -17,7 +17,6 @@
     <!-- Nodes -->
     <node name="motion" pkg="nicoros" args="-m $(arg json_path) -v $(arg vrep) --vrep-scene $(arg vrep-scene) $(arg motion_args)" type="Motion.py" required="true" /> 
     <!--<node name="motion" pkg="nicoros" type="Motion.py" required="true" />-->
-    <node name="jointstatepublisher" pkg="nicoros" type="JointStatePublisher.py" required="true" />
     <node name="trajectory" pkg="nicoros" type="TrajectoryServer.py" required="true" />
     
 </launch>

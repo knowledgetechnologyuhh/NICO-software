@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from nicomotion.Motion import Motion
+from nicomoveit import moveitWrapper
 import logging
 import argparse
 import sys
@@ -14,11 +15,10 @@ import control_msgs.msg
 
 from std_msgs.msg import String
 
-a = control_msgs.msg.FollowJointTrajectoryAction
-
 class NicoRosMotion():
     """
-    The NicoRosMotion class exposes the functions of :class:`nicomotion.Motion` to ROS
+    The NicoRosMotion class exposes the functions of :class:`nicomotion.Motion` to ROS and 
+    periodically publishes the current joint states
     """
 
     @staticmethod
@@ -36,15 +36,17 @@ class NicoRosMotion():
                 'vrepScene': None,
                 'rostopicName': '/nico/motion',
                 'jointStateName': '/joint_states',
+                'sittingPosition': True,
                 }
 
     def __init__(self, config = None):
         """
-        RosNicoMotion provides :class:`nicomotion.Motion` functions over ROS
+        RosNicoMotion provides :class:`nicomotion.Motion` functions over ROS and 
+        periodically publishes the current joint states
 
         :param config: Configuration of the :class:`nicomotion.Motion` and RosNicoMotion interface
         :type config: dict
-        """
+        """        
         self.robot = None
         if config is None:
             config = NicoRosMotion.getConfig()
@@ -97,12 +99,27 @@ class NicoRosMotion():
         rospy.Service('%s/getStiffness' % config['rostopicName'], nicomsg.srv.GetValue, self._ROSPY_getStiffness)
         rospy.Service('%s/getPID' % config['rostopicName'], nicomsg.srv.GetPID, self._ROSPY_getPID)
 
+        # setup class variables
+        self._running = True
+        self.jsonConfig = self.robot.getConfig()
+        self.vrep = self.robot.getVrep()
+        if rospy.has_param(config['rostopicName']+'/sittingPosition'):
+            config['sittingPosition'] = rospy.get_param(config['rostopicName']+'/sittingPosition')
+        self.config = config
+
+        # setup publishers
+        logging.debug('Init publishers')
+        self._jointStatePublisher = rospy.Publisher('%s' % config['jointStateName'], sensor_msgs.msg.JointState, queue_size = 1)
+        # a asynchronous thread is seperated from the main thread
+        self._jointStateThread = threading.Thread(target=self._sendJointState)
+        self._jointStateThread.start()   
+
         # wait for messages
         logging.info('-- All done --')
 
     def stop(self):
-        # wait for messages
-        logging.info('-- All done --')
+        self._running = False
+        self._jointStateThread.join()
 
     def _ROSPY_openHand(self, message):
         """
@@ -370,6 +387,54 @@ class NicoRosMotion():
         :type message: nicomsg.msg.empty
         """
         self.robot.disableTorqueAll()
+        
+    def _sendJointState(self):
+        """
+        Loop for sending the current joint state
+        """
+        while self._running:
+            if rospy.has_param(self.config['rostopicName']+'/sittingPosition'):
+                self.config['sittingPosition'] = rospy.get_param(self.config['rostopicName']+'/sittingPosition')
+            message = sensor_msgs.msg.JointState()
+            message.name = []
+            message.position = []
+            message.effort = []
+            joints = self.robot.getJointNames()
+            
+            for joint in joints:
+                message.name += [joint]
+                value = self.robot.getAngle(joint)
+                value = moveitWrapper.nicoToRosAngle(joint, value, self.jsonConfig, self.vrep)
+                rospy.loginfo(joint+' '+str(value))
+                message.position += [value]
+                #message.effort += [self.robot.getLoad(joint)]
+            
+            joints_without_motor = []
+            leftLeg = ['l_hip_z', 'l_hip_x', 'l_hip_y', 'l_knee_y', 'l_ankle_y', 'l_ankle_x']
+            leftLeg_sitting = [0.0601951067222, -0.084078543203, -1.53735464204, 1.24698948964, 0.305836083766, 0.0223105563298]
+            rightLeg = [ 'r_hip_z', 'r_hip_x', 'r_hip_y', 'r_knee_y', 'r_ankle_y', 'r_ankle_x']
+            rightLeg_sitting = [-0.031318849578, 0.0614412972261, -1.50805089035, 1.20882593629, 0.387770525688, -0.0962579440558]
+            if self.config['sittingPosition']:
+                for i in range(len(leftLeg)):
+                    message.name += [leftLeg[i]]
+                    value = leftLeg_sitting[i]
+                    message.position += [value]
+                    message.name += [rightLeg[i]]
+                    value = rightLeg_sitting[i]
+                    message.position += [value]                
+            else:
+                joints_without_motor.extend(leftLeg)
+                joints_without_motor.extend(rightLeg)
+            
+            joints_without_motor.extend(['l_indexfinger_1st_x', 'l_indexfinger_2nd_x', 'l_ringfingers_x', 'l_ringfinger_1st_x', 'l_ringfinger_2nd_x', 'l_thumb_1st_x', 'l_thumb_2nd_x', 'r_indexfinger_1st_x', 'r_indexfinger_2nd_x', 'r_ringfingers_x', 'r_ringfinger_1st_x', 'r_ringfinger_2nd_x', 'r_thumb_1st_x', 'r_thumb_2nd_x'])
+            for joint in joints_without_motor:
+                message.name += [joint]
+                value = 0.0
+                message.position += [value]
+                
+            message.header.stamp = rospy.get_rostime()
+            self._jointStatePublisher.publish(message)
+            time.sleep(0.25)    
 
     def __del__(self):
         self.robot.cleanup()
