@@ -68,6 +68,8 @@ add_service_files(
    GetNames.srv
    GetPID.srv
    GetValue.srv
+   GetValues.srv
+   GetString.srv
    GetIntValue.srv
    StartAudioStream.srv
    StopAudioStream.srv

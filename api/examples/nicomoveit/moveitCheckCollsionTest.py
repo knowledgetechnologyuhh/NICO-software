@@ -5,18 +5,17 @@
 import time
 import math
 from nicomoveit import moveitWrapper
-from nicomotion import Motion
 
 groupName = "leftArm"
-leftArm = moveitWrapper.groupHandle(groupName)
+leftArm = moveitWrapper.groupHandle(groupName, kinematicsOnly=True, robotMotorFile='nico_humanoid_legged_with_hands_mod-vrep.json')
 
-target = [0.0, 0.0, -0.5, 0.0, 0.0, 0.0] # position with collision
+target = [0.0, 0.0, -0.5, 0.0, 0.0, 0.0] # position without collision
 for idx in range(0, len(target)):
   target[idx] = math.degrees(target[idx])
 
 leftArm.isColliding(target)
 
-target = [0.0, 0.0, 0.5, 0.0, 0.0, 0.0]  # position without collision
+target = [0.0, 0.0, 0.5, 0.0, 0.0, 0.0]  # position with collision
 for idx in range(0, len(target)):
   target[idx] = math.degrees(target[idx])
 
