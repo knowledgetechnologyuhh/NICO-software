@@ -39,7 +39,7 @@
       "r_indexfingers_x",
       "r_thumb_x",
       "r_virtualhand_x"
-      
+
     ],
     "l_hand": [
       "l_wrist_z",
@@ -156,7 +156,7 @@
     },
      "l_wrist_z": {
       "offset": 0.0,
-      "type": "MX-28",
+      "type": "SR-RH4D",
       "id": 24,
       "angle_limit": [
         -90,
@@ -166,7 +166,7 @@
     },
     "l_wrist_x": {
       "offset": 0.0,
-      "type": "MX-28",
+      "type": "SR-RH4D",
       "id": 26,
       "angle_limit": [
         -35,
@@ -176,8 +176,8 @@
     },
     "l_indexfingers_x": {
       "offset": 0.0,
-      "type": "MX-28",
-      "id": 28,
+      "type": "SR-RH4D",
+      "id": 30,
       "angle_limit": [
         -160,
         160
@@ -186,17 +186,17 @@
     },
      "l_thumb_x": {
       "offset": 0.0,
-      "type": "MX-28",
-      "id": 30,
+      "type": "SR-RH4D",
+      "id": 28,
       "angle_limit": [
         -160,
         160
       ],
       "orientation": "direct"
-    },  
+    },
      "l_virtualhand_x": {
       "offset": 0.0,
-      "type": "MX-28",
+      "type": "SR-EROSBRD",
       "id": 32,
       "angle_limit": [
         -160,
@@ -206,7 +206,7 @@
     },
     "r_wrist_z": {
       "offset": 0.0,
-      "type": "MX-28",
+      "type": "SR-RH4D",
       "id": 23,
       "angle_limit": [
         -90,
@@ -217,7 +217,7 @@
     ,
     "r_wrist_x": {
       "offset": 0.0,
-      "type": "MX-28",
+      "type": "SR-RH4D",
       "id": 25,
       "angle_limit": [
         -50,
@@ -228,8 +228,8 @@
     ,
     "r_indexfingers_x": {
       "offset": 0.0,
-      "type": "MX-28",
-      "id": 27,
+      "type": "SR-RH4D",
+      "id": 29,
       "angle_limit": [
         -160,
         160
@@ -238,8 +238,8 @@
     },
      "r_thumb_x": {
       "offset": 0.0,
-      "type": "MX-28",
-      "id": 29,
+      "type": "SR-RH4D",
+      "id": 27,
       "angle_limit": [
         -160,
         160
@@ -248,7 +248,7 @@
     },
      "r_virtualhand_x": {
       "offset": 0.0,
-      "type": "MX-28",
+      "type": "SR-EROSBRD",
       "id": 31,
       "angle_limit": [
         -160,
@@ -258,5 +258,3 @@
     }
    }
 }
-
-
