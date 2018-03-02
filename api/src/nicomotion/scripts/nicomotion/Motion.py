@@ -10,7 +10,6 @@ from pypot.vrep.remoteApiBindings import vrep as remote_api
 import _nicomotion_internal.hand
 import _nicomotion_internal.RH7D_hand
 
-
 class Motion:
     """
     The Motion class provides a high level interface to various movement related functions of the NICO robot
@@ -38,7 +37,7 @@ class Motion:
 
         with open(motorConfig, 'r') as config_file:
             config = json.load(config_file)
-            
+
         self._config = config
 
         if vrep:
@@ -423,8 +422,8 @@ class Motion:
             return motor.upper_limit
         else:
             logging.warning('No joint "%s" found' % jointName)
-            return 0.0                
-                
+            return 0.0
+
     def setAngleUpperLimit(self, jointName, angle):
         """
         Sets the upper angle limit of a joint (in degree)
@@ -454,8 +453,8 @@ class Motion:
             return motor.lower_limit
         else:
             logging.warning('No joint "%s" found' % jointName)
-            return 0.0            
-                
+            return 0.0
+
     def setAngleLowerLimit(self, jointName, angle):
         """
         Sets the lower angle limit of a joint (in degree)
@@ -516,13 +515,20 @@ class Motion:
         :return: Current of the joint
         :rtype: float
         """
+        r_handjoint_currents = {"r_wrist_z":"present_wrist_rotation_current","r_wrist_x":"present_wrist_flexion_current","r_indexfingers_x":"present_finger_current","r_thumb_x":"present_thumb_current"}
+        l_handjoint_currents = {"l_wrist_z":"present_wrist_rotation_current","l_wrist_x":"present_wrist_flexion_current","l_indexfingers_x":"present_finger_current","l_thumb_x":"present_thumb_current"}
         if hasattr(self._robot, jointName):
-            motor = getattr(self._robot, jointName)
-            if hasattr(motor, 'present_current'):
-                return motor.present_current
+            if jointName in r_handjoint_currents.keys():
+                return getattr(self._robot.r_virtualhand_x, r_handjoint_currents[jointName])
+            elif jointName in l_handjoint_currents.keys():
+                return getattr(self._robot.l_virtualhand_x, l_handjoint_currents[jointName])
             else:
-                logging.warning('Joint %s has no present current' % jointName)
-                return 0.0
+                motor = getattr(self._robot, jointName)
+                if hasattr(motor, 'present_current'):
+                    return motor.present_current
+                else:
+                    logging.warning('Joint %s has no present current' % jointName)
+                    return 0.0
         else:
             logging.warning('No joint "%s" found' % jointName)
             return 0.0
@@ -682,7 +688,7 @@ class Motion:
         :type relativeToObject: str
         :return: Position of the requestet object in x,y,z coordinates relative to the second object
         :rtype: list of three floats
-        """                
+        """
       return self._robot.get_object_position(objectName,relativeToObject)
 
     def cleanup(self):
