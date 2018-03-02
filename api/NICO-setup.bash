@@ -6,6 +6,9 @@ WORKDIR=`pwd`
 VIRTUALENV="virtualenv"
 echo Running at: $WORKDIR/$DIR
 
+CURRENT_GIT_COMMIT=`git show --name-status | grep commit`
+CURRENT_GIT_COMMIT=${CURRENT_GIT_COMMIT#'commit '}
+
 cd
 
 #virtualenv setup
@@ -28,21 +31,21 @@ source ~/.NICO/bin/activate
 if [ $VIRTUAL_ENV == ~/.NICO ]; then
   echo "Checking python packages"
   pip install 'pyserial<=3.1' # versions 3.2 and 3.3 (most recent as of writing) are missing __init__.pyc for tools
-  pip install 'sphinx' # required inside virtualenv to find all modules
+  pip install 'sphinx' # required inside virtualenv to find all modules    
   # install/update custom pypot
-  cd /tmp
-  git clone https://git.informatik.uni-hamburg.de/wtm-robots-and-equipment/pypot.git
-  cd pypot
-  CURRENT_GIT_COMMIT=`git show --name-status | grep commit`
-  CURRENT_GIT_COMMIT=${CURRENT_GIT_COMMIT#'commit '}
   if [ ! -f ~/.NICO/.current_git_commit ] || [ ! `cat ~/.NICO/.current_git_commit` == $CURRENT_GIT_COMMIT ]; then
     echo "Custom pypot outdated - updating to commit $CURRENT_GIT_COMMIT"
+    cd /tmp
+    git clone https://git.informatik.uni-hamburg.de/wtm-robots-and-equipment/pypot.git
+    cd pypot      
     rm -rf ~/.NICO/lib/python2.7/site-packages/pypot/
     ~/.NICO/bin/python setup.py install
     echo $CURRENT_GIT_COMMIT >| ~/.NICO/.current_git_commit
   else
     echo "Latest custom pypot already installed - skipping installation"
   fi
+  pip install 'pyassimp'
+  pip install pyassimp --upgrade
 else
   echo "Activation failed - skipping python package installations"
 fi
@@ -55,10 +58,12 @@ installed")
 if [ "" == "$MOVEIT_indigo" ] && [ "" == "$MOVEIT_kinetic" ]; then
   echo "MoveIt! is not installed"
 else
-  mv $WORKDIR/$DIR/src/nicomoveit/kinematics/package_.xml $WORKDIR/$DIR/src/nicomoveit/kinematics/package.xml
+  if [ -f $WORKDIR/$DIR/src/nicomoveit/kinematics/package_.xml ]; then
+    mv $WORKDIR/$DIR/src/nicomoveit/kinematics/package_.xml $WORKDIR/$DIR/src/nicomoveit/kinematics/package.xml
+  fi
   echo "MoveIt! is installed"
-  echo "To use MoveIt! with visualization run: roslaunch moveitgenerated demo.launch"
-  echo "otherwise run: roscore"
+  echo "To use MoveIt! with visualization run: roslaunch nicoros nicoros_moveit_visual.launch"
+  echo "To use MoveIt! without visualization run: roslaunch nicoros nicoros_moveit.launch"
 fi 
 
 #ROS + catkin

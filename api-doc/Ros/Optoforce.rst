@@ -1,4 +1,4 @@
-rosnico - Optoforce
+nicoros - Optoforce
 *********************
 
 The Optoforce class allows to send the Optoforce data through ROS.

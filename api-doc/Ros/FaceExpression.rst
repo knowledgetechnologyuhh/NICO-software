@@ -1,4 +1,4 @@
-rosnico - FaceExpression
+nicoros - FaceExpression
 ************************
 
 The FaceExpression class allows to manipulate the facial expression of NICO through ROS.
