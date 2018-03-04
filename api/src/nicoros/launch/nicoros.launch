@@ -2,7 +2,7 @@
 <!--launches NICO ROS capabilities-->
 <launch>
     <!-- Arguments -->
-    <arg name="json_path" default="$(find moveitgenerated)/../../../../json/nico_humanoid_legged_with_hands_mod-vrep.json" doc="Path to the JSON which describes the motors in a way PyPot understands it. Path must be absolute or relative to python working path (~/.ros)" /> 
+    <arg name="json_path" default="$(find moveitgenerated)/../../../../json/nico_humanoid_legged_with_hands_mod-vrep_with_legs.json" doc="Path to the JSON which describes the motors in a way PyPot understands it. Path must be absolute or relative to python working path (~/.ros)" />
     <arg name="urdf_path" default="$(find moveiturdf)/urdf/complete.urdf" doc="Path to URDF file describing the robot. Path must be relative to current path." />
     <arg name="motion_args" default="" doc="Additional arguments for nico ros motion interface. For example use the '-v' parameter to use the simulated robot (VREP) instead of the real one" />
     <arg name="vrep" default="true" />
