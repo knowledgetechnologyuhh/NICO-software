@@ -37,6 +37,7 @@ class NicoRosMotion():
                 'rostopicName': '/nico/motion',
                 'jointStateName': '/joint_states',
                 'sittingPosition': True,
+                'fakeExecution': False,
                 }
 
     def __init__(self, config = None):
@@ -57,6 +58,8 @@ class NicoRosMotion():
             config['vrep'] = rospy.get_param(config['rostopicName']+'/vrep')
         if rospy.has_param(config['rostopicName']+'/vrepScene'):
             config['vrepScene'] = rospy.get_param(config['rostopicName']+'/vrepScene')
+        if rospy.has_param(config['rostopicName']+'/fakeExecution'):
+            config['fakeExecution'] = rospy.get_param(config['rostopicName']+'/fakeExecution')
 
         # init Motion
         logging.info('-- Init NicoRosMotion --')
@@ -106,6 +109,7 @@ class NicoRosMotion():
         if rospy.has_param(config['rostopicName']+'/sittingPosition'):
             config['sittingPosition'] = rospy.get_param(config['rostopicName']+'/sittingPosition')
         self.config = config
+        self.fakeJointStates = {}
 
         # setup publishers
         logging.debug('Init publishers')
@@ -182,6 +186,7 @@ class NicoRosMotion():
         :param message: ROS message
         :type message: nicomsg.msg.sff
         """
+        self.fakeJointStates[message.param1] = message.param2
         self.robot.setAngle(message.param1, message.param2, message.param3)
 
     def _ROSPY_changeAngle(self, message):
@@ -395,6 +400,8 @@ class NicoRosMotion():
         while self._running:
             if rospy.has_param(self.config['rostopicName']+'/sittingPosition'):
                 self.config['sittingPosition'] = rospy.get_param(self.config['rostopicName']+'/sittingPosition')
+            if rospy.has_param(self.config['rostopicName']+'/fakeExecution'):
+                self.config['fakeExecution'] = rospy.get_param(self.config['rostopicName']+'/fakeExecution')
             message = sensor_msgs.msg.JointState()
             message.name = []
             message.position = []
@@ -402,8 +409,11 @@ class NicoRosMotion():
             joints = self.robot.getJointNames()
             
             for joint in joints:
+                if self.config['fakeExecution'] and joint in self.fakeJointStates:
+                    value = self.fakeJointStates[joint]
+                else:
+                    value = self.robot.getAngle(joint)
                 message.name += [joint]
-                value = self.robot.getAngle(joint)
                 value = moveitWrapper.nicoToRosAngle(joint, value, self.jsonConfig, self.vrep)
                 rospy.loginfo(joint+' '+str(value))
                 message.position += [value]
@@ -453,6 +463,7 @@ if __name__ == '__main__':
     parser.add_argument('--vrep-scene', dest='vrepScene', help='Scene to load in VREP. Default: %s' % config['vrepScene'], type=str)
     parser.add_argument('--rostopic-name', dest='rostopicName', help='Topic name for ROS. Default: %s' % config['rostopicName'], type=str)
     parser.add_argument('-j', '--joint-state-name', dest='jointStateName', help='Name of the joint state topic. PLEASE NOTE: A lot of other nodes assume the joint state note to be at /joint_states, so be careful when changing it. Default: %s' % config['jointStateName'], type=str)
+    parser.add_argument('-f', '--fake-execution', dest='fake', help='Publish fake joint states instead of real joint states', action='store_false')
 
     args = parser.parse_known_args()[0]
     if args.logFile:
@@ -470,6 +481,7 @@ if __name__ == '__main__':
         config['rostopicName'] = args.rostopicName
     if args.jointStateName:
         config['jointStateName'] = args.jointStateName
+    config['fakeExecution'] = args.fake        
 
     # Set logging setting
     loggingLevel = logging.INFO
