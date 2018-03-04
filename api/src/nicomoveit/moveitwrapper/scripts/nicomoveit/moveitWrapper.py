@@ -57,8 +57,8 @@ class groupHandle:
   Plans are given for and executed on certain groups of joints
   """
   
-  def __init__(self, groupName, robotMotorFile=None, vrep=False, vrepScene=None, kinematicsOnly=False, monitorPathExecution=True,
-   visualize=False, rosnicoPrefix='/nico/motion', jointStateName='/joint_states', sittingPosition=True):
+  def __init__(self, groupName, robotMotorFile=None, vrep=False, vrepScene=None, kinematicsOnly=False, monitorPathExecution=None,
+   visualize=False, rosnicoPrefix='/nico/motion', jointStateName='/joint_states'):
     """
     :param groupName: Name of the planning group that should be moved.
                       Possible movement groups to use are: 
@@ -80,16 +80,13 @@ class groupHandle:
     :type rosnicoPrefix: str
     :param jointStateName: ROS topic for joint state information
     :type jointStateName: str
-    :param sittingPosition: Should the legs be in sitting or standing position? Default is True
-    :type sittingPosition: boolean
     """
     if robotMotorFile is None:
       print("Please provide a motor configuration file!")
       return
     self.vrep = vrep
     self.rosnicoPrefix = rosnicoPrefix
-    rospy.init_node('moveitWrapper', anonymous=True)    
-    rospy.set_param(rosnicoPrefix+'/sittingPosition', sittingPosition)    
+    rospy.init_node('moveitWrapper', anonymous=True)
     
     # find packages
     uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
@@ -165,7 +162,8 @@ class groupHandle:
     self.group.set_goal_orientation_tolerance(0.1)
     # set default movement speed of joints
     rospy.set_param(rosnicoPrefix+'/fractionMaxSpeed', 0.1)
-    rospy.set_param(rosnicoPrefix+'/fakeExecution', not monitorPathExecution)
+    if monitorPathExecution is not None:
+      rospy.set_param(rosnicoPrefix+'/fakeExecution', not monitorPathExecution)
     self.defaultPose = self.group.get_current_pose()
     self.planningTime = None
     self.executionTime = None
@@ -280,7 +278,7 @@ class groupHandle:
     """
     self.group.set_goal_position_tolerance(positionTolerance)
     
-  def monitorPathExecution(self, monitorPathExecution)
+  def monitorPathExecution(self, monitorPathExecution):
     """
     Sets the ROS parameter that defines if motion plans are monitored to be correctly executed
 
