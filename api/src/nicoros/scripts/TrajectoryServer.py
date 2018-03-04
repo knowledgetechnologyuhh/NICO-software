@@ -30,6 +30,7 @@ class TrajectoryServer:
         """
         return {'rostopicName': '/trajectory',                
                 'rosnicoPrefix': '/nico/motion',
+                'check_correct_path_execution': True,
                 }
 
     def __init__(self, planningGroup, config = None):
@@ -41,6 +42,8 @@ class TrajectoryServer:
         """
         if config is None:
             config = TrajectoryServer.getConfig()
+            
+        self.config = config
 
         self._error_string = 'Successful'
         # Error codes see http://docs.ros.org/api/control_msgs/html/action/FollowJointTrajectory.html
@@ -90,6 +93,7 @@ class TrajectoryServer:
         
         self.pathTolerance = rospy.get_param(config['rosnicoPrefix']+'/pathTolerance', self.pathTolerance)
         self.fractionMaxSpeed = rospy.get_param(config['rosnicoPrefix']+'/fractionMaxSpeed', self.fractionMaxSpeed)
+        self.config['check_correct_path_execution'] = not rospy.get_param(config['rosnicoPrefix']+'/fakeExecution', not self.config['check_correct_path_execution'])
 
         self._testJoints(message.trajectory.joint_names)
 
@@ -122,8 +126,11 @@ class TrajectoryServer:
                 rospy.logwarn(str("ERROR occured"))
                 self._moveToCurrentJointAngles(message.trajectory.joint_names)
                 break
-        rospy.logwarn(str("checkFinalPosition"))
-        self._checkFinalPosition(message, start)
+        if self.config['check_correct_path_execution']:
+            rospy.logwarn(str("check final position"))
+            self._checkFinalPosition(message, start)
+        else:
+            rospy.logwarn(str("skip check of final position"))
         rospy.logwarn(str("sendResult"))
         self._sendResult()
 
@@ -187,11 +194,12 @@ class TrajectoryServer:
             calculated_error = abs(desired.positions[i] - actual.positions[i])
             error.positions += [ calculated_error ]
             # Check margin
-            if (joint in self._path_tolerance and calculated_error > self._path_tolerance[joint]) or calculated_error > self.pathTolerance:
-                self._error_code = control_msgs.msg.FollowJointTrajectoryResult.PATH_TOLERANCE_VIOLATED
-                self._error_string = 'Joint %s missed path position by %f (should: %f, is: %f)' % (joint, calculated_error, desired.positions[i], actual.positions[i] )
-                rospy.logwarn(self._error_string)
-                return
+            if self.config['check_correct_path_execution']:
+              if (joint in self._path_tolerance and calculated_error > self._path_tolerance[joint]) or calculated_error > self.pathTolerance:
+                  self._error_code = control_msgs.msg.FollowJointTrajectoryResult.PATH_TOLERANCE_VIOLATED
+                  self._error_string = 'Joint %s missed path position by %f (should: %f, is: %f)' % (joint, calculated_error, desired.positions[i], actual.positions[i] )
+                  rospy.logwarn(self._error_string)
+                  return
 
         desired.time_from_start = point.time_from_start
         actual.time_from_start = rospy.Time.now() - start_time
@@ -274,6 +282,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser('NICO trajectory server')
     parser.add_argument('--rostopic-name', dest='rostopicName', help='Topic name for ROS. Default: %s' % config['rostopicName'], type=str)
     parser.add_argument('--rosnico-prefix', dest='rosnicoPrefix', help='Prefix of the NICO ROS motion interface. Default: %s' % config['rosnicoPrefix'], type=str)
+    parser.add_argument('-c', '--check', dest='check', help='Check if joint path is correctly executed', action='store_false')
 
     args = parser.parse_known_args()[0]
 
@@ -281,6 +290,8 @@ if __name__ == '__main__':
         config['rostopicName'] = args.rostopicName
     if args.rosnicoPrefix:
         config['rosnicoPrefix'] = args.rosnicoPrefix
+
+    config['check_correct_path_execution'] = args.check
 
     #server = TrajectoryServer(config)
     
