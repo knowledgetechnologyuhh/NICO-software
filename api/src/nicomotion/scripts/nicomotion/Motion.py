@@ -34,6 +34,7 @@ class Motion:
         self._robot = None
         self._maximumSpeed = 1.0
         self._vrep = vrep
+        self._vrepIO = None
         self._handModel = "RH4D"
 
         with open(motorConfig, 'r') as config_file:
@@ -50,6 +51,7 @@ class Motion:
                 for group in config['motorgroups'].keys():
                     config['motorgroups'][group] = [x for x in config['motorgroups'][group] if x != motor]
             self._robot = pypot.vrep.from_vrep(config, vrepHost, vrepPort, vrepScene)
+            self._vrepIO = self._robot._controllers[0].io
         else:
             logging.info('Using robot')
             try:
@@ -74,21 +76,21 @@ class Motion:
 
     def getVrep(self):
         """
-        Returns if vrep simulation is used or not 
+        Returns if vrep simulation is used or not
 
         :return: is vrep or real NICO used
         :rtype: boolean
-        """        
+        """
         return self._vrep
 
 
     def getConfig(self):
         """
-        Returns the JSON configuration of motors 
+        Returns the JSON configuration of motors
 
         :return: motor configuration
         :rtype: dict
-        """        
+        """
         return self._config
 
     def startSimulation(self, synchronize=False):
@@ -101,11 +103,11 @@ class Motion:
         """
         if self._vrep:
             if synchronize:
-                clientID = self._robot._controllers[0].io.client_id
-                remote_api.simxSynchronous(clientID,True)
-                remote_api.simxStartSimulation(clientID, remote_api.simx_opmode_blocking)
+                remote_api.simxSynchronous(self._vrepIO.client_id, True)
+                self._vrepIO.start_simulation()
             else:
-                self._robot.start_simulation()
+                remote_api.simxSynchronous(self._vrepIO.client_id, False)
+                self._vrepIO.start_simulation()
         else:
             logging.warning('startSimulation() has no effect on a real robot')
 
@@ -117,7 +119,7 @@ class Motion:
         :type dt: int
         """
         if self._vrep:
-            self._robot._controllers[0].io.call_remote_api('simxSetFloatingParameter', remote_api.sim_floatparam_simulation_time_step, dt)
+            self._vrepIO.call_remote_api('simxSetFloatingParameter', remote_api.sim_floatparam_simulation_time_step, dt)
         else:
             logging.warning('nextSimulationStep() has no effect on a real robot')
 
@@ -126,7 +128,7 @@ class Motion:
         Advances the V-REP simulation by one step if synchronize was set on startSimulation().
         """
         if self._vrep:
-            remote_api.simxSynchronousTrigger(self._robot._controllers[0].io.client_id)
+            remote_api.simxSynchronousTrigger(self._vrepIO.client_id)
         else:
             logging.warning('nextSimulationStep() has no effect on a real robot')
 
@@ -135,7 +137,7 @@ class Motion:
         Stops the V-REP simulation
         """
         if self._vrep:
-            remote_api.simxStopSimulation(self._robot._controllers[0].io.client_id, remote_api.simx_opmode_blocking)
+            self._vrepIO.stop_simulation()
         else:
             logging.warning('stopSimulation() has no effect on a real robot')
 
@@ -144,9 +146,41 @@ class Motion:
         Restarts the V-REP simulation
         """
         if self._vrep:
-            self._robot.reset_simulation
+            self._vrepIO.restart_simulation()
         else:
             logging.warning('resetSimulation() has no effect on a real robot')
+
+    def callVREPRemoteApi(self, func_name, *args, **kwargs):
+        """ Calls any remote API func in a thread_safe way.
+
+        :param str func_name: name of the remote API func to call
+        :param args: args to pass to the remote API call
+        :param kwargs: args to pass to the remote API call
+
+        :return: api response
+
+        .. note:: You can add an extra keyword to specify if you want to use the streaming or sending mode. The oneshot_wait mode is used by default (see `here <http://www.coppeliarobotics.com/helpFiles/en/remoteApiConstants.htm#operationModes>`_ for details about possible modes).
+
+        .. warning:: You should not pass the clientId and the operationMode as arguments. They will be automatically added.
+        """
+        if self._vrep:
+            return self._vrepIO.call_remote_api(func_name, *args, **kwargs)
+        else:
+            logging.warning('callVREPRemoteApi() has no effect on a real robot')
+            return None
+
+    def getVrepIO(self):
+        """
+        Gives access to pypots vrep IO (see https://poppy-project.github.io/pypot/pypot.vrep.html#pypot.vrep.io.VrepIO)
+
+        :return: Pypot vrep IO
+        :rtype: pypot.vrep.io
+        """
+        if self._vrep:
+            return self._vrepIO
+        else:
+            logging.warning('A real robot has no VREP controller')
+            return None
 
     def thumbsUp(self, handName, fractionMaxSpeed=1.0):
         """
