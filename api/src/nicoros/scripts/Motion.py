@@ -36,7 +36,7 @@ class NicoRosMotion():
                 'vrepScene': None,
                 'rostopicName': '/nico/motion',
                 'jointStateName': '/joint_states',
-                'sittingPosition': True,
+                'fakeExecution': False,
                 }
 
     def __init__(self, config = None):
@@ -57,6 +57,8 @@ class NicoRosMotion():
             config['vrep'] = rospy.get_param(config['rostopicName']+'/vrep')
         if rospy.has_param(config['rostopicName']+'/vrepScene'):
             config['vrepScene'] = rospy.get_param(config['rostopicName']+'/vrepScene')
+        if rospy.has_param(config['rostopicName']+'/fakeExecution'):
+            config['fakeExecution'] = rospy.get_param(config['rostopicName']+'/fakeExecution')
 
         # init Motion
         logging.info('-- Init NicoRosMotion --')
@@ -103,9 +105,8 @@ class NicoRosMotion():
         self._running = True
         self.jsonConfig = self.robot.getConfig()
         self.vrep = self.robot.getVrep()
-        if rospy.has_param(config['rostopicName']+'/sittingPosition'):
-            config['sittingPosition'] = rospy.get_param(config['rostopicName']+'/sittingPosition')
         self.config = config
+        self.fakeJointStates = {}
 
         # setup publishers
         logging.debug('Init publishers')
@@ -182,6 +183,7 @@ class NicoRosMotion():
         :param message: ROS message
         :type message: nicomsg.msg.sff
         """
+        self.fakeJointStates[message.param1] = message.param2
         self.robot.setAngle(message.param1, message.param2, message.param3)
 
     def _ROSPY_changeAngle(self, message):
@@ -393,8 +395,8 @@ class NicoRosMotion():
         Loop for sending the current joint state
         """
         while self._running:
-            if rospy.has_param(self.config['rostopicName']+'/sittingPosition'):
-                self.config['sittingPosition'] = rospy.get_param(self.config['rostopicName']+'/sittingPosition')
+            if rospy.has_param(self.config['rostopicName']+'/fakeExecution'):
+                self.config['fakeExecution'] = rospy.get_param(self.config['rostopicName']+'/fakeExecution')
             message = sensor_msgs.msg.JointState()
             message.name = []
             message.position = []
@@ -402,36 +404,22 @@ class NicoRosMotion():
             joints = self.robot.getJointNames()
             
             for joint in joints:
+                if self.config['fakeExecution'] and joint in self.fakeJointStates:
+                    value = self.fakeJointStates[joint]
+                else:
+                    value = self.robot.getAngle(joint)
                 message.name += [joint]
-                value = self.robot.getAngle(joint)
                 value = moveitWrapper.nicoToRosAngle(joint, value, self.jsonConfig, self.vrep)
                 rospy.loginfo(joint+' '+str(value))
                 message.position += [value]
                 #message.effort += [self.robot.getLoad(joint)]
-            
-            joints_without_motor = []
-            leftLeg = ['l_hip_z', 'l_hip_x', 'l_hip_y', 'l_knee_y', 'l_ankle_y', 'l_ankle_x']
-            leftLeg_sitting = [0.0601951067222, -0.084078543203, -1.53735464204, 1.24698948964, 0.305836083766, 0.0223105563298]
-            rightLeg = [ 'r_hip_z', 'r_hip_x', 'r_hip_y', 'r_knee_y', 'r_ankle_y', 'r_ankle_x']
-            rightLeg_sitting = [-0.031318849578, 0.0614412972261, -1.50805089035, 1.20882593629, 0.387770525688, -0.0962579440558]
-            if self.config['sittingPosition']:
-                for i in range(len(leftLeg)):
-                    message.name += [leftLeg[i]]
-                    value = leftLeg_sitting[i]
-                    message.position += [value]
-                    message.name += [rightLeg[i]]
-                    value = rightLeg_sitting[i]
-                    message.position += [value]                
-            else:
-                joints_without_motor.extend(leftLeg)
-                joints_without_motor.extend(rightLeg)
-            
-            joints_without_motor.extend(['l_indexfinger_1st_x', 'l_indexfinger_2nd_x', 'l_ringfingers_x', 'l_ringfinger_1st_x', 'l_ringfinger_2nd_x', 'l_thumb_1st_x', 'l_thumb_2nd_x', 'r_indexfinger_1st_x', 'r_indexfinger_2nd_x', 'r_ringfingers_x', 'r_ringfinger_1st_x', 'r_ringfinger_2nd_x', 'r_thumb_1st_x', 'r_thumb_2nd_x'])
+
+            joints_without_motor = ['l_indexfinger_1st_x', 'l_indexfinger_2nd_x', 'l_ringfingers_x', 'l_ringfinger_1st_x', 'l_ringfinger_2nd_x', 'l_thumb_1st_x', 'l_thumb_2nd_x', 'r_indexfinger_1st_x', 'r_indexfinger_2nd_x', 'r_ringfingers_x', 'r_ringfinger_1st_x', 'r_ringfinger_2nd_x', 'r_thumb_1st_x', 'r_thumb_2nd_x']
             for joint in joints_without_motor:
                 message.name += [joint]
                 value = 0.0
-                message.position += [value]
-                
+                message.position += [value]            
+
             message.header.stamp = rospy.get_rostime()
             self._jointStatePublisher.publish(message)
             time.sleep(0.25)    
@@ -453,6 +441,7 @@ if __name__ == '__main__':
     parser.add_argument('--vrep-scene', dest='vrepScene', help='Scene to load in VREP. Default: %s' % config['vrepScene'], type=str)
     parser.add_argument('--rostopic-name', dest='rostopicName', help='Topic name for ROS. Default: %s' % config['rostopicName'], type=str)
     parser.add_argument('-j', '--joint-state-name', dest='jointStateName', help='Name of the joint state topic. PLEASE NOTE: A lot of other nodes assume the joint state note to be at /joint_states, so be careful when changing it. Default: %s' % config['jointStateName'], type=str)
+    parser.add_argument('-f', '--fake-execution', dest='fake', help='Publish fake joint states instead of real joint states', action='store_false')
 
     args = parser.parse_known_args()[0]
     if args.logFile:
@@ -470,6 +459,7 @@ if __name__ == '__main__':
         config['rostopicName'] = args.rostopicName
     if args.jointStateName:
         config['jointStateName'] = args.jointStateName
+    config['fakeExecution'] = args.fake        
 
     # Set logging setting
     loggingLevel = logging.INFO
