@@ -57,8 +57,8 @@ class groupHandle:
   Plans are given for and executed on certain groups of joints
   """
   
-  def __init__(self, groupName, robotMotorFile=None, vrep=False, vrepScene=None, kinematicsOnly=False,
-   visualize=False, rosnicoPrefix='/nico/motion', jointStateName='/joint_states', sittingPosition=True):
+  def __init__(self, groupName, robotMotorFile=None, vrep=False, vrepScene=None, kinematicsOnly=False, monitorPathExecution=None,
+   visualize=False, rosnicoPrefix='/nico/motion', jointStateName='/joint_states'):
     """
     :param groupName: Name of the planning group that should be moved.
                       Possible movement groups to use are: 
@@ -72,22 +72,21 @@ class groupHandle:
     :type vrepScene: str
     :param kinematicsOnly: Do not perform movements in simulated or real robot
     :type kinematicsOnly: boolean
+    :param monitorPathExecution: Do or do not monitor if motion plans are correctly executed
+    :type monitorPathExecution: boolean
     :param visualize: Visualize internal MoveIt! state in R-Viz
     :type visualize: boolean
     :param rosnicoPrefix: Topic prefix for motion handling in ROS
     :type rosnicoPrefix: str
     :param jointStateName: ROS topic for joint state information
     :type jointStateName: str
-    :param sittingPosition: Should the legs be in sitting or standing position? Default is True
-    :type sittingPosition: boolean
     """
     if robotMotorFile is None:
       print("Please provide a motor configuration file!")
       return
     self.vrep = vrep
     self.rosnicoPrefix = rosnicoPrefix
-    rospy.init_node('moveitWrapper', anonymous=True)    
-    rospy.set_param(rosnicoPrefix+'/sittingPosition', sittingPosition)    
+    rospy.init_node('moveitWrapper', anonymous=True)
     
     # find packages
     uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
@@ -163,6 +162,8 @@ class groupHandle:
     self.group.set_goal_orientation_tolerance(0.1)
     # set default movement speed of joints
     rospy.set_param(rosnicoPrefix+'/fractionMaxSpeed', 0.1)
+    if monitorPathExecution is not None:
+      rospy.set_param(rosnicoPrefix+'/fakeExecution', not monitorPathExecution)
     self.defaultPose = self.group.get_current_pose()
     self.planningTime = None
     self.executionTime = None
@@ -250,7 +251,8 @@ class groupHandle:
     """
     Defines the maximum joint angle that the real/or simulated joint is allowed to
     deviate from the path plan. Set this value to enable automated stopping of motion
-    in case of a collision
+    in case of a potential collision. Be careful, a strict path tolerance will result
+    in NICO stopping movement even in harmless situations
 
     :param pathTolerance: maximum allowed joint angle deviation in degree
     :type pathTolerance: float
@@ -276,6 +278,15 @@ class groupHandle:
     """
     self.group.set_goal_position_tolerance(positionTolerance)
     
+  def monitorPathExecution(self, monitorPathExecution):
+    """
+    Sets the ROS parameter that defines if motion plans are monitored to be correctly executed
+
+    :param monitorPathExecution: should motion plan execution be monitored?
+    :type monitorPathExecution: boolean
+    """
+    rospy.set_param(rosnicoPrefix+'/fakeExecution', not monitorPathExecution)
+
   def getPositionTolerance(self):
     """
     Returns the radius of the sphere around the target origin of the
