@@ -57,17 +57,17 @@ class groupHandle:
   Plans are given for and executed on certain groups of joints
   """
   
-  def __init__(self, groupName, robotMotorFile=None, vrep=False, vrepScene=None, kinematicsOnly=False, monitorPathExecution=None,
+  def __init__(self, groupName, vrep=True, robotMotorFile=None, vrepScene=None, kinematicsOnly=False, monitorPathExecution=None,
    visualize=False, rosnicoPrefix='/nico/motion', jointStateName='/joint_states'):
     """
     :param groupName: Name of the planning group that should be moved.
                       Possible movement groups to use are: 
                       'leftArm', 'rightArm', 'leftLeg', 'rightLeg'
     :type groupName: str
-    :param robotMotorFile: Motor configuration file in json format
-    :type robotMotorFile: str
     :param vrep: Should movements be done in V-Rep simulation or on the real robot
     :type vrep: boolean
+    :param robotMotorFile: Motor configuration file in json format
+    :type robotMotorFile: str
     :param vrepScene: V-Rep scene to load if simulation is used
     :type vrepScene: str
     :param kinematicsOnly: Do not perform movements in simulated or real robot
@@ -81,9 +81,6 @@ class groupHandle:
     :param jointStateName: ROS topic for joint state information
     :type jointStateName: str
     """
-    if robotMotorFile is None:
-      print("Please provide a motor configuration file!")
-      return
     self.vrep = vrep
     self.rosnicoPrefix = rosnicoPrefix
     rospy.init_node('moveitWrapper', anonymous=True)
@@ -992,19 +989,19 @@ def rosToNicoAngle(jointName, value, jsonConfig = None, vrep = True):
   """
   value = math.degrees(value)
   if jsonConfig != None:
-    if jointName == u'l_wrist_z' or jointName == u'l_wrist_z': 
+    if jointName == u'l_wrist_z' or jointName == u'r_wrist_z':
       value = -value
   if not vrep:
-    if jointName == u'l_wrist_x' or jointName == u'r_wrist_x': 
+    if jointName == u'l_wrist_x' or jointName == u'r_wrist_x':
       value = value*7+164
-    if jointName == u'l_wrist_z' or jointName == u'r_wrist_z': 
+    if jointName == u'l_wrist_z' or jointName == u'r_wrist_z':
       value = value*2
   if jsonConfig != None:
-    if jointName in jsonConfig[u'motors']:        
+    if jointName in jsonConfig[u'motors']:
       if jsonConfig[u'motors'][jointName][u'orientation'] == u'indirect':
         value = -value
       value = value - jsonConfig[u'motors'][jointName][u'offset']
-  return value  
+  return value
   
 def nicoToRosAngle(jointName, value, jsonConfig = None, vrep = True):  
   """
@@ -1016,15 +1013,15 @@ def nicoToRosAngle(jointName, value, jsonConfig = None, vrep = True):
   :type value: float
   """  
   if not vrep:
-    if jointName == u'l_wrist_x' or jointName == u'r_wrist_x': 
+    if jointName == u'l_wrist_x' or jointName == u'r_wrist_x':
       value = (value-164)/7
-    if jointName == u'l_wrist_z' or jointName == u'r_wrist_z': 
+    if jointName == u'l_wrist_z' or jointName == u'r_wrist_z':
       value = value/2
   if jsonConfig != None:
-    if jointName in jsonConfig[u'motors']:     
-      value = value + jsonConfig[u'motors'][jointName][u'offset']   
+    if jointName in jsonConfig[u'motors']:
+      value = value + jsonConfig[u'motors'][jointName][u'offset']
       if jsonConfig[u'motors'][jointName][u'orientation'] == u'indirect':
-        value = -value 
-    if jointName == u'l_wrist_z' or jointName == u'r_wrist_z': 
-      value = -value 
-  return  math.radians(value)  
+        value = -value
+    if jointName == u'l_wrist_z' or jointName == u'r_wrist_z':
+      value = -value
+  return math.radians(value)
