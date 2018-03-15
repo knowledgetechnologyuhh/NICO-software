@@ -220,7 +220,7 @@ class groupHandle:
     :param fractionMaxSpeed: movement speed of joints as fraction of maximum velocity
     :type fractionMaxSpeed: float
     """
-    rospy.set_param(rosnicoPrefix+'/fractionMaxSpeed', fractionMaxSpeed)
+    rospy.set_param(self.rosnicoPrefix+'/fractionMaxSpeed', fractionMaxSpeed)
     
   def getMaxSpeed(self):
     """
@@ -230,7 +230,7 @@ class groupHandle:
     :return: movement speed of joints as fraction of maximum velocity
     :rtype: float
     """
-    return rospy.get_param(rosnicoPrefix+'/fractionMaxSpeed')
+    return rospy.get_param(self.rosnicoPrefix+'/fractionMaxSpeed')
 
       
   def setMotionPlanner(self, plannerID):
@@ -913,7 +913,7 @@ class groupHandle:
     print(self.group.get_known_constraints())
 
     for i in range(10):
-      pose_target = group.get_random_pose()
+      pose_target = self.group.get_random_pose()
       #print(pose_target)
       self.group.set_pose_target(pose_target)
       self.group.go()
