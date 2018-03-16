@@ -1,10 +1,12 @@
 #!/bin/bash
 
 # get dir
-DIR=`dirname "$BASH_SOURCE"`
-WORKDIR=`pwd`
+CALLDIR=`pwd`
+cd "`dirname "$BASH_SOURCE"`"
+WORKDIR=$(pwd)
+cd "$CALLDIR"
 VIRTUALENV="virtualenv"
-echo Running at: $WORKDIR/$DIR
+echo Running at: "$WORKDIR"
 
 cd
 
@@ -57,8 +59,8 @@ installed")
 if [ "" == "$MOVEIT_indigo" ] && [ "" == "$MOVEIT_kinetic" ]; then
   echo "MoveIt! is not installed"
 else
-  if [ -f $WORKDIR/$DIR/src/nicomoveit/kinematics/package_.xml ]; then
-    mv $WORKDIR/$DIR/src/nicomoveit/kinematics/package_.xml $WORKDIR/$DIR/src/nicomoveit/kinematics/package.xml
+  if [ -f $WORKDIR/src/nicomoveit/kinematics/package_.xml ]; then
+    mv $WORKDIR/src/nicomoveit/kinematics/package_.xml $WORKDIR/src/nicomoveit/kinematics/package.xml
   fi
   echo "MoveIt! is installed"
   echo "To use MoveIt! with visualization run: roslaunch nicoros nicoros_moveit_visual.launch"
@@ -67,7 +69,7 @@ fi
 
 #ROS + catkin
 echo "Setting up API"
-cd $WORKDIR/$DIR
+cd $WORKDIR
 if [ -e /opt/ros/indigo/setup.bash ]; then
   ROS_VERSION="indigo"
   source /opt/ros/${ROS_VERSION}/setup.bash
@@ -77,7 +79,7 @@ elif [ -e /opt/ros/kinetic/setup.bash ]; then
 fi
 if [ -x "$(command -v catkin_make)" ]; then
   catkin_make
-  source $WORKDIR/$DIR/devel/setup.bash
+  source $WORKDIR/devel/setup.bash
 fi
 if ! [ -x "$(command -v catkin_make)" ]; then
   echo "Catkin not found - skipping API building"
@@ -86,7 +88,7 @@ fi
 #cleanup
 echo "Cleanup"
 rm -rf /tmp/pypot
-cd "$WORKDIR"
+cd "$CALLDIR"
 
 echo "done"
 echo
