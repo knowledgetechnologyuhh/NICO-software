@@ -186,21 +186,19 @@ if __name__ == "__main__":
 
         if command == "raw":
             (x, y, z) = optsens.get_sensor_values_raw()
-            print "x ,y, z : " + str(x) + "," + str(y) + "," + str(z)
+            print("x ,y, z : " + str(x) + "," + str(y) + "," + str(z))
 
         elif command=="newton":
             (x,y,z) = optsens.get_sensor_values()
-            print "x ,y, z (in Newton) : " + str(x) + "," + str(y) + "," + str(z)
+            print( "x ,y, z (in Newton) : " + str(x) + "," + str(y) + "," + str(z))
 
         elif command=="string":
-            print optsens.get_sensor_string()
+            print( optsens.get_sensor_string())
 
         elif command=="all":
             (time,counter, status,x, y, z,checksum) = optsens.get_sensor_all()
-            print "time, counter, status,x, y, z,checksum "  + str((time,counter, status,x, y, z,checksum))
+            print("time, counter, status,x, y, z,checksum "  + str((time,counter, status,x, y, z,checksum)))
 
         elif command=="csv":
             (time,counter, status,x, y, z,checksum) = optsens.get_sensor_all()
-            print str(time)+","+str(counter) +"," + str(status) + "," +str(x) + "," + str(y) + "," + str(z)  + "," + str(checksum)
-
-
+            print(str(time)+","+str(counter) +"," + str(status) + "," +str(x) + "," + str(y) + "," + str(z)  + "," + str(checksum))
