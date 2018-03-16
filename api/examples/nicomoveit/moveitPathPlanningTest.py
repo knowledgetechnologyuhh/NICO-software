@@ -5,7 +5,11 @@ import math
 from nicomoveit import moveitWrapper
 
 groupName = "leftArm"
-leftArm = moveitWrapper.groupHandle(groupName,robotMotorFile='nico_humanoid_legged_with_hands_mod-vrep.json',vrep=True,vrepScene='NICO-seated-with-table.ttt',visualize=True)
+leftArm = moveitWrapper.groupHandle(groupName,vrep=True,robotMotorFile='nico_humanoid_legged_with_hands_mod-vrep_with_legs.json',vrepScene='NICO-seated-with-table.ttt',visualize=True)
+
+# if you already executed 'roslaunch nicoros nicoros_moveit_visual.launch' or 'roslaunch nicoros nicoros_moveit.launch' in a seperate terminal most of the parameters are obsolete:
+#leftArm = moveitWrapper.groupHandle(groupName, visualize=True)
+
 time.sleep(3)
 leftArm.addMesh("table","table.stl",position=[0,0.0,0.175])
 time.sleep(3)
