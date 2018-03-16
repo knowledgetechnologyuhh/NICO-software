@@ -1,4 +1,7 @@
 import serial
+import serial.tools.list_ports
+import _nicotouch_internal.optoforce as optoforce_driver
+import logging
 import time
 import numpy as np
 import sys
@@ -15,6 +18,55 @@ adapted to NICO api Erik Strahl
 
 
 class optoforce:
+
+    def _scan_ports(self, ser_number=None):
+        """
+        Scans serial ports for OptoForce device with given serial number and returns the connection. Returns the first sensor found if no serial number is given.
+
+        :param ser_number: Serial number of the sensor (optional)
+        :type ser_number: str
+        :return: Serial connection to OptoForce sensor with specified serial number (or any if ser_number is None)
+        :rtype: serial.Serial
+        """
+        ports = serial.tools.list_ports.comports()
+        for p in ports:
+            if "OptoForce" in p.description:
+                logging.info("Connecting to OptoForce sensor on port {}".format(p.device))
+                try:
+                    ser = serial.Serial(port=p.device,
+                                        baudrate=1000000,
+                                        parity=serial.PARITY_NONE,
+                                        stopbits=serial.STOPBITS_ONE,
+                                        bytesize=serial.EIGHTBITS
+                                        )
+
+                    if ser.is_open:
+                        driver = optoforce_driver.OptoforceDriver(ser)
+
+                        driver.request_serial_number()
+                        while ser.is_open:
+                            try:
+                                data = driver.read()
+
+                                if isinstance(data, optoforce_driver.OptoforceSerialNumber):
+                                    if ser_number is None or ser_number == str(data):
+                                        logging.info("Successfully connected to OptoForce sensor {} on port {}".format(str(data), p.device))
+                                        return ser
+                                    logging.info("OptoForce sensor on port {} skipped - serial number {} not matching {}".format(p.device, ser_number, str(data)))
+                                    ser.close()
+                                    del driver
+
+                            except optoforce_driver.OptoforceError:
+                                pass
+
+                except serial.SerialException as e:
+                    logging.warning("Connection to OptoForce sensor port {} failed due to {}".format(p.device, e))
+
+        if ser_number is None:
+            logging.fatal("No OptoForce sensor found")
+        else:
+            logging.fatal("No matching OptoForce sensor found for serial number {}".format(ser_number))
+        return None
 
 
     def get_sensor_values_m(self):
@@ -116,14 +168,10 @@ class optoforce:
         joined_seq = ''.join(str(v) for v in seq)  # Make a string from array
         return joined_seq
 
-    def __init__(self,port,ser_number):
+    def __init__(self,ser_number=None):
+        logging.getLogger().setLevel(logging.INFO)
 
-        self.ser = serial.Serial(port=port,
-                            baudrate=1000000,
-                            parity=serial.PARITY_NONE,
-                            stopbits=serial.STOPBITS_ONE,
-                            bytesize=serial.EIGHTBITS
-                            )
+        self.ser = self._scan_ports(ser_number)
 
         #Capacitys and Counts (measured at optoforce) for our sensors
         self.dev_nom_capacity=10
@@ -162,10 +210,8 @@ if __name__ == "__main__":
                         help="One of the commands raw (get raw sensor values), newton (get sensor values in Newton), string ( get the whole message as hex-string-representation ) "
                              +" all (get all data  (time,sample counter, status,x,y,z,checksum)), csv (all data in csv format to store this right away)")
     # fj freeze joints as they are by torquing it. You subset to freeze only a subset of the joints.
-    parser.add_argument('--serial', nargs='?', default='DSE0A125',
+    parser.add_argument('--serial', nargs='?', default=None,
                         help="serial number of the sensors device")
-    parser.add_argument('--device', nargs='?', default='/dev/ttyACM0',
-                        help="serial device the sonsor is connected with like /dev/ttyACM0")
     parser.add_argument('--cont', action="store_true", default=False,
                         help="do not stop after one reading")
     #parser.add_argument('--stiffoff', action="store_true", default=False,
@@ -175,7 +221,7 @@ if __name__ == "__main__":
 
     command = args.command
 
-    optsens = optoforce(args.device,args.serial)
+    optsens = optoforce(args.serial)
 
     oneTime=True
     while args.cont or oneTime:
