@@ -85,7 +85,7 @@ class NicoRosMotion():
         rospy.Subscriber('%s/disableTorque' % config['rostopicName'], nicomsg.msg.s, self._ROSPY__disableTorque)
         rospy.Subscriber('%s/enableTorqueAll' % config['rostopicName'], nicomsg.msg.empty, self._ROSPY__enableTorqueAll)
         rospy.Subscriber('%s/disableTorqueAll' % config['rostopicName'], nicomsg.msg.empty, self._ROSPY__disableTorqueAll)
-        rospy.Subscriber('%s/toSavePosition' % config['rostopicName'], nicomsg.msg.empty, self._ROSPY__toSavePosition)
+        rospy.Subscriber('%s/toSafePosition' % config['rostopicName'], nicomsg.msg.empty, self._ROSPY__toSafePosition)
 
         # setup services
         logging.debug('Init services')
@@ -391,14 +391,14 @@ class NicoRosMotion():
         """
         self.robot.disableTorqueAll()
 
-    def _ROSPY__toSavePosition(self, message):
+    def _ROSPY__toSafePosition(self, message):
         """
-        Callback handle for :meth:`nicomotion.Motion.toSavePosition`
+        Callback handle for :meth:`nicomotion.Motion.toSafePosition`
 
         :param message: ROS message
         :type message: nicomsg.msg.empty
         """
-        self.robot.toSavePosition()
+        self.robot.toSafePosition()
 
     def _sendJointState(self):
         """

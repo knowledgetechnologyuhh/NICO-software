@@ -31,5 +31,5 @@ leftArm.moveToJointCoordinates(target)
 
 leftArm.shiftPose(1, 0.1)
 
-leftArm.toSavePosition()
+leftArm.toSafePosition()
 
