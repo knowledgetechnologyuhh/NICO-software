@@ -8,11 +8,18 @@ cd "$CALLDIR"
 VIRTUALENV="virtualenv"
 echo Running at: "$WORKDIR"
 
+VIRTUALENVDIR="NICO"
+if [ $# -eq 1 ]
+  then
+    VIRTUALENVDIR="$1"
+fi
+echo Virtual environment directory: "$VIRTUALENVDIR"
+
 cd
 
 #virtualenv setup
 echo "Checking for virtualenv"
-if [ -d ".NICO/" ]; then
+if [ -d ".$VIRTUALENVDIR/" ]; then
     echo "Existing virtualenv found"
 else
   echo "No virtualenv found - setting up new virtualenv"
@@ -21,13 +28,13 @@ else
     pip install --user virtualenv
     VIRTUALENV=".local/bin/virtualenv"
   fi
-  $VIRTUALENV -p /usr/bin/python2.7 --system-site-packages ~/.NICO
+  $VIRTUALENV -p /usr/bin/python2.7 --system-site-packages ~/.$VIRTUALENVDIR
 fi
 echo "Activating virtualenv"
-source ~/.NICO/bin/activate
+source ~/.$VIRTUALENVDIR/bin/activate
 
 #install python packages
-if [ $VIRTUAL_ENV == ~/.NICO ]; then
+if [ $VIRTUAL_ENV == ~/.$VIRTUALENVDIR ]; then
   echo "Checking python packages"
   pip install 'pyserial<=3.1' # versions 3.2 and 3.3 (most recent as of writing) are missing __init__.pyc for tools
   pip install 'sphinx' # required inside virtualenv to find all modules
@@ -37,11 +44,11 @@ if [ $VIRTUAL_ENV == ~/.NICO ]; then
   cd pypot
   CURRENT_GIT_COMMIT=`git show --name-status | grep commit`
   CURRENT_GIT_COMMIT=${CURRENT_GIT_COMMIT#'commit '}
-  if [ ! -f ~/.NICO/.current_git_commit ] || [ ! `cat ~/.NICO/.current_git_commit` == $CURRENT_GIT_COMMIT ]; then
+  if [ ! -f ~/.$VIRTUALENVDIR/.current_git_commit ] || [ ! `cat ~/.$VIRTUALENVDIR/.current_git_commit` == $CURRENT_GIT_COMMIT ]; then
     echo "Custom pypot outdated - updating to commit $CURRENT_GIT_COMMIT"
-    rm -rf ~/.NICO/lib/python2.7/site-packages/pypot/
-    ~/.NICO/bin/python setup.py install
-    echo $CURRENT_GIT_COMMIT >| ~/.NICO/.current_git_commit
+    rm -rf ~/.$VIRTUALENVDIR/lib/python2.7/site-packages/pypot/
+    ~/.$VIRTUALENVDIR/bin/python setup.py install
+    echo $CURRENT_GIT_COMMIT >| ~/.$VIRTUALENVDIR/.current_git_commit
   else
     echo "Latest custom pypot already installed - skipping installation"
   fi
