@@ -5,7 +5,7 @@ from nicomotion import Motion
 
 time.sleep(5)
 #robot = Motion.Motion("../../../json/nico_humanoid_upper_with_hands.json",vrep=False)
-robot = Motion.Motion("../../../json/nico_humanoid_upper_with_hands_vrep.json",vrep=True)
+robot = Motion.Motion("../../../json/nico_humanoid_upper_with_hands_vrep.json",vrep=True,vrepScene="../../../v-rep/NICO-seated-with-table.ttt")
 position = 20
 
 for i in xrange(10):
@@ -36,11 +36,7 @@ for i in xrange(10):
 	position = position * -1
         time.sleep(2)
 
-robot.setAngle("r_arm_x", 20, 0.05)
-robot.setAngle("r_elbow_y", 0, 0.05)
-robot.setAngle("l_arm_x", -20, 0.05)
-robot.setAngle("l_elbow_y", 0, 0.05)
-robot.setAngle("head_z", 0, 0.05)
-robot.setAngle("head_y", 0, 0.05)
-time.sleep(5)
+print "Moving to save position"
+robot.toSavePosition()
+time.sleep(7)
 robot.disableTorqueAll()

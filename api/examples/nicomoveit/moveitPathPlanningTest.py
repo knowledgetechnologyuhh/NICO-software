@@ -31,6 +31,5 @@ leftArm.moveToJointCoordinates(target)
 
 leftArm.shiftPose(1, 0.1)
 
-target2 = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0] # position with collision
-leftArm.moveToJointCoordinates(target2)
+leftArm.toSavePosition()
 
