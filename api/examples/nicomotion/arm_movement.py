@@ -36,7 +36,7 @@ for i in xrange(10):
 	position = position * -1
         time.sleep(2)
 
-print "Moving to save position"
-robot.toSavePosition()
+print "Moving to safe position"
+robot.toSafePosition()
 time.sleep(7)
 robot.disableTorqueAll()

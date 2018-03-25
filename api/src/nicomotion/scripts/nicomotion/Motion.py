@@ -73,10 +73,10 @@ class Motion:
                 self._robot = pypot.robot.from_config(config)
         if hasattr(self._robot, "r_middlefingers_x") or hasattr(self._robot, "l_middlefingers_x"):
             self._handModel = "RH7D"
-        # remember initial situation as a save state
-        self.saveState = dict()
+        # remember initial situation as a safe state
+        self.safeState = dict()
         for motor in self._robot.motors:
-            self.saveState[motor.name] = motor.present_position
+            self.safeState[motor.name] = motor.present_position
 
     def getVrep(self):
         """
@@ -386,14 +386,14 @@ class Motion:
             logging.warning('No joint "%s" found' % jointName)
             return
 
-    def toSavePosition(self):
+    def toSafePosition(self):
         """
         Moves the robot to its initial state of this session.
-        In this state it should be save to disable the force control.
+        In this state it should be safe to disable the force control.
         To receive a collision free motion trajectories use the corresponding moveitWrapper function instead.
         """
-        for motor in self.saveState:
-            self.setAngle(motor, self.saveState[motor], 0.1)
+        for motor in self.safeState:
+            self.setAngle(motor, self.safeState[motor], 0.1)
 
     def setAngle(self, jointName, angle, fractionMaxSpeed):
         """

@@ -667,13 +667,13 @@ class groupHandle:
       print("Please use an axis between 0 and 2 (0 -> x, 1 -> y, 2 ->z)")
     return self.moveToPosition([x,y,z])  
   
-  def toSavePosition(self):
+  def toSafePosition(self):
     """
     Moves the robot to its initial state of this session.
-    In this state it should be save to disable the force control.
+    In this state it should be safe to disable the force control.
     To receive a collision free motion trajectories use the corresponding moveitWrapper function instead.
     """
-    # to be certain that a save position is reached we first try to reach the initial pose
+    # to be certain that a safe position is reached we first try to reach the initial pose
     self.group.set_pose_target(self.defaultPose)
     self.__planAndExecute()
     # then we try to reach the exact initial joint values, this, however, is often not possible
