@@ -161,6 +161,7 @@ class groupHandle:
     rospy.set_param(rosnicoPrefix+'/fractionMaxSpeed', 0.1)
     if monitorPathExecution is not None:
       rospy.set_param(rosnicoPrefix+'/fakeExecution', not monitorPathExecution)
+    self.defaultJointValues = self.group.get_current_joint_values()
     self.defaultPose = self.group.get_current_pose()
     self.planningTime = None
     self.executionTime = None
@@ -666,6 +667,18 @@ class groupHandle:
       print("Please use an axis between 0 and 2 (0 -> x, 1 -> y, 2 ->z)")
     return self.moveToPosition([x,y,z])  
   
+  def toSafePosition(self):
+    """
+    Moves the robot to its initial state of this session.
+    In this state it should be safe to disable the force control.
+    To receive a collision free motion trajectories use the corresponding moveitWrapper function instead.
+    """
+    # to be certain that a safe position is reached we first try to reach the initial pose
+    self.group.set_pose_target(self.defaultPose)
+    self.__planAndExecute()
+    # then we try to reach the exact initial joint values, this, however, is often not possible
+    self.moveToJointCoordinates(self.defaultJointValues)
+
   def computeCartesianPath(self,axis,value, sufficient = False,
                            startPosition = None, startOrientation = None):
     """
@@ -747,29 +760,7 @@ class groupHandle:
       return None
     else:
       return self.__planAndExecute(plan)
-      
-  def moveToDefault(self):
-    """
-    Plan a path to the default pose, which is the pose NICO had when initializing the moveitWrapper
 
-    :return: List of points on the planned path or None if planning was not successful.
-             Each point is a list with one joint parameter for each joint of the planning group
-    :rtype: list of lists of floats
-    """
-  
-    print("Trying to find path to default pose of group", self.groupName)
-    positionTolerance = self.getPositionTolerance()
-    orientationTolerance = self.getOrientationTolerance()    
-    self.setPositionTolerance(0.001)
-    self.setOrientationTolerance(math.degrees(0.1)) 
-    # Set goal pose
-    self.group.clear_pose_targets()
-    self.group.set_pose_target(self.defaultPose)
-    # Plan to goal pose and execute plan if found
-    self.setPositionTolerance(positionTolerance)
-    self.setOrientationTolerance(orientationTolerance)
-    return self.__planAndExecute()
-    
   def isColliding(self, jointCoordinates):
     """
     Check if the NICO is in collision with itself or the environment
