@@ -15,13 +15,14 @@ import matplotlib.pyplot
 import numpy
 from PIL import Image
 
+import logging
 
 
 class faceExpression:
     """
     The faceExpression class provides an interface to manipulate NICO's facial expressions
     """
-    def __init__(self, devicename='/dev/ttyACM0',mode="real"):
+    def __init__(self, devicename=None, mode="real"):
         self.mode = mode
         self.comm_mode=2
         self.left = self.create_test_PIL((8,8))
@@ -31,15 +32,42 @@ class faceExpression:
         #self.show_PIL(self.mouth)
 
         if devicename != "sim":
-            self.ser = serial.Serial(devicename, 115200)  # Establish the connection on a specific port
-            #self.ser = serial.Serial(devicename, 9600)  # Establish the connection on a specific port
-            sleep(2)
-            #self.send_PIL(self.mouth, "m")
-            #raw_input()
+            if devicename == None:
+                self._scan_ports()
+            else:
+                self.ser = serial.Serial(devicename, 115200)  # Establish the connection on a specific port
+                #self.ser = serial.Serial(devicename, 9600)  # Establish the connection on a specific port
+                sleep(2)
+                #self.send_PIL(self.mouth, "m")
+                #raw_input()
         else:
             self.mode = "sim"
             self.ser = None
 
+    def _scan_ports(self):
+        """
+        Automatically detects and establishes a connection with the FaceExpression Arduino
+        """
+        ports = serial.tools.list_ports.comports()
+        for p in ports:
+            if "Arduino" in p.description:
+                logging.info("Connecting to Arduino on port {}".format(p.device))
+                try:
+                    self.ser = serial.Serial(p.device, 115200)
+                    sleep(2)
+
+                    if self.ser.is_open:
+                        self.ser.write("neutral")
+                        if self.ser.readline()=="Showing neutral":
+                            logging.info("Successfully connected to FaceExpression device on port {}".format(p.device))
+                            return
+                        self.ser.close()
+
+                except serial.SerialException as e:
+                    logging.warning("Connection to Arduino on port {} failed due to {}".format(p.device, e))
+
+        logging.fatal("No FaceExpression Arduino device found")
+        self.ser = None
 
     def setCommMode(self, mode):
         """
@@ -52,26 +80,26 @@ class faceExpression:
         """
         self.comm_mode=mode
         expression="mod"+str(mode)
-        print "Sending " + expression
+        print("Sending " + expression)
 
         self.ser.write(str(expression))  # Convert the decimal number to ASCII then send it to the Arduino
-        print self.ser.readline()  # Read the newest output from the Arduino
+        print(self.ser.readline())  # Read the newest output from the Arduino
 
         sleep(.2)  # Delay for one tenth of a second
 
     def sendFaceExpression(self, expression):
         """
         Changes NICO's facial expression to the given preset. The presets consist of:
-        'happiness','sadness','anger','disgust','surprise','fear','neutral','clean'
+        'happiness','sadness','anger','disgust','surprise','fear','neutral','clear'
 
-        :param expression: name of the desired facial expression (happiness,sadness,anger,disgust,surprise,fear,neutral,clean)
+        :param expression: name of the desired facial expression (happiness,sadness,anger,disgust,surprise,fear,neutral,clear)
         :type expression: str
         """
         # try:
-        print "Sending " + expression
+        print("Sending " + expression)
 
         self.ser.write(str(expression))  # Convert the decimal number to ASCII then send it to the Arduino
-        print self.ser.readline()  # Read the newest output from the Arduino
+        print(self.ser.readline())  # Read the newest output from the Arduino
 
         sleep(.2)  # Delay for one tenth of a second
 
@@ -175,9 +203,9 @@ class faceExpression:
             answ=self.ser.readline()
         st3 = timeit.default_timer() - start
         if self.comm_mode > 1:
-            print answ
+            print(answ)
         st4 = timeit.default_timer()-start
-        print "times st1,st2,st3 : " + str(st1) + "," + str(st2) + "," + str(st3) + "," + str(st4)
+        print("times st1,st2,st3 : " + str(st1) + "," + str(st2) + "," + str(st3) + "," + str(st4))
 
     def testDisplay(self):
         import random
@@ -187,11 +215,11 @@ class faceExpression:
             for m in range(16):
                 rn = random.randint(0, 255)
                 comm_str += "%0.2X" % rn
-            print "Sending " + comm_str
+            print("Sending " + comm_str)
 
             if self.mode != "sim" :
                 self.ser.write(str(comm_str))  # Convert the decimal number to ASCII then send it to the Arduino
-                print self.ser.readline()  # Read the newest output from the Arduino
+                print(self.ser.readline())  # Read the newest output from the Arduino
 
                 sleep(.1)  # Delay for one tenth of a second
             else:
@@ -203,7 +231,7 @@ class faceExpression:
 
         if self.mode != "sim" :
             self.ser.write(str(comm_str))  # Convert the decimal number to ASCII then send it to the Arduino
-            print self.ser.readline()  # Read the newest output from the Arduino
+            print(self.ser.readline())  # Read the newest output from the Arduino
 
             sleep(.1)  # Delay for one tenth of a second
         else:
@@ -464,8 +492,8 @@ if __name__ == "__main__":
 
     params = sys.argv[1:]
     if (len(params) != 1) and (len(params) != 2):
-        print "Sends face expressions to NICO Arduino controller."
-        print "Use 'python sendFaceExpression.py [happiness,sadness,anger,disgust,surprise,fear,neutral,clean]'"
+        print("Sends face expressions to NICO Arduino controller.")
+        print("Use 'python sendFaceExpression.py [happiness,sadness,anger,disgust,surprise,fear,neutral,clean]'")
         #fe = faceExpression()
         #fe.testDisplay()
         #fe = faceExpression("/dev/ttyACM1")

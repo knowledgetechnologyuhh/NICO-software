@@ -7,7 +7,7 @@ import time
 import timeit
 
 #Change your interface here
-fe = faceExpression("/dev/ttyACM0")
+fe = faceExpression()
 
 # Chnange betwee two faces
 

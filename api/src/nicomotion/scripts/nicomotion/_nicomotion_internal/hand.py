@@ -4,6 +4,10 @@ import threading
 
 MAX_CUR_FINGER=100
 MAX_CUR_THUMB=100
+CURRENT_PORTS = {"wrist_z":"present_current_port_1",
+                 "wrist_x":"present_current_port_2",
+                 "thumb_x":"present_current_port_3",
+                 "indexfingers_x":"present_current_port_4"}
 
 
 def _HAND_compliant(robot):
@@ -30,7 +34,7 @@ def _closeHandWithCurrentLimit(board, thumb, indexfingers, percentage):
         for retries in range(10):
             success=True
             try:
-                if board.present_finger_current>MAX_CUR_FINGER or board.present_thumb_current>MAX_CUR_THUMB:
+                if board.present_current_port_4>MAX_CUR_FINGER or board.present_current_port_3>MAX_CUR_THUMB:
                     logging.warning("Reached maximum current - Hand won't be closed any further")
                     return
                 break
@@ -47,6 +51,42 @@ def _closeHandWithCurrentLimit(board, thumb, indexfingers, percentage):
         time.sleep(0.05)
     indexfingers.compliant = True
     thumb.compliant = True
+
+def isHandMotor(jointname):
+    """
+    Checks whether the given motor belongs to the RH4D hand
+
+    :param jointname: Name of the motor
+    :type jointname: str
+    :return: True if motor is a hand motor, False else
+    :rtype: boolean
+    """
+    if jointname[2:] in CURRENT_PORTS.keys():
+        return True
+    return False
+
+def getPresentCurrent(robot, jointname):
+    """
+    Returns the current reading for the given joint from the hand's mainboard.
+    (Current readings are not stored in the motors themselves)
+
+    :param jointName: Name of the joint
+    :type jointName: str
+    :return: Current of the joint
+    :rtype: float
+    """
+    if isHandMotor(jointname):
+
+        if jointname.startswith('r_'):
+            board = getattr(robot, "r_virtualhand")
+        elif jointname.startswith('l_'):
+            board = getattr(robot, "l_virtualhand")
+
+        if board != None:
+            return getattr(board, CURRENT_PORTS[jointname[2:]])
+
+    logging.warning("{} is not a handjoint".format(jointname))
+    return 0
 
 def openHand(robot, handName, fractionMaxSpeed=1.0, percentage=1.0):
     """
