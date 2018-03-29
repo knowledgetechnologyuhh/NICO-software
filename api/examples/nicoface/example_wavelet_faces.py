@@ -6,7 +6,7 @@ from nicoface.FaceExpression import faceExpression
 import time
 
 #Change your interface here
-fe = faceExpression("/dev/ttyACM0")
+fe = faceExpression()
 
 #Generate the mouth form and eyebrowse
 # Using the standard values

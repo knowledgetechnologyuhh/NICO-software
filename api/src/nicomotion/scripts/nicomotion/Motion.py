@@ -322,7 +322,8 @@ class Motion:
             if self._handModel=="RH4D":
                 _nicomotion_internal.hand.closeHand(self._robot, handName, min(fractionMaxSpeed, self._maximumSpeed), percentage)
             else:
-                logging.warning("Close hand for RH7D doesn't support percentage parameter")
+                if percentage!=1.0:
+                    logging.warning("Close hand for RH7D doesn't support percentage parameter")
                 _nicomotion_internal.RH7D_hand.closeHand(self._robot, handName, min(fractionMaxSpeed, self._maximumSpeed))
 
     def enableForceControlAll(self, goalForce = 500):
@@ -394,10 +395,13 @@ class Motion:
         :type fractionMaxSpeed: float
         """
         if hasattr(self._robot, jointName):
-            motor = getattr(self._robot, jointName)
-            motor.compliant = False
-            motor.goal_speed = 1000.0 * min(fractionMaxSpeed, self._maximumSpeed)
-            motor.goal_position = angle
+            if self._handModel == "RH7D" and _nicomotion_internal.RH7D_hand.isHandMotor(jointName):
+                _nicomotion_internal.RH7D_hand.setAngle(jointName, angle, fractionMaxSpeed)
+            else:
+                motor = getattr(self._robot, jointName)
+                motor.compliant = False
+                motor.goal_speed = 1000.0 * min(fractionMaxSpeed, self._maximumSpeed)
+                motor.goal_position = angle
         else:
             logging.warning('No joint "%s" found' % jointName)
             return
@@ -415,9 +419,12 @@ class Motion:
         """
         if hasattr(self._robot, jointName):
             motor = getattr(self._robot, jointName)
-            motor.compliant = False
-            motor.goal_speed = 1000.0 * min(fractionMaxSpeed, self._maximumSpeed)
-            motor.goal_position = change + motor.present_position
+            if self._handModel == "RH7D" and _nicomotion_internal.RH7D_hand.isHandMotor(jointName):
+                _nicomotion_internal.RH7D_hand.setAngle(jointName, change + motor.present_position, fractionMaxSpeed)
+            else:
+                motor.compliant = False
+                motor.goal_speed = 1000.0 * min(fractionMaxSpeed, self._maximumSpeed)
+                motor.goal_position = change + motor.present_position
         else:
             logging.warning('No joint "%s" found' % jointName)
             return
@@ -569,13 +576,11 @@ class Motion:
         :return: Current of the joint
         :rtype: float
         """
-        r_handjoint_currents = {"r_wrist_z":"present_wrist_rotation_current","r_wrist_x":"present_wrist_flexion_current","r_indexfingers_x":"present_finger_current","r_thumb_x":"present_thumb_current"}
-        l_handjoint_currents = {"l_wrist_z":"present_wrist_rotation_current","l_wrist_x":"present_wrist_flexion_current","l_indexfingers_x":"present_finger_current","l_thumb_x":"present_thumb_current"}
         if hasattr(self._robot, jointName):
-            if jointName in r_handjoint_currents.keys():
-                return getattr(self._robot.r_virtualhand_x, r_handjoint_currents[jointName])
-            elif jointName in l_handjoint_currents.keys():
-                return getattr(self._robot.l_virtualhand_x, l_handjoint_currents[jointName])
+            if self._handModel == "RH4D" and _nicomotion_internal.hand.isHandMotor(jointName):
+                return _nicomotion_internal.hand.getPresentCurrent(jointName)
+            elif self._handModel == "RH7D" and _nicomotion_internal.RH7D_hand.isHandMotor(jointName):
+                return _nicomotion_internal.RH7D_hand.getPresentCurrent
             else:
                 motor = getattr(self._robot, jointName)
                 if hasattr(motor, 'present_current'):
