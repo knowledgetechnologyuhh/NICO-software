@@ -13,8 +13,6 @@ from PIL import Image, ImageDraw
 import numpy as np
 
 import matplotlib.pyplot
-import numpy
-from PIL import Image
 
 import logging
 
@@ -113,6 +111,55 @@ class faceExpression:
     # except:
     #	print "Could not interface with arduino device. Reason:" + str(sys.exc_info()[0])
 
+    def sendTrainedFaceExpression(self, expression):
+        """
+        Changes NICO's facial expression to the given network predicted preset. These consist of:
+        'Angry', 'Happy', 'Neutral', 'Sad', 'Surprise'
+
+        :param expression: name of the desired facial expression ('Angry', 'Happy', 'Neutral', 'Sad', 'Surprise')
+        :type expression: str
+        """
+        presets = {
+        'Angry':
+            {'mouth': ((0.99945402, -0.07992669,  0.99940026, 0.01424949),( -0.99829715, -0.11406033,  0.9997558,0.04432757)),
+             'left' : (-0.99951923, -0.00889372,  0.99983245, -0.14990053),
+             'right': (-0.99873191,  0.08545645,  0.99995756, -0.04182587)},
+        'Happy':
+            {'mouth': ((-0.96794784, -0.01458586, -0.9989453, 0.00975196), (-0.95078206, -0.03179681,  1., 0.01479599)),
+             'left' : (0.99983221, -0.07629592,  1., -0.04946393),
+             'right': (0.99992925, -0.03617397,  0.99996203, -0.01813084)},
+        'Neutral':
+            {'mouth': ((-0.026799461, -0.50599956,  0.99360126,-0.01208178), (-0.025511968, -0.50718502,  0.99981982,-0.07333233)),
+             'left' : (0.03521928,  0.0601279,  0.99998277, -0.05035896),
+             'right': (0.01149672,  0.0500899,  0.99979389, -0.07785152)},
+        'Sad':
+            {'mouth': ((0.99979699, -0.902700145, 1.0, -0.002130153),(0.99975657, -0.902467377,  1., -0.00777484)),
+             'left' : (0.99999094, -0.03609413,  1., -0.05323452),
+             'right': (0.99998903, -0.06230563,  0.99999368, -0.01770263)},
+        'Surprise':
+            {'mouth': ((0.99945402, -0.07992669,  0.99940026, 0.01424949), ( -0.99829715, -0.11406033,  0.9997558, 0.04432757)),
+             'left' : (0.99999094, -0.03609413,  1., -0.05323452),
+             'right': (0.99998903, -0.06230563,  0.99999368, -0.01770263)}
+        }
+        if expression in presets.keys():
+            self.mouth = self.gen_mouth(*presets[expression]['mouth'])
+            self.left = self.gen_eyebrowse(presets[expression]['left'], type='l')
+            self.right = self.gen_eyebrowse(presets[expression]['right'], type='r')
+
+            if self.mode == "sim":
+                self.sim_show_face()
+            else:
+                self.send()
+
+    def sim_show_face(self):
+        face = Image.new('L', (16, 16))
+
+        face.paste(self.mouth, (0, 0))
+        face.paste(self.left, (8, 0))
+        face.paste(self.right, (8, 8))
+
+        self.show_PIL(face.rotate(90))
+
     def PIL_to_np(self, Img):
         """
         Converts a PIL image into a numpy array
@@ -173,8 +220,6 @@ class faceExpression:
             time.sleep(0.01)
         if address == "all" or address == "r":
             self.send_PIL(self.right, "r")
-
-
 
     def show_PIL(self, Img):
         """
@@ -286,11 +331,11 @@ class faceExpression:
 
         # Get the RGBA buffer from the figure
         w, h = fig.canvas.get_width_height()
-        buf = numpy.fromstring(fig.canvas.tostring_argb(), dtype=numpy.uint8)
+        buf = np.fromstring(fig.canvas.tostring_argb(), dtype=np.uint8)
         buf.shape = (w, h, 4)
 
         # canvas.tostring_argb give pixmap in ARGB mode. Roll the ALPHA channel to have it in RGBA mode
-        buf = numpy.roll(buf, 3, axis=2)
+        buf = np.roll(buf, 3, axis=2)
         return buf
 
 
@@ -361,7 +406,7 @@ class faceExpression:
     def binarize_image(self,image, threshold):
         """Binarize an image."""
         image = image.convert('L')  # convert image to monochrome
-        image = numpy.array(image)
+        image = np.array(image)
         image = Image.fromarray(self.binarize_array(image, threshold))
         return image
 
