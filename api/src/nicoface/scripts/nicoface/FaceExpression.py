@@ -5,6 +5,7 @@
 
 from time import sleep
 import serial
+import serial.tools.list_ports
 import sys
 import numpy as np
 from PIL import Image, ImageDraw
@@ -23,6 +24,8 @@ class faceExpression:
     The faceExpression class provides an interface to manipulate NICO's facial expressions
     """
     def __init__(self, devicename=None, mode="real"):
+        logging.getLogger().setLevel(logging.INFO)
+
         self.mode = mode
         self.comm_mode=2
         self.left = self.create_test_PIL((8,8))
@@ -50,15 +53,18 @@ class faceExpression:
         """
         ports = serial.tools.list_ports.comports()
         for p in ports:
-            if "Arduino" in p.description:
+            if p.manufacturer and "Arduino" in p.manufacturer:
                 logging.info("Connecting to Arduino on port {}".format(p.device))
                 try:
                     self.ser = serial.Serial(p.device, 115200)
                     sleep(2)
 
                     if self.ser.is_open:
+                        logging.info("Trying to send neutral face expression")
                         self.ser.write("neutral")
-                        if self.ser.readline()=="Showing neutral":
+                        response = self.ser.readline()
+                        logging.info('Received response: "{}"'.format(repr(response)))
+                        if response=="Showing neutral\r\n":
                             logging.info("Successfully connected to FaceExpression device on port {}".format(p.device))
                             return
                         self.ser.close()
