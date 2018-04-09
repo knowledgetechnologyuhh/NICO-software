@@ -28,8 +28,11 @@ objects =["red_tomato","green_sausage","red_ball","yellow_banana","red_banana","
 #40-49 SHK Ju
 #50-59 B.Sc. Emil 	
 #60-69 B.Sc. Emil
+#70-79 SHK Josip
+#80-89 SHK Josip
+#90-99 SHK Karen
 
-number_of_samples_per_object=70
+number_of_samples_per_object=100
 
 #definition of Maximum current - This protects the hands from breaking!! Do not change this, if you do not know!
 MAX_CUR_FINGER=120
