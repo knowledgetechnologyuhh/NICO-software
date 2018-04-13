@@ -2,7 +2,7 @@ import logging
 import time
 import threading
 
-MAX_CUR=100
+MAX_CUR=150
 CURRENT_PORTS = {"wrist_z":"present_current_port_1",
                  "wrist_y":"present_current_port_2",
                  "wrist_x":"present_current_port_3",
