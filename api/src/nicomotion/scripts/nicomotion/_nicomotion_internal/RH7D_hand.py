@@ -297,13 +297,13 @@ def okSign(robot, handName, fractionMaxSpeed=1.0):
 
     if handName == 'RHand':
         for motor in ["r_indexfinger_x","r_thumb_x"]:
-            threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[robot, motor, 0,fractionMaxSpeed]).start()
-        threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[robot, "r_thumb_z", 180,fractionMaxSpeed]).start()
+            threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[robot, motor, -50,fractionMaxSpeed]).start()
+        threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[robot, "r_thumb_z", 140,fractionMaxSpeed]).start()
         threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[robot, "r_middlefingers_x", -180,fractionMaxSpeed]).start()
     elif handName == 'LHand':
         for motor in ["l_indexfinger_x","l_thumb_x"]:
-            threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[robot, motor, 0,fractionMaxSpeed]).start()
-        threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[robot, "l_thumb_z", 180,fractionMaxSpeed]).start()
+            threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[robot, motor, -50,fractionMaxSpeed]).start()
+        threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[robot, "l_thumb_z", 140,fractionMaxSpeed]).start()
         threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[robot, "l_middlefingers_x", -180,fractionMaxSpeed]).start()
     else:
         logging.warning('Unknown hand handle: %s' % handName)
@@ -326,14 +326,14 @@ def pinchToIndex(robot, handName, fractionMaxSpeed=1.0):
         return
 
     if handName == 'RHand':
-        for motor in ["r_indexfinger_x","robot.r_thumb_x"]:
-            threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[robot, motor, 0,fractionMaxSpeed]).start()
-        threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[robot, "r_thumb_z", 180,fractionMaxSpeed]).start()
+        for motor in ["r_indexfinger_x","r_thumb_x"]:
+            threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[robot, motor, -50,fractionMaxSpeed]).start()
+        threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[robot, "r_thumb_z", 140,fractionMaxSpeed]).start()
         threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[robot, "r_middlefingers_x", 180,fractionMaxSpeed]).start()
     elif handName == 'LHand':
         for motor in ["l_indexfinger_x","l_thumb_x"]:
-            threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[robot, motor, 0,fractionMaxSpeed]).start()
-        threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[robot, "l_thumb_z", 180,fractionMaxSpeed]).start()
+            threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[robot, motor, -50,fractionMaxSpeed]).start()
+        threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[robot, "l_thumb_z", 140,fractionMaxSpeed]).start()
         threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[robot, "l_middlefingers_x", 180,fractionMaxSpeed]).start()
     else:
         logging.warning('Unknown hand handle: %s' % handName)
@@ -385,20 +385,13 @@ def pencilGrip(robot, handName, fractionMaxSpeed=1.0):
         logging.critical('No robot provided')
         return
 
+    motorSettings = {"middlefingers_x": (180,1),"thumb_z": (180,1), "indexfinger_x": (90,.1), "thumb_x": (90, .2)}
     if handName == 'RHand':
-        for motor in ["r_middlefingers_x","r_thumb_z"]:
-            threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[robot, motor, 180,fractionMaxSpeed]).start()
-        threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[robot, "r_thumb_z", -180,fractionMaxSpeed]).start()
-        threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[robot, "r_middlefingers_x", 180,fractionMaxSpeed]).start()
-        _move(robot.r_indexfinger_x,90,0.3*fractionMaxSpeed)
-        _move(robot.r_thumb_x,90,0.6*fractionMaxSpeed)
-        threading.Timer(5.0, _HAND_compliant, [robot]).start()
+        for motor, (pos, speed) in motorSettings.iteritems():
+            threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[robot, "r_{}".format(motor), pos,speed*fractionMaxSpeed]).start()
     elif handName == 'LHand':
-        for motor in [robot.l_middlefingers_x,robot.l_thumb_z]:
-            _move(motor,180,fractionMaxSpeed)
-        _move(robot.l_indexfinger_x,90,0.3*fractionMaxSpeed)
-        _move(robot.l_thumb_x,90,0.6*fractionMaxSpeed)
-        threading.Timer(5.0, _HAND_compliant, [robot]).start()
+        for motor, (pos, speed) in motorSettings.iteritems():
+            threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[robot, "l_{}".format(motor), pos,speed*fractionMaxSpeed]).start()
     else:
         logging.warning('Unknown hand handle: %s' % handName)
         return
@@ -419,17 +412,13 @@ def closeHand(robot, handName, fractionMaxSpeed=1.0):
         logging.critical('No robot provided')
         return
 
+    motorSettings = {"middlefingers_x": (180,1),"thumb_z": (180,1), "indexfinger_x": (180,1), "thumb_x": (90, .2)}
     if handName == 'RHand':
-        for motor in ["r_indexfinger_x","r_middlefingers_x","r_thumb_z"]:
-            threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[robot, motor, 180,fractionMaxSpeed]).start()
-        threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[robot, "r_thumb_x", 90,.5*fractionMaxSpeed]).start()
-        threading.Timer(5.0, _HAND_compliant, [robot]).start()
-
+        for motor, (pos, speed) in motorSettings.iteritems():
+            threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[robot, "r_{}".format(motor), pos,speed*fractionMaxSpeed]).start()
     elif handName == 'LHand':
-        for motor in ["l_indexfinger_x","l_middlefingers_x","l_thumb_z"]:
-            threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[robot, motor, 180,fractionMaxSpeed]).start()
-        threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[robot, "l_thumb_x", 90,.5*fractionMaxSpeed]).start()
-        threading.Timer(5.0, _HAND_compliant, [robot]).start()
+        for motor, (pos, speed) in motorSettings.iteritems():
+            threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[robot, "l_{}".format(motor), pos,speed*fractionMaxSpeed]).start()
     else:
         logging.warning('Unknown hand handle: %s' % handName)
         return
