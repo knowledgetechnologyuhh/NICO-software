@@ -983,10 +983,10 @@ def rosToNicoAngle(jointName, value, jsonConfig = None, vrep = True):
     if jointName == u'l_wrist_z' or jointName == u'r_wrist_z':
       value = -value
   if not vrep:
+    if jointName == u'l_arm_x' or jointName == u'r_arm_x':
+      value = -value
     if jointName == u'l_wrist_x' or jointName == u'r_wrist_x':
       value = value*7+164
-    if jointName == u'l_wrist_z' or jointName == u'r_wrist_z':
-      value = value*2
   if jsonConfig != None:
     if jointName in jsonConfig[u'motors']:
       if jsonConfig[u'motors'][jointName][u'orientation'] == u'indirect':
@@ -1006,13 +1006,14 @@ def nicoToRosAngle(jointName, value, jsonConfig = None, vrep = True):
   if not vrep:
     if jointName == u'l_wrist_x' or jointName == u'r_wrist_x':
       value = (value-164)/7
-    if jointName == u'l_wrist_z' or jointName == u'r_wrist_z':
-      value = value/2
   if jsonConfig != None:
     if jointName in jsonConfig[u'motors']:
       value = value + jsonConfig[u'motors'][jointName][u'offset']
       if jsonConfig[u'motors'][jointName][u'orientation'] == u'indirect':
         value = -value
+  if not vrep:
+    if jointName == u'l_arm_x' or jointName == u'r_arm_x':
+      value = -value
     if jointName == u'l_wrist_z' or jointName == u'r_wrist_z':
       value = -value
   return math.radians(value)
