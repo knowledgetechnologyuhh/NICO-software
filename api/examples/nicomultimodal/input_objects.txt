@@ -1,5 +1,0 @@
-#possible input action - format: one action per line
-blue ball
-red car
-light tomato
-heavy tomato
