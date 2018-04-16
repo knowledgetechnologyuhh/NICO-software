@@ -1,3 +1,0 @@
-#possible input action - format: one action per line
-push
-pull
