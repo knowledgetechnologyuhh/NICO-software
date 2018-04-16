@@ -1,0 +1,5 @@
+#possible input action - format: one action per line
+grasp
+lift
+shake
+bang
