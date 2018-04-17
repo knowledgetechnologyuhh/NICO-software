@@ -1,0 +1,76 @@
+./api/src/nicovision/scripts/nicovision/ImageRecorder.py:4:import cv2
+./api/src/nicovision/scripts/nicovision/ImageRecorder.py:81:            cv2.imwrite(self._target, frame)
+./api/src/nicovision/scripts/nicovision/VideoRecorder.py:2:import cv2
+./api/src/nicovision/scripts/nicovision/VideoRecorder.py:8:if not hasattr(cv2, 'cv'):
+./api/src/nicovision/scripts/nicovision/VideoRecorder.py:10:    cv2.cv = cv2
+./api/src/nicovision/scripts/nicovision/VideoRecorder.py:183:            if hasattr(cv2.cv, 'FOURCC'):
+./api/src/nicovision/scripts/nicovision/VideoRecorder.py:185:                    VideoCodec.MPEG1: cv2.cv.FOURCC('P','I','M','1'),
+./api/src/nicovision/scripts/nicovision/VideoRecorder.py:186:                    VideoCodec.H264: cv2.cv.FOURCC('X','2','6','4'),
+./api/src/nicovision/scripts/nicovision/VideoRecorder.py:187:                    VideoCodec.DIVX: cv2.cv.FOURCC('D','I','V','X'),
+./api/src/nicovision/scripts/nicovision/VideoRecorder.py:191:                    VideoCodec.MPEG1: cv2.VideoWriter_fourcc('P','I','M','1'),
+./api/src/nicovision/scripts/nicovision/VideoRecorder.py:192:                    VideoCodec.H264: cv2.VideoWriter_fourcc('X','2','6','4'),
+./api/src/nicovision/scripts/nicovision/VideoRecorder.py:193:                    VideoCodec.DIVX: cv2.VideoWriter_fourcc('D','I','V','X'),
+./api/src/nicovision/scripts/nicovision/VideoRecorder.py:209:        self._encoder = cv2.VideoWriter(folder + file, fourcc, self._framerate, (self._width, self._height))
+./api/src/nicovision/scripts/nicovision/VideoDevice.py:2:import cv2
+./api/src/nicovision/scripts/nicovision/VideoDevice.py:8:if not hasattr(cv2, 'cv'):
+./api/src/nicovision/scripts/nicovision/VideoDevice.py:10:    cv2.cv = cv2
+./api/src/nicovision/scripts/nicovision/VideoDevice.py:151:        self._capture = cv2.VideoCapture(self._deviceId)
+./api/src/nicovision/scripts/nicovision/VideoDevice.py:152:        self._capture.set(cv2.cv.CAP_PROP_FRAME_WIDTH, self._width)
+./api/src/nicovision/scripts/nicovision/VideoDevice.py:153:        self._capture.set(cv2.cv.CAP_PROP_FRAME_HEIGHT, self._height)
+./api/src/nicovision/scripts/nicovision/VideoDevice.py:154:        self._capture.set(cv2.cv.CAP_PROP_FPS, self._framerate)
+./api/src/nicoemotionrecognition/scripts/nicoemotionrecognition/EmotionRecognition.py:4:import cv2
+./api/src/nicoemotionrecognition/scripts/nicoemotionrecognition/EmotionRecognition.py:84:        cv2.destroyAllWindows()
+./api/src/nicoemotionrecognition/scripts/nicoemotionrecognition/EmotionRecognition.py:232:                cv2.imshow('Visual Emotion Recognition',frame)
+./api/src/nicoemotionrecognition/scripts/nicoemotionrecognition/EmotionRecognition.py:233:                if cv2.waitKey(1) & 0xFF == ord('q'):
+./api/src/nicoemotionrecognition/scripts/nicoemotionrecognition/_nicoemotionrecognition_internal/run.py:18:import cv2
+./api/src/nicoemotionrecognition/scripts/nicoemotionrecognition/_nicoemotionrecognition_internal/run.py:40:cap = cv2.VideoCapture(0)
+./api/src/nicoemotionrecognition/scripts/nicoemotionrecognition/_nicoemotionrecognition_internal/run.py:78:        cv2.imshow('Visual Emotion Recognition',frame)
+./api/src/nicoemotionrecognition/scripts/nicoemotionrecognition/_nicoemotionrecognition_internal/run.py:79:        if cv2.waitKey(1) & 0xFF == ord('q'):
+./api/src/nicoemotionrecognition/scripts/nicoemotionrecognition/_nicoemotionrecognition_internal/run.py:84:cv2.destroyAllWindows()
+./api/src/nicoemotionrecognition/scripts/nicoemotionrecognition/_nicoemotionrecognition_internal/imageProcessingUtil.py:1:import cv2
+./api/src/nicoemotionrecognition/scripts/nicoemotionrecognition/_nicoemotionrecognition_internal/imageProcessingUtil.py:28:        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+./api/src/nicoemotionrecognition/scripts/nicoemotionrecognition/_nicoemotionrecognition_internal/imageProcessingUtil.py:30:        image = numpy.array(cv2.resize(image, imageSize))
+./api/src/nicoemotionrecognition/scripts/nicoemotionrecognition/_nicoemotionrecognition_internal/GUIController.py:2:import cv2
+./api/src/nicoemotionrecognition/scripts/nicoemotionrecognition/_nicoemotionrecognition_internal/GUIController.py:22:            cv2.rectangle(frame, (d.left(), d.top()), (d.right(), d.bottom()), faceColor, 2)
+./api/src/nicoemotionrecognition/scripts/nicoemotionrecognition/_nicoemotionrecognition_internal/GUIController.py:42:        cv2.line(frame, (640+170, 20), (640+170, 220), (255, 255, 255), 4)
+./api/src/nicoemotionrecognition/scripts/nicoemotionrecognition/_nicoemotionrecognition_internal/GUIController.py:43:        cv2.line(frame, (640+85, 110), (640+285, 110), (255, 255, 255), 4)
+./api/src/nicoemotionrecognition/scripts/nicoemotionrecognition/_nicoemotionrecognition_internal/GUIController.py:45:        cv2.putText(frame, "Calm", (640+150, 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+./api/src/nicoemotionrecognition/scripts/nicoemotionrecognition/_nicoemotionrecognition_internal/GUIController.py:46:        cv2.putText(frame, "Excited", (640+150, 235), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+./api/src/nicoemotionrecognition/scripts/nicoemotionrecognition/_nicoemotionrecognition_internal/GUIController.py:48:        cv2.putText(frame, "Negative", (640+15, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+./api/src/nicoemotionrecognition/scripts/nicoemotionrecognition/_nicoemotionrecognition_internal/GUIController.py:49:        cv2.putText(frame, "Positive", (640+295, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+./api/src/nicoemotionrecognition/scripts/nicoemotionrecognition/_nicoemotionrecognition_internal/GUIController.py:58:        cv2.circle(frame, (640+185+int(valence), 110+int(arousal)), 5, pointColor, -1)
+./api/src/nicoemotionrecognition/scripts/nicoemotionrecognition/_nicoemotionrecognition_internal/GUIController.py:74:            cv2.putText(frame, emotion, (640+5, initialPosition+15+int(index)*20), cv2.FONT_HERSHEY_SIMPLEX, 0.5,  modelDictionary.classesColor[index], 1)
+./api/src/nicoemotionrecognition/scripts/nicoemotionrecognition/_nicoemotionrecognition_internal/GUIController.py:76:            cv2.rectangle(frame, (640+100, initialPosition+5+int(index)*20), (int(640+100 + emotionClassification), initialPosition+20+int(index)*20), modelDictionary.classesColor[index], -1)
+./api/src/nicoemotionrecognition/scripts/nicoemotionrecognition/_nicoemotionrecognition_internal/GUIController.py:77:            cv2.putText(frame, str(emotionClassification) + "%", (int(640+105 + emotionClassification + 10), initialPosition+20+int(index)*20),
+./api/src/nicoemotionrecognition/scripts/nicoemotionrecognition/_nicoemotionrecognition_internal/GUIController.py:78:                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, modelDictionary.classesColor[index], 1)
+./api/utility/hand_rotation_test.py:3:import cv2
+./api/utility/hand_rotation_test.py:19:camera = cv2.VideoCapture(0)
+./api/utility/hand_rotation_test.py:27:    cv2.putText(image, "setAngle: "+str(-180+5*rotation), (5,20), cv2.cv.CV_FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255))
+./api/utility/hand_rotation_test.py:28:    cv2.putText(image, "getAngle: "+str(angle), (5,40), cv2.cv.CV_FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255))
+./api/utility/hand_rotation_test.py:29:    cv2.imwrite(dirname(abspath(__file__))+"/rotation_images/hand_at_"+str(-180+5*rotation)+"_degrees.png", image );
+./api/examples/nicomultimodal/.idea/workspace.xml:157:      <find>cv2</find>
+./api/examples/nicomultimodal/mmrecord.py:17:import cv2
+./api/examples/nicomultimodal/mmrecord.py:40:    gui_font = cv2.FONT_HERSHEY_SIMPLEX
+./api/examples/nicomultimodal/mmrecord.py:157:        cv2.imshow('Multi-modal recording', self.gui)
+./api/examples/nicomultimodal/mmrecord.py:158:        cv2.moveWindow('Multi-modal recording', 40, 40)
+./api/examples/nicomultimodal/mmrecord.py:244:            cv2.putText(self.gui,
+./api/examples/nicomultimodal/mmrecord.py:247:            cv2.putText(self.gui,
+./api/examples/nicomultimodal/mmrecord.py:250:            cv2.putText(self.gui,
+./api/examples/nicomultimodal/mmrecord.py:253:            cv2.imshow('Multi-modal recording', self.gui)
+./api/examples/nicomultimodal/mmrecord.py:254:            c = cv2.waitKey(0)
+./api/examples/nicomultimodal/mmrecord.py:257:            cv2.putText(self.gui,
+./api/examples/nicomultimodal/mmrecord.py:260:            cv2.imshow('Multi-modal recording', self.gui)
+./api/examples/nicomultimodal/mmrecord.py:261:            c = cv2.waitKey(0)
+./api/examples/nicomultimodal/mmrecord.py:263:            cv2.putText(self.gui,
+./api/examples/nicomultimodal/mmrecord.py:266:            cv2.putText(self.gui,
+./api/examples/nicomultimodal/mmrecord.py:269:            cv2.imshow('Multi-modal recording', self.gui)
+./api/examples/nicomultimodal/mmrecord.py:271:            c = cv2.waitKey(0)
+./api/examples/nicomultimodal/mmrecord.py:275:                cv2.putText(self.gui,
+./api/examples/nicomultimodal/mmrecord.py:278:                cv2.imshow('Multi-modal recording', self.gui)
+./api/examples/nicomultimodal/mmrecord.py:283:                cv2.putText(self.gui,
+./api/examples/nicomultimodal/mmrecord.py:286:                cv2.imshow('Multi-modal recording', self.gui)
+./api/examples/nicomultimodal/mmrecord.py:293:        cv2.destroyAllWindows()
+./api/examples/nicomotion/grasping/throw_the_ball_using_mover.py:247:    # im_original = cv2.imread("./cleaned/"+file, cv2.IMREAD_COLOR)
+./api/examples/nicomotion/grasping/throw_the_ball_using_mover.py:264:    # im_original = cv2.resize(crop_img, (80,60))
+./api/examples/nicomotion/grasping/throw_the_dice_using_mover.py:247:    # im_original = cv2.imread("./cleaned/"+file, cv2.IMREAD_COLOR)
+./api/examples/nicomotion/grasping/throw_the_dice_using_mover.py:264:    # im_original = cv2.resize(crop_img, (80,60))
