@@ -10,7 +10,7 @@ import datetime
 """
 Created on Thu Jun 23 15:32:38 2016
 
-@author: Moaaz Maamoon M. Ali
+sensor access by Moaaz Maamoon M. Ali
 
 adapted to NICO api Erik Strahl
 
