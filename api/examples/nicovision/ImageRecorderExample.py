@@ -1,9 +1,9 @@
 from nicovision import ImageRecorder
 
-device = ImageRecorder.getDevices()[0]
+device = ImageRecorder.get_devices()[0]
 print('Will take an image from device %s - smile :)' % device)
-ir = ImageRecorder.ImageRecorder(device)
-path = ir.saveOneImage()
+ir = ImageRecorder.ImageRecorder(device, 640, 480)
+path = ir.save_one_image()
 if path is '':
     print('Oh, something has gone wrong')
 else:
