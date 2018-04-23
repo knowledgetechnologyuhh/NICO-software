@@ -1,4 +1,4 @@
-rosnico - AudioStream
+nicoros - AudioStream
 *********************
 
 The AudioStream class allows to send the audio data through ROS.

@@ -1,4 +1,4 @@
-rosnico - Vision
+nicoros - Vision
 ****************
 
 The Vision class allows the access to the cameras through ROS.
