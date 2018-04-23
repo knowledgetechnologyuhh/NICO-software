@@ -240,8 +240,9 @@ if __name__ == '__main__':
     #SET IT Explicitly here            
     #audio_device=8
     dev_idx = audio_device
+    directory="audio-test/nico_multimodal_recording/"
     #ar = AudioRecorder(audio_channels=1, samplerate=48000, datadir="datasets/nico_shaking_0", audio_device=dev_idx)
-    ar = AudioRecorder(audio_channels=2, samplerate=48000, datadir="./.", audio_device=dev_idx)
+    ar = AudioRecorder(audio_channels=2, samplerate=48000, datadir=directory, audio_device=dev_idx)
 
     # For recoring several streams at once (does not yet work with alsaaudio)
     # while True:
@@ -272,7 +273,7 @@ if __name__ == '__main__':
         if label == "0":
             break
         rec_id = 0
-        ar.start_recording(label,fname=label+".wav")
+        ar.start_recording(label,fname=label+".wav", dir_name=directory)
         print("Press Enter to stop recording")
         raw_input()
         ar.stop_recording(0)

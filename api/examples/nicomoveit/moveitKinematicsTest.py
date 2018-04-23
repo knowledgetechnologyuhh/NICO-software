@@ -7,7 +7,7 @@ from nicomoveit import moveitWrapper
 time.sleep(1)
 
 groupName = "leftArm"
-leftArm = moveitWrapper.groupHandle(groupName)
+leftArm = moveitWrapper.groupHandle(groupName, kinematicsOnly=True, robotMotorFile='nico_humanoid_legged_with_hands_mod-vrep.json')
 
 p_x = 0.43085057313
 p_y = 0.134845567708

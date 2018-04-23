@@ -121,7 +121,8 @@ planner_configs:
     dense_delta_fraction: 0.001  # delta fraction for interface detection. default: 0.001
     max_failures: 5000  # maximum consecutive failure limit. default: 5000
 leftArm:
-  planner_configs:
+  default_planner_config: RRTConnectkConfigDefault
+  planner_configs:  
     - SBLkConfigDefault
     - ESTkConfigDefault
     - LBKPIECEkConfigDefault
@@ -148,6 +149,7 @@ leftArm:
   projection_evaluator: joints(l_shoulder_z,l_shoulder_y)
   longest_valid_segment_fraction: 0.005
 rightArm:
+  default_planner_config: RRTConnectkConfigDefault
   planner_configs:
     - SBLkConfigDefault
     - ESTkConfigDefault
@@ -175,6 +177,7 @@ rightArm:
   projection_evaluator: joints(r_shoulder_z,r_shoulder_y)
   longest_valid_segment_fraction: 0.005
 leftLeg:
+  default_planner_config: RRTConnectkConfigDefault
   planner_configs:
     - SBLkConfigDefault
     - ESTkConfigDefault
@@ -202,6 +205,7 @@ leftLeg:
   projection_evaluator: joints(l_hip_z,l_hip_x)
   longest_valid_segment_fraction: 0.005
 rightLeg:
+  default_planner_config: RRTConnectkConfigDefault
   planner_configs:
     - SBLkConfigDefault
     - ESTkConfigDefault

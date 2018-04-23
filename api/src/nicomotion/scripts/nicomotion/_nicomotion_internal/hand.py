@@ -2,6 +2,14 @@ import logging
 import time
 import threading
 
+MAX_CUR_FINGER=100
+MAX_CUR_THUMB=100
+CURRENT_PORTS = {"wrist_z":"present_current_port_1",
+                 "wrist_x":"present_current_port_2",
+                 "thumb_x":"present_current_port_3",
+                 "indexfingers_x":"present_current_port_4"}
+
+
 def _HAND_compliant(robot):
     """
     Removes the compliant from the hand. This function is used as a callback for the timer
@@ -20,6 +28,65 @@ def _HAND_compliant(robot):
 
     if hasattr(robot, 'l_thumb_x'):
         robot.l_thumb_x.compliant = True
+
+def _closeHandWithCurrentLimit(board, thumb, indexfingers, percentage):
+    for it,pos in enumerate(range (int(indexfingers.present_position),int(130*percentage),5)):
+        for retries in range(10):
+            success=True
+            try:
+                if board.present_current_port_4>MAX_CUR_FINGER or board.present_current_port_3>MAX_CUR_THUMB:
+                    logging.warning("Reached maximum current - Hand won't be closed any further")
+                    return
+                break
+            except AttributeError as e:
+                if retries==9:
+                    logging.warning("Current check failed after 10 retries")
+                    success=False
+                    raise
+                logging.warning("Current check failed - retry {}".format(retries+1))
+        if not success:
+            break
+        indexfingers.goal_position=pos
+        thumb.goal_position=pos
+        time.sleep(0.05)
+    indexfingers.compliant = True
+    thumb.compliant = True
+
+def isHandMotor(jointname):
+    """
+    Checks whether the given motor belongs to the RH4D hand
+
+    :param jointname: Name of the motor
+    :type jointname: str
+    :return: True if motor is a hand motor, False else
+    :rtype: boolean
+    """
+    if jointname[2:] in CURRENT_PORTS.keys():
+        return True
+    return False
+
+def getPresentCurrent(robot, jointname):
+    """
+    Returns the current reading for the given joint from the hand's mainboard.
+    (Current readings are not stored in the motors themselves)
+
+    :param jointName: Name of the joint
+    :type jointName: str
+    :return: Current of the joint
+    :rtype: float
+    """
+    if isHandMotor(jointname):
+
+        if jointname.startswith('r_'):
+            board = getattr(robot, "r_virtualhand")
+        elif jointname.startswith('l_'):
+            board = getattr(robot, "l_virtualhand")
+
+        if board != None:
+            return getattr(board, CURRENT_PORTS[jointname[2:]])
+
+    logging.warning("{} is not a handjoint".format(jointname))
+    return 0
 
 def openHand(robot, handName, fractionMaxSpeed=1.0, percentage=1.0):
     """
@@ -130,20 +197,16 @@ def closeHand(robot, handName, fractionMaxSpeed=1.0, percentage=1.0):
     if handName == 'RHand':
         robot.r_indexfingers_x.compliant = False
         robot.r_indexfingers_x.goal_speed = 1000.0 * fractionMaxSpeed
-        robot.r_indexfingers_x.goal_position = 130.0 * percentage
         robot.r_thumb_x.compliant = False
         robot.r_thumb_x.goal_speed = 1000.0 * fractionMaxSpeed
-        robot.r_thumb_x.goal_position = 130.0 * percentage
-        threading.Timer(1.0, _HAND_compliant, [robot]).start()
+        threading.Thread(target=_closeHandWithCurrentLimit, args=[robot.r_virtualhand_x, robot.r_thumb_x, robot.r_indexfingers_x, percentage]).start()
 
     elif handName == 'LHand':
         robot.l_indexfingers_x.compliant = False
         robot.l_indexfingers_x.goal_speed = 1000.0 * fractionMaxSpeed
-        robot.l_indexfingers_x.goal_position = 130.0 * percentage
         robot.l_thumb_x.compliant = False
         robot.l_thumb_x.goal_speed = 1000.0 * fractionMaxSpeed
-        robot.l_thumb_x.goal_position = 130.0 * percentage
-        threading.Timer(1.0, _HAND_compliant, [robot]).start()
+        threading.Thread(target=_closeHandWithCurrentLimit, args=[robot.l_virtualhand_x, robot.l_thumb_x, robot.l_indexfingers_x, percentage]).start()
     else:
         logging.warning('Unknown hand handle: %s' % handName)
         return

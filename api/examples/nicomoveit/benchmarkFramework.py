@@ -3,7 +3,6 @@
 import time
 import math
 from nicomoveit import moveitWrapper
-from nicomotion import Motion
 
 class groupHandle:
   """
@@ -11,14 +10,14 @@ class groupHandle:
   For a motion planning group a set of possible poses can be generated
   and results can be reported to receive statistics
   """
-  def __init__(self, groupName):
+  def __init__(self, groupName, robotMotorFile='nico_humanoid_legged_with_hands_mod-vrep.json'):
     """
     :param groupName: Name of the planning group that should be moved.
                       Possible movement groups to use are: 
                       'leftArm', 'rightArm', 'leftLeg', 'rightLeg'
     :type groupName: str
     """
-    self.handle = moveitWrapper.groupHandle(groupName) # always neccessary when using this class?
+    self.handle = moveitWrapper.groupHandle(groupName, kinematicsOnly=True, robotMotorFile=robotMotorFile)
     self.listOfPoses = []
 
   def createRandomReachablePoses(self, fileName = None, N = 1, collisionAllowed = False):
@@ -48,19 +47,19 @@ class groupHandle:
       else:
         collision = self.handle.isColliding(target)        
       if collision:
-        print "Collision"
+        print("Collision")
       else:
         outOfBounds = False
         for jointIdx in range(len(target)):
           target[jointIdx] = math.radians(target[jointIdx])
           if target[jointIdx] > constraints_max[jointIdx] or target[jointIdx] < constraints_min[jointIdx]:
-            print "Joint " + jointNames[jointIdx] + " value " + str(target[jointIdx])
+            print("Joint " + jointNames[jointIdx] + " value " + str(target[jointIdx]))
             outOfBounds = True
         if outOfBounds:
-          print "Out of bounds"
+          print("Out of bounds")
         else:
           numberOfPoses = numberOfPoses + 1
-          print numberOfPoses
+          print(numberOfPoses)
           self.listOfPoses.append(target)
           if fileName is not None:
             line = str(target)[1:-1]

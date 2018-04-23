@@ -7,12 +7,13 @@ import sys
 import tensorflow as tf
 from nicovision.VideoDevice import VideoDevice
 import logging
+import time
 
 from nicomotion import Motion
 from os.path import dirname, abspath
 
 class EmotionRecognition:
-    def __init__(self, device='', robot=None, face=None, faceDetectionDelta = 10):
+    def __init__(self, device='', robot=None, face=None, faceDetectionDelta = 10, voiceEnabled=False):
         """
         Initialises the EmotionRecognition
 
@@ -31,6 +32,7 @@ class EmotionRecognition:
         self._running = False
         self._facialExpression = face
         self._robot = robot
+        self._voiceEnabled=voiceEnabled
 
         self._modelCategorical = modelLoader.modelLoader(modelDictionary.CategoricaModel)
         self._modelDimensional = modelLoader.modelLoader(modelDictionary.DimensionalModel)
@@ -40,6 +42,11 @@ class EmotionRecognition:
         self._imageProcessing = imageProcessingUtil.imageProcessingUtil(faceDetectionDelta)
 
         self._GUIController = GUIController.GUIController()
+        
+        self._not_found_counter = 0
+        self._same_emotion_counter = 0
+        
+        self.last_exp=""
 
 
     def start(self, showGUI=True, faceTracking=False, mirrorEmotion=False):
@@ -133,13 +140,15 @@ class EmotionRecognition:
 
 
             if not len(face) == 0:
+                self._not_found_counter = 0
                 if self._faceTracking and self._trackingCounter == 0:
                     if self._robot is not None:
                         # (width - center_x)/width * FOV - FOV/2
                         angle_z = (640-facePoints[0].center().x)/640.0 * 60 - 60/2.0 # horizontal
                         angle_y = (480-facePoints[0].center().y)/480.0 * 50 - 50/2.0 # vertikal
-                        self._robot.changeAngle("head_z", angle_z, 0.02)
-                        self._robot.changeAngle("head_y", -angle_y, 0.02)
+                        self._robot.changeAngle("head_z", angle_z, 0.03)
+                        self._robot.changeAngle("head_y", -angle_y, 0.03)
+                        time.sleep(0.8)
                     else:
                         logging.warning("No robot given on initialisation - skipping face tracking")
                 if self._trackingCounter == self._faceDetectionDelta:
@@ -152,7 +161,49 @@ class EmotionRecognition:
                     self._dimensionalRecognition = self._modelDimensional.classify(face)
 
                 if self._mirrorEmotion and self._facialExpression is not None:
-                    self._facialExpression.sendFaceExpression(self.getHighestMatchingEmotion())
+					if self.last_exp != self.getHighestMatchingEmotion():
+						self._same_emotion_counter =0
+						self.last_exp = self.getHighestMatchingEmotion()
+						self._facialExpression.sendFaceExpression(self.last_exp)
+					else:
+						self._same_emotion_counter += 1
+						if self._voiceEnabled and self._same_emotion_counter == 3:
+							def say(sen):
+								import os.path
+								import subprocess
+								fname="./wav_cache/"+sen+".mp3"
+								from gtts import gTTS
+								
+								try:
+										
+									if not (os.path.isfile(fname)): 
+										import urllib2 
+										urllib2.urlopen('http://216.58.192.142', timeout=1)
+										tts = gTTS(text=sen, lang='en-au', slow=False)
+										#tts.save("/tmp/say.mp3")
+										tts.save(fname)
+									comm = ["mpg123" , fname]
+									subprocess.check_call(comm)
+									
+								except:
+									#Fallback offline tts engine
+									import pyttsx3;
+									engine = pyttsx3.init();
+									engine.say(sen);
+									engine.runAndWait() ;
+									
+							if self.last_exp == "happiness":
+								import random
+								sents=["I am happy, if YOU are happy.","What a nice day, right?","You are happy right now, are you?"]
+								say (random.choice(sents))
+							if self.last_exp == "surprise":
+								import random
+								sents=["You look surprised. Is everything alright?","Are you surprised, what a smart robot I am?","This is a surprise, right?"]
+								say (random.choice(sents))
+							if self.last_exp == "anger":
+								import random
+								sents=["You look angry. Is everything alright?","I am angry as well!","What went wrong?"]
+								say (random.choice(sents))
 
                 if self._showGUI:
                     frame = self._GUIController.createDetectedFacGUI(frame,facePoints,self._modelCategorical.modelDictionary, self._categoricalRecognition)
@@ -162,11 +213,19 @@ class EmotionRecognition:
                 self._categoricalRecognition = None
                 self._dimensionalRecognition = None
                 if self._faceTracking:
-                    if self._robot is not None:
-                        self._robot.setAngle("head_z", 0, 0.05)
-                        self._robot.setAngle("head_y", 10, 0.05)
-                    else:
-                        logging.warning("No robot given on initialisation - skipping face tracking")
+					self._not_found_counter += 1
+					print "Saw nothing: " + str(self._not_found_counter)
+					if self._not_found_counter > 50 :
+						
+						# After  frames of not detecting something, return to mid position
+						self._not_found_counter = 0
+						if self._robot is not None:
+							from random import randint
+							
+							self._robot.setAngle("head_z", 0+randint(-15, 15), 0.01)
+							self._robot.setAngle("head_y", -30+randint(-10, 10), 0.01)
+						else:
+							logging.warning("No robot given on initialisation - skipping face tracking")
 
             if self._showGUI:
                 # Display the resulting frame

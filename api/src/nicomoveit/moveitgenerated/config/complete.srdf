@@ -44,7 +44,6 @@
     <!--DISABLE COLLISIONS: By default it is assumed that any link of the robot could potentially come into collision with any other link in the robot. This tag disables collision checking between a specified pair of links. -->
     <disable_collisions link1="finger_segment:11" link2="finger_segment:12" reason="Never" />
     <disable_collisions link1="finger_segment:11" link2="finger_segment:13" reason="Never" />
-    <disable_collisions link1="finger_segment:11" link2="finger_segment:15" reason="Never" />
     <disable_collisions link1="finger_segment:11" link2="finger_segment:21" reason="Adjacent" />
     <disable_collisions link1="finger_segment:11" link2="finger_segment:22" reason="Never" />
     <disable_collisions link1="finger_segment:11" link2="finger_segment:23" reason="Never" />
@@ -66,7 +65,6 @@
     <disable_collisions link1="finger_segment:12" link2="fingertip:11" reason="Never" />
     <disable_collisions link1="finger_segment:12" link2="fingertip:12" reason="Adjacent" />
     <disable_collisions link1="finger_segment:12" link2="fingertip:13" reason="Never" />
-    <disable_collisions link1="finger_segment:12" link2="left_collarbone:11" reason="Never" />
     <disable_collisions link1="finger_segment:12" link2="left_shoulder:11" reason="Never" />
     <disable_collisions link1="finger_segment:12" link2="neck:11" reason="Never" />
     <disable_collisions link1="finger_segment:12" link2="right_collarbone:11" reason="Never" />
@@ -78,7 +76,6 @@
     <disable_collisions link1="finger_segment:13" link2="finger_segment:21" reason="Never" />
     <disable_collisions link1="finger_segment:13" link2="finger_segment:22" reason="Never" />
     <disable_collisions link1="finger_segment:13" link2="finger_segment:23" reason="Adjacent" />
-    <disable_collisions link1="finger_segment:13" link2="finger_segment:26" reason="Never" />
     <disable_collisions link1="finger_segment:13" link2="fingertip:11" reason="Never" />
     <disable_collisions link1="finger_segment:13" link2="fingertip:12" reason="Never" />
     <disable_collisions link1="finger_segment:13" link2="fingertip:13" reason="Adjacent" />
@@ -136,6 +133,7 @@
     <disable_collisions link1="finger_segment:16" link2="left_upper_arm:11" reason="Never" />
     <disable_collisions link1="finger_segment:16" link2="left_wrist:11" reason="Never" />
     <disable_collisions link1="finger_segment:16" link2="neck:11" reason="Never" />
+    <disable_collisions link1="finger_segment:16" link2="right_collarbone:11" reason="Never" />
     <disable_collisions link1="finger_segment:16" link2="right_shoulder:11" reason="Never" />
     <disable_collisions link1="finger_segment:21" link2="finger_segment:22" reason="Never" />
     <disable_collisions link1="finger_segment:21" link2="finger_segment:23" reason="Never" />
@@ -149,7 +147,6 @@
     <disable_collisions link1="finger_segment:21" link2="right_palm:11" reason="Adjacent" />
     <disable_collisions link1="finger_segment:21" link2="right_shoulder:11" reason="Never" />
     <disable_collisions link1="finger_segment:21" link2="right_upper_arm:11" reason="Never" />
-    <disable_collisions link1="finger_segment:21" link2="right_wrist:11" reason="Never" />
     <disable_collisions link1="finger_segment:22" link2="finger_segment:23" reason="Never" />
     <disable_collisions link1="finger_segment:22" link2="fingertip:11" reason="Never" />
     <disable_collisions link1="finger_segment:22" link2="fingertip:12" reason="Never" />
@@ -162,7 +159,7 @@
     <disable_collisions link1="finger_segment:22" link2="right_palm:11" reason="Adjacent" />
     <disable_collisions link1="finger_segment:22" link2="right_shoulder:11" reason="Never" />
     <disable_collisions link1="finger_segment:22" link2="right_upper_arm:11" reason="Never" />
-    <disable_collisions link1="finger_segment:22" link2="right_wrist:11" reason="Never" />
+    <disable_collisions link1="finger_segment:22" link2="right_wrist:11" reason="Default" />
     <disable_collisions link1="finger_segment:23" link2="fingertip:11" reason="Never" />
     <disable_collisions link1="finger_segment:23" link2="fingertip:12" reason="Never" />
     <disable_collisions link1="finger_segment:23" link2="fingertip:13" reason="Never" />
@@ -174,7 +171,7 @@
     <disable_collisions link1="finger_segment:23" link2="right_palm:11" reason="Adjacent" />
     <disable_collisions link1="finger_segment:23" link2="right_shoulder:11" reason="Never" />
     <disable_collisions link1="finger_segment:23" link2="right_upper_arm:11" reason="Never" />
-    <disable_collisions link1="finger_segment:23" link2="right_wrist:11" reason="Never" />
+    <disable_collisions link1="finger_segment:23" link2="right_wrist:11" reason="Default" />
     <disable_collisions link1="finger_segment:24" link2="finger_segment:25" reason="Never" />
     <disable_collisions link1="finger_segment:24" link2="finger_segment:26" reason="Never" />
     <disable_collisions link1="finger_segment:24" link2="fingertip:14" reason="Never" />
@@ -185,11 +182,9 @@
     <disable_collisions link1="finger_segment:24" link2="left_palm:11" reason="Adjacent" />
     <disable_collisions link1="finger_segment:24" link2="left_shoulder:11" reason="Never" />
     <disable_collisions link1="finger_segment:24" link2="left_upper_arm:11" reason="Never" />
-    <disable_collisions link1="finger_segment:24" link2="left_wrist:11" reason="Never" />
     <disable_collisions link1="finger_segment:24" link2="neck:11" reason="Never" />
     <disable_collisions link1="finger_segment:24" link2="right_shoulder:11" reason="Never" />
     <disable_collisions link1="finger_segment:25" link2="finger_segment:26" reason="Never" />
-    <disable_collisions link1="finger_segment:25" link2="fingertip:11" reason="Never" />
     <disable_collisions link1="finger_segment:25" link2="fingertip:14" reason="Never" />
     <disable_collisions link1="finger_segment:25" link2="fingertip:15" reason="Never" />
     <disable_collisions link1="finger_segment:25" link2="fingertip:16" reason="Never" />
@@ -198,7 +193,7 @@
     <disable_collisions link1="finger_segment:25" link2="left_palm:11" reason="Adjacent" />
     <disable_collisions link1="finger_segment:25" link2="left_shoulder:11" reason="Never" />
     <disable_collisions link1="finger_segment:25" link2="left_upper_arm:11" reason="Never" />
-    <disable_collisions link1="finger_segment:25" link2="left_wrist:11" reason="Never" />
+    <disable_collisions link1="finger_segment:25" link2="left_wrist:11" reason="Default" />
     <disable_collisions link1="finger_segment:25" link2="neck:11" reason="Never" />
     <disable_collisions link1="finger_segment:25" link2="right_collarbone:11" reason="Never" />
     <disable_collisions link1="finger_segment:25" link2="right_shoulder:11" reason="Never" />
@@ -210,18 +205,16 @@
     <disable_collisions link1="finger_segment:26" link2="left_palm:11" reason="Adjacent" />
     <disable_collisions link1="finger_segment:26" link2="left_shoulder:11" reason="Never" />
     <disable_collisions link1="finger_segment:26" link2="left_upper_arm:11" reason="Never" />
-    <disable_collisions link1="finger_segment:26" link2="left_wrist:11" reason="Never" />
+    <disable_collisions link1="finger_segment:26" link2="left_wrist:11" reason="Default" />
     <disable_collisions link1="finger_segment:26" link2="neck:11" reason="Never" />
+    <disable_collisions link1="finger_segment:26" link2="right_collarbone:11" reason="Never" />
     <disable_collisions link1="finger_segment:26" link2="right_shoulder:11" reason="Never" />
-    <disable_collisions link1="fingertip:11" link2="fingertip:12" reason="Never" />
-    <disable_collisions link1="fingertip:11" link2="fingertip:13" reason="Never" />
     <disable_collisions link1="fingertip:11" link2="left_shoulder:11" reason="Never" />
     <disable_collisions link1="fingertip:11" link2="neck:11" reason="Never" />
     <disable_collisions link1="fingertip:11" link2="right_collarbone:11" reason="Never" />
     <disable_collisions link1="fingertip:11" link2="right_lower_arm:11" reason="Never" />
     <disable_collisions link1="fingertip:11" link2="right_shoulder:11" reason="Never" />
     <disable_collisions link1="fingertip:11" link2="right_upper_arm:11" reason="Never" />
-    <disable_collisions link1="fingertip:11" link2="right_wrist:11" reason="Never" />
     <disable_collisions link1="fingertip:12" link2="fingertip:13" reason="Never" />
     <disable_collisions link1="fingertip:12" link2="left_shoulder:11" reason="Never" />
     <disable_collisions link1="fingertip:12" link2="neck:11" reason="Never" />
@@ -236,13 +229,10 @@
     <disable_collisions link1="fingertip:13" link2="right_lower_arm:11" reason="Never" />
     <disable_collisions link1="fingertip:13" link2="right_shoulder:11" reason="Never" />
     <disable_collisions link1="fingertip:13" link2="right_upper_arm:11" reason="Never" />
-    <disable_collisions link1="fingertip:14" link2="fingertip:15" reason="Never" />
-    <disable_collisions link1="fingertip:14" link2="fingertip:16" reason="Never" />
     <disable_collisions link1="fingertip:14" link2="left_collarbone:11" reason="Never" />
     <disable_collisions link1="fingertip:14" link2="left_lower_arm:11" reason="Never" />
     <disable_collisions link1="fingertip:14" link2="left_shoulder:11" reason="Never" />
     <disable_collisions link1="fingertip:14" link2="left_upper_arm:11" reason="Never" />
-    <disable_collisions link1="fingertip:14" link2="left_wrist:11" reason="Never" />
     <disable_collisions link1="fingertip:14" link2="neck:11" reason="Never" />
     <disable_collisions link1="fingertip:14" link2="right_collarbone:11" reason="Never" />
     <disable_collisions link1="fingertip:14" link2="right_shoulder:11" reason="Never" />
@@ -285,7 +275,6 @@
     <disable_collisions link1="left_ankle:11" link2="right_hip_low:11" reason="Never" />
     <disable_collisions link1="left_ankle:11" link2="right_hip_up:11" reason="Never" />
     <disable_collisions link1="left_ankle:11" link2="right_shoulder:11" reason="Never" />
-    <disable_collisions link1="left_ankle:11" link2="right_upper_arm:11" reason="Never" />
     <disable_collisions link1="left_ankle:11" link2="torso:11" reason="Never" />
     <disable_collisions link1="left_collarbone:11" link2="left_foot:11" reason="Never" />
     <disable_collisions link1="left_collarbone:11" link2="left_hip_low:11" reason="Never" />
@@ -357,7 +346,6 @@
     <disable_collisions link1="left_shank:11" link2="right_hip_low:11" reason="Never" />
     <disable_collisions link1="left_shank:11" link2="right_hip_up:11" reason="Never" />
     <disable_collisions link1="left_shank:11" link2="right_shoulder:11" reason="Never" />
-    <disable_collisions link1="left_shank:11" link2="right_upper_arm:11" reason="Never" />
     <disable_collisions link1="left_shank:11" link2="torso:11" reason="Never" />
     <disable_collisions link1="left_shoulder:11" link2="left_thigh:11" reason="Never" />
     <disable_collisions link1="left_shoulder:11" link2="left_wrist:11" reason="Never" />
@@ -376,8 +364,10 @@
     <disable_collisions link1="left_thigh:11" link2="right_shoulder:11" reason="Never" />
     <disable_collisions link1="left_thigh:11" link2="right_upper_arm:11" reason="Never" />
     <disable_collisions link1="left_upper_arm:11" link2="left_wrist:11" reason="Never" />
+    <disable_collisions link1="left_upper_arm:11" link2="right_ankle:11" reason="Never" />
     <disable_collisions link1="left_upper_arm:11" link2="right_hip_low:11" reason="Never" />
     <disable_collisions link1="left_upper_arm:11" link2="right_hip_up:11" reason="Never" />
+    <disable_collisions link1="left_upper_arm:11" link2="right_shank:11" reason="Never" />
     <disable_collisions link1="left_upper_arm:11" link2="right_thigh:11" reason="Never" />
     <disable_collisions link1="left_wrist:11" link2="neck:11" reason="Never" />
     <disable_collisions link1="neck:11" link2="right_ankle:11" reason="Never" />

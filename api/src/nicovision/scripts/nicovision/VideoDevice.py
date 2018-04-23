@@ -5,9 +5,11 @@ import inspect
 import threading
 import time
 
+
 class VideoDevice:
     """
-    The VideoDevice class handles low-level communication with the video devices
+    The VideoDevice class handles low-level communication with the video
+    devices
     """
 
     _VIDEO_DEVICE_PATH = '/dev/v4l/by-id/'
@@ -16,9 +18,10 @@ class VideoDevice:
     """
 
     @staticmethod
-    def getAllDevices():
+    def get_all_devices():
         """
-        Returns a list containing the possible path of all video capturing devices
+        Returns a list containing the possible path of all video capturing
+        devices
 
         :return: Paths of video devices
         :rtype: list
@@ -32,7 +35,7 @@ class VideoDevice:
         return paths
 
     @staticmethod
-    def resolveDevice(device):
+    def resolve_device(device):
         """
         Returns the id of a device
 
@@ -54,13 +57,14 @@ class VideoDevice:
             logging.error('No candidates found')
             return -1
         elif len(candidates) is 1:
-            return int(os.readlink(VideoDevice._VIDEO_DEVICE_PATH + candidates[0])[-1:])
+            return int(os.readlink(
+                VideoDevice._VIDEO_DEVICE_PATH + candidates[0])[-1:])
         else:
             logging.error('Multiple candidates found: {}'.format(candidates))
             return -1
 
     @staticmethod
-    def fromDevice(device):
+    def from_device(device):
         """
         Convenience method for creating a VideoDevice from a device
 
@@ -69,7 +73,7 @@ class VideoDevice:
         :return: VideoDevice or None if path is not valid / ambiguous
         :rtype: VideoDevice or None
         """
-        id = VideoDevice.resolveDevice(device)
+        id = VideoDevice.resolve_device(device)
         if id is -1:
             logging.error('Can not create VideoDevice from ID %s' % id)
             return None
@@ -77,9 +81,11 @@ class VideoDevice:
 
     def __init__(self, id, framerate=20, width=640, height=480):
         """
-        Initialises the VideoDevice. The device starts closed and has to be opened.
+        Initialises the VideoDevice. The device starts closed and has to be
+        opened.
 
-        If you want to create a VideoDevice from a (partial) ID, use :meth:`nicovision.VideoDevice.fromDevice` instead.
+        If you want to create a VideoDevice from a (partial) ID, use
+        :meth:`nicovision.VideoDevice.fromDevice` instead.
 
         :param id: device id
         :type id: int
@@ -95,7 +101,7 @@ class VideoDevice:
         self._width = width
         self._height = height
 
-    def setFrameRate(self, framerate):
+    def set_framerate(self, framerate):
         """
         Sets the current framerate
 
@@ -104,7 +110,7 @@ class VideoDevice:
         """
         self._framerate = framerate
 
-    def getFrameRate(self):
+    def get_framerate(self):
         """
         Returns the current frame rate
 
@@ -113,7 +119,7 @@ class VideoDevice:
         """
         return self._framerate
 
-    def setResolution(self, width, height):
+    def set_resolution(self, width, height):
         """
         Sets the current resolution
 
@@ -125,7 +131,7 @@ class VideoDevice:
         self._width = width
         self._height = height
 
-    def getResolution(self):
+    def get_resolution(self):
         """
         Returns the current resolution
 
@@ -144,10 +150,9 @@ class VideoDevice:
 
         # Open camera
         self._capture = cv2.VideoCapture(self._deviceId)
-        self._capture.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, self._width)
-        self._capture.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, self._height)
-        self._capture.set(cv2.cv.CV_CAP_PROP_FPS, self._framerate)
-        self._capture.open(self._deviceId)
+        self._capture.set(cv2.CAP_PROP_FRAME_WIDTH, self._width)
+        self._capture.set(cv2.CAP_PROP_FRAME_HEIGHT, self._height)
+        self._capture.set(cv2.CAP_PROP_FPS, self._framerate)
 
         # Start eventloop
         self._running = True
@@ -168,7 +173,7 @@ class VideoDevice:
         self._capture.release()
         self._capture = None
 
-    def isOpen(self):
+    def is_open(self):
         """
         Checks if the VideoDevice is open
 
@@ -177,14 +182,14 @@ class VideoDevice:
         """
         return self._open
 
-    def addCallback(self, function):
+    def add_callback(self, function):
         """
         Adds a callback for the event loop
 
         Whenever a new frame arrives, all registered callbacks are called.
 
-        The callback must take exactly 2 arguments: rval and frame. frame can be None if any error occures or no image
-        could be grabbed.
+        The callback must take exactly 2 arguments: rval and frame. frame can
+        be None if any error occures or no image could be grabbed.
 
         :param function: Function to add as callback
         :type function: function
@@ -194,7 +199,7 @@ class VideoDevice:
             return
         self._callback += [function]
 
-    def cleanCallbacks(self):
+    def clean_callbacks(self):
         """
         Removes all saved callbacks
         """
