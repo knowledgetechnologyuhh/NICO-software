@@ -7,7 +7,7 @@ import datetime
 """
 Created on Thu Jun 23 15:32:38 2016
 
-@author: Moaaz Maamoon M. Ali
+sensor access by Moaaz Maamoon M. Ali
 
 adapted to NICO api Erik Strahl
 
@@ -118,6 +118,7 @@ class optoforce:
 
     def __init__(self,port,ser_number):
 
+        #print "Using port: " + port
         self.ser = serial.Serial(port=port,
                             baudrate=1000000,
                             parity=serial.PARITY_NONE,
