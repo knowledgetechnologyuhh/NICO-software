@@ -18,6 +18,7 @@ group = moveit_commander.MoveGroupCommander("leftArm")
 #print(robot.get_group_names())
 #print(robot.get_current_state())
 
+# This is the default path planner in Kinetic anyway, but not in Indigo
 group.set_planner_id("RRTConnectkConfigDefault")
 
 print("increase tolerance")
