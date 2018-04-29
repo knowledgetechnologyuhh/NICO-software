@@ -108,7 +108,7 @@ class groupHandle:
     if not nicomoveit:
       if robotMotorFile is None:
         print("Please provide a motor configuration file or start rosnico with moveit capabilities")
-      elif vrep is True and vrepScene is None:
+      elif vrep is True and vrepScene is None and not kinematicsOnly:
         print("You want to use V-Rep, but did not provide a V-Rep scene name. Please do that or start rosnico with moveit capabilities")
       else:
         print("Starting MoveIt! service")
@@ -682,6 +682,8 @@ class groupHandle:
   def computeCartesianPath(self,axis,value, sufficient = False,
                            startPosition = None, startOrientation = None):
     """
+    WARNING: Do not rely on this function to work as you expect! Please test in safe environment beforehand!
+    
     Shift the pose on a certain axis with the distance given.
     This path has the property of being a straight line in cartesian coordinates
 

@@ -1,12 +1,16 @@
 #!/usr/bin/python
 
-import re
+"""
+This script is used to generate an URDF from the original URDF that can be used by MoveIt!
 
-# For MoveIt! to properly work it needs a fixed frame, therefore a 'world link'
-# connecting the world with the torso is put into the original urdf.
-# MoveIt! has problems working with collision geometry meshes with a high number of vertices
-# thats why simplified meshes are used. 
-# I use these simplified meshes for visual geometry aswell to save computation time
+For MoveIt! to properly work it needs a fixed frame, therefore a 'world link'
+connecting the world with the torso is put into the original urdf.
+MoveIt! has problems working with collision geometry meshes with a high number of vertices
+thats why simplified meshes are used. 
+I use these simplified meshes for visual geometry aswell to reduce computation time
+"""
+
+import re
 
 original = open("../../../urdf/complete.urdf", 'r')
 moveiturdf = open("moveiturdf/urdf/complete.urdf", 'w')

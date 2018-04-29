@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
-<!--launches NICO ROS capabilities, MoveIt! and kinematics server for the simulated NICO-->
+<!--launches NICO ROS capabilities, MoveIt! and kinematics server for the real NICO-->
 <launch>
 
-  <include file="$(find nicoros)/launch/nicoros.launch" />
+  <include file="$(find nicoros)/launch/nicoros_real.launch" />
   <include file="$(find moveitgenerated)/launch/move_group.launch" />
   <include file="$(find kinematics)/launch/kinematics_server.launch" />
 

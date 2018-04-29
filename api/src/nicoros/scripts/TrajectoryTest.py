@@ -1,4 +1,10 @@
 #!/usr/bin/env python
+
+"""
+A simple test of the follow-joint-trajectory action without using MoveIt!.
+The script creates a simple joint trajectory and sends it in form of an action to the TrajectoryServer.
+"""
+
 import actionlib
 import control_msgs.msg
 import trajectory_msgs.msg
