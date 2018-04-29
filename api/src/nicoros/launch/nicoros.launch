@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!--launches NICO ROS capabilities-->
+<!--launches NICO ROS capabilities for the simulated NICO-->
 <launch>
     <!-- Arguments -->
     <arg name="json_path" default="$(find moveitgenerated)/../../../../json/nico_humanoid_legged_with_hands_mod-vrep_with_legs.json" doc="Path to the JSON which describes the motors in a way PyPot understands it. Path must be absolute or relative to python working path (~/.ros)" />
