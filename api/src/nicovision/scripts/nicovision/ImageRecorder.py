@@ -3,6 +3,7 @@ import os
 import time
 import cv2
 import logging
+from ImageWriter import ImageWriter
 
 from VideoDevice import VideoDevice
 
@@ -19,10 +20,11 @@ def get_devices():
 
 class ImageRecorder:
     """
-The ImageRecorder class enables the capturing of single images from a camera.
+The ImageRecorder class enables the capturing of images from a camera.
     """
 
-    def __init__(self, device='', width=640, height=480):
+    def __init__(self, device='', width=640, height=480, framerate=20,
+                 writer_threads=2):
         """
         Initialises the ImageRecorder with a given device.
 
@@ -34,11 +36,15 @@ The ImageRecorder class enables the capturing of single images from a camera.
         :type width: float
         :param height: Height of image
         :type height: float
+        :param writer_threads: Number of worker threads for image writer
+        :type writer_threads: int
         """
-        self._device = device
-        self._target = 'picture.png'
-        self._width = width
-        self._height = height
+        self._device = VideoDevice.from_device(device, framerate, width,
+                                               height)
+        if self._device is None:
+            logging.error('Can not create device from path' + self._device)
+        self._target = 'picture-{}.png'
+        self._image_writer = ImageWriter(writer_threads)
 
     def save_one_image(self):
         """
@@ -59,17 +65,26 @@ The ImageRecorder class enables the capturing of single images from a camera.
         :rtype: bool
         """
         self._target = path
-        device = VideoDevice.from_device(self._device)
-        if device is None:
-            logging.error('Can not create device from path' + self._device)
+        if self._device is None:
+            logging.error('Capture device not initialized')
             return False
-        device.set_framerate(1)
-        device.set_resolution(self._width, self._height)
-        device.open()
-        time.sleep(0.1)
-        device.add_callback(self._callback)
-        device.close()
+        if not self._device._open:
+            self._device.open()
+        self._device.add_callback(self._callback)
+        time.sleep(.1)
+        self._device.close()
+        self._device.clean_callbacks()
         return True
+
+    def start_recording(self, path="picture-{}.png"):
+        self._target = path
+        if not self._device._open:
+            self._device.open()
+        self._device.add_callback(self._callback)
+
+    def stop_recording(self):
+        self._device.close()
+        self._device.clean_callbacks()
 
     def _callback(self, rval, frame):
         """
@@ -78,5 +93,6 @@ The ImageRecorder class enables the capturing of single images from a camera.
         :param rval: rval
         :param frame: frame
         """
-        if frame is not None:
-            cv2.imwrite(self._target, frame)
+        if rval:
+            self._image_writer.write_image(self._target.format(
+                datetime.datetime.today().isoformat()), frame)
