@@ -64,7 +64,7 @@ class VideoDevice:
             return -1
 
     @staticmethod
-    def from_device(device):
+    def from_device(device, framerate=20, width=640, height=480):
         """
         Convenience method for creating a VideoDevice from a device
 
@@ -77,11 +77,11 @@ class VideoDevice:
         if id is -1:
             logging.error('Can not create VideoDevice from ID %s' % id)
             return None
-        return VideoDevice(id)
+        return VideoDevice(id, framerate, width, height)
 
     def __init__(self, id, framerate=20, width=640, height=480):
         """
-        Initialises the VideoDevice. The device starts closed and has to be
+        Initialises the VideoDevice. The device starts open and has to be
         opened.
 
         If you want to create a VideoDevice from a (partial) ID, use
@@ -90,16 +90,22 @@ class VideoDevice:
         :param id: device id
         :type id: int
         """
-        self._capture = None
         self._deviceId = id
         self._valid = True
-        self._open = False
+        self._open = True
         self._callback = []
-        self._running = False
-        self._thread = None
+        self._running = True
         self._framerate = framerate
         self._width = width
         self._height = height
+        # Open camera
+        self._capture = cv2.VideoCapture(id)
+        self._capture.set(cv2.CAP_PROP_FRAME_WIDTH, self._width)
+        self._capture.set(cv2.CAP_PROP_FRAME_HEIGHT, self._height)
+        self._capture.set(cv2.CAP_PROP_FPS, self._framerate)
+        # Start thread
+        self._thread = threading.Thread(target=self._eventloop)
+        self._thread.start()
 
     def set_framerate(self, framerate):
         """
@@ -109,6 +115,8 @@ class VideoDevice:
         :type framerate: int
         """
         self._framerate = framerate
+        if self._capture is not None:
+            self._capture.set(cv2.CAP_PROP_FPS, self._framerate)
 
     def get_framerate(self):
         """
@@ -128,8 +136,16 @@ class VideoDevice:
         :param height: Height
         :type height: int
         """
+        print("width: {}, heigth: {}".format(width, height))
         self._width = width
         self._height = height
+        if self._capture is not None:
+            self._running = False
+            self._capture.set(cv2.CAP_PROP_FRAME_WIDTH, self._width)
+            self._capture.set(cv2.CAP_PROP_FRAME_HEIGHT, self._height)
+            self._running = True
+
+        print("Resolution set")
 
     def get_resolution(self):
         """
@@ -169,9 +185,8 @@ class VideoDevice:
             return
         self._running = False
         self._open = False
-        self._thread.join()
         self._capture.release()
-        self._capture = None
+        self._thread.join()
 
     def is_open(self):
         """
@@ -212,7 +227,8 @@ class VideoDevice:
         This will call all registered callbacks for each frame
         """
         while self._running:
+            t1 = time.time()
             rval, frame = self._capture.read()
             for function in self._callback:
                 function(rval, frame)
-                time.sleep(1.0 / self._framerate)
+            time.sleep(max(0, 1.0/self._framerate - (time.time() - t1)))

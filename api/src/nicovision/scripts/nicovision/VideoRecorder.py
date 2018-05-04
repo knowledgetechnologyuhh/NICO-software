@@ -59,7 +59,8 @@ class VideoRecorder:
         :param videoformat: Used video format
         :type videoformat: VideoCodec
         """
-        self._device = VideoDevice.from_device(device)
+        self._device = VideoDevice.from_device(device, framerate, width,
+                                               height)
         self._running = False
         self._colorspace = colorspace
         self._framerate = framerate
@@ -200,9 +201,10 @@ class VideoRecorder:
         self._encoder = cv2.VideoWriter(folder + file, fourcc, self._framerate,
                                         (self._width, self._height))
         self._device.add_callback(self._callback)
-        self._device.set_resolution(self._width, self._height)
-        self._device.set_framerate(self._framerate)
-        self._device.open()
+        if not self._device._open:
+            self._device.set_resolution(self._width, self._height)
+            self._device.set_framerate(self._framerate)
+            self._device.open()
         self._running = True
 
     def stop_recording(self):
@@ -218,5 +220,5 @@ class VideoRecorder:
         self._running = False
 
     def _callback(self, rval, frame):
-        if frame is not None:
+        if rval:
             self._encoder.write(frame)
