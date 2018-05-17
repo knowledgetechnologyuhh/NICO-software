@@ -75,15 +75,32 @@ def getPresentCurrent(robot, jointname):
     :return: Current of the joint
     :rtype: float
     """
+
+    """
+    Wrist Rotation: ID 23/24, Port Number 1 == wrist_z
+    Wrist Flexion: ID 25/26, Port Number 2  == wrist_x
+    Thumb Flexion: ID 27/28, Port Number 3  == thumb_x
+    Middle finger Flexion: ID 29/30, Port Number 4 == indexfingers_x
+    """
+
     if isHandMotor(jointname):
 
         if jointname.startswith('r_'):
-            board = getattr(robot, "r_virtualhand")
+            board = getattr(robot, "r_virtualhand_x")
         elif jointname.startswith('l_'):
-            board = getattr(robot, "l_virtualhand")
+            board = getattr(robot, "l_virtualhand_x")
 
         if board != None:
-            return getattr(board, CURRENT_PORTS[jointname[2:]])
+            if jointname.endswith("wrist_z"):
+                return board.present_current_port_1
+            elif jointname.endswith("wrist_x"):
+                return board.present_current_port_2
+            elif jointname.endswith("thumb_x"):
+                return board.present_current_port_3
+            elif jointname.endswith("indexfingers_x"):
+                return board.present_current_port_4
+
+        #return getattr(board, CURRENT_PORTS[jointname[2:]])
 
     logging.warning("{} is not a handjoint".format(jointname))
     return 0
