@@ -11,12 +11,14 @@ from pypot.vrep.remoteApiBindings import vrep as remote_api
 import _nicomotion_internal.hand
 import _nicomotion_internal.RH7D_hand
 
+
 class Motion:
     """
     The Motion class provides a high level interface to various movement related functions of the NICO robot
     """
 
-    def __init__(self, motorConfig='config.json', vrep=False, vrepHost='127.0.0.1', vrepPort=19997, vrepScene=None):
+    def __init__(self, motorConfig='config.json', vrep=False,
+                 vrepHost='127.0.0.1', vrepPort=19997, vrepScene=None):
         """
         Motion is an interface to control the movement of the NICO robot.
 
@@ -49,8 +51,11 @@ class Motion:
             for motor in to_remove:
                 config['motors'].pop(motor)
                 for group in config['motorgroups'].keys():
-                    config['motorgroups'][group] = [x for x in config['motorgroups'][group] if x != motor]
-            self._robot = pypot.vrep.from_vrep(config, vrepHost, vrepPort, vrepScene)
+                    config['motorgroups'][group] = [x for x in
+                                                    config['motorgroups'][
+                                                        group] if x != motor]
+            self._robot = pypot.vrep.from_vrep(config, vrepHost, vrepPort,
+                                               vrepScene)
             self._vrepIO = self._robot._controllers[0].io
         else:
             logging.info('Using robot')
@@ -64,14 +69,20 @@ class Motion:
                     id = int(id)
                     for motor in config['motors'].keys():
                         if config['motors'][motor]['id'] == id:
-                            logging.warning('Removing motor %s (%i)' %(motor, id))
+                            logging.warning(
+                                'Removing motor %s (%i)' % (motor, id))
                             config['motors'].pop(motor)
                             for group in config['motorgroups'].keys():
-                                config['motorgroups'][group] = [x for x in config['motorgroups'][group] if x != motor]
+                                config['motorgroups'][group] = [x for x in
+                                                                config[
+                                                                    'motorgroups'][
+                                                                    group] if
+                                                                x != motor]
                 logging.warning('New config created:')
                 logging.warning(pprint.pformat(config))
                 self._robot = pypot.robot.from_config(config)
-        if hasattr(self._robot, "r_middlefingers_x") or hasattr(self._robot, "l_middlefingers_x"):
+        if hasattr(self._robot, "r_middlefingers_x") or hasattr(self._robot,
+                                                                "l_middlefingers_x"):
             self._handModel = "RH7D"
         # remember initial situation as a safe state
         self.safeState = dict()
@@ -86,7 +97,6 @@ class Motion:
         :rtype: boolean
         """
         return self._vrep
-
 
     def getConfig(self):
         """
@@ -123,9 +133,12 @@ class Motion:
         :type dt: int
         """
         if self._vrep:
-            self._vrepIO.call_remote_api('simxSetFloatingParameter', remote_api.sim_floatparam_simulation_time_step, dt)
+            self._vrepIO.call_remote_api('simxSetFloatingParameter',
+                                         remote_api.sim_floatparam_simulation_time_step,
+                                         dt)
         else:
-            logging.warning('nextSimulationStep() has no effect on a real robot')
+            logging.warning(
+                'nextSimulationStep() has no effect on a real robot')
 
     def nextSimulationStep(self):
         """
@@ -134,7 +147,8 @@ class Motion:
         if self._vrep:
             remote_api.simxSynchronousTrigger(self._vrepIO.client_id)
         else:
-            logging.warning('nextSimulationStep() has no effect on a real robot')
+            logging.warning(
+                'nextSimulationStep() has no effect on a real robot')
 
     def stopSimulation(self):
         """
@@ -170,7 +184,8 @@ class Motion:
         if self._vrep:
             return self._vrepIO.call_remote_api(func_name, *args, **kwargs)
         else:
-            logging.warning('callVREPRemoteApi() has no effect on a real robot')
+            logging.warning(
+                'callVREPRemoteApi() has no effect on a real robot')
             return None
 
     def getVrepIO(self):
@@ -198,10 +213,14 @@ class Motion:
         if self._vrep:
             logging.warning("'Thumbs up' pose is not supported for vrep")
         else:
-            if self._handModel=="RH7D":
-                _nicomotion_internal.RH7D_hand.thumbsUp(self._robot, handName, min(fractionMaxSpeed, self._maximumSpeed))
+            if self._handModel == "RH7D":
+                _nicomotion_internal.RH7D_hand.thumbsUp(self._robot, handName,
+                                                        min(fractionMaxSpeed,
+                                                            self._maximumSpeed))
             else:
-                logging.warning("'Thumbs up' pose is not supported for hand model %s", self._handModel)
+                logging.warning(
+                    "'Thumbs up' pose is not supported for hand model %s",
+                    self._handModel)
 
     def okSign(self, handName, fractionMaxSpeed=1.0):
         """
@@ -215,10 +234,13 @@ class Motion:
         if self._vrep:
             logging.warning("'OK' pose is not supported for vrep")
         else:
-            if self._handModel=="RH7D":
-                _nicomotion_internal.RH7D_hand.okSign(self._robot, handName, min(fractionMaxSpeed, self._maximumSpeed))
+            if self._handModel == "RH7D":
+                _nicomotion_internal.RH7D_hand.okSign(self._robot, handName,
+                                                      min(fractionMaxSpeed,
+                                                          self._maximumSpeed))
             else:
-                logging.warning("'OK' pose is not supported for hand model %s", self._handModel)
+                logging.warning("'OK' pose is not supported for hand model %s",
+                                self._handModel)
 
     def pinchToIndex(self, handName, fractionMaxSpeed=1.0):
         """
@@ -232,10 +254,14 @@ class Motion:
         if self._vrep:
             logging.warning("'pinch to index' pose is not supported for vrep")
         else:
-            if self._handModel=="RH7D":
-                _nicomotion_internal.RH7D_hand.pinchToIndex(self._robot, handName, min(fractionMaxSpeed, self._maximumSpeed))
+            if self._handModel == "RH7D":
+                _nicomotion_internal.RH7D_hand.pinchToIndex(self._robot,
+                                                            handName, min(
+                        fractionMaxSpeed, self._maximumSpeed))
             else:
-                logging.warning("'pinch to index' pose is not supported for hand model %s", self._handModel)
+                logging.warning(
+                    "'pinch to index' pose is not supported for hand model %s",
+                    self._handModel)
 
     def pencilGrip(self, handName, fractionMaxSpeed=1.0):
         """
@@ -249,10 +275,15 @@ class Motion:
         if self._vrep:
             logging.warning("'pencil grip' pose is not supported for vrep")
         else:
-            if self._handModel=="RH7D":
-                _nicomotion_internal.RH7D_hand.pencilGrip(self._robot, handName, min(fractionMaxSpeed, self._maximumSpeed))
+            if self._handModel == "RH7D":
+                _nicomotion_internal.RH7D_hand.pencilGrip(self._robot,
+                                                          handName,
+                                                          min(fractionMaxSpeed,
+                                                              self._maximumSpeed))
             else:
-                logging.warning("'pencil grip' pose is not supported for hand model %s", self._handModel)
+                logging.warning(
+                    "'pencil grip' pose is not supported for hand model %s",
+                    self._handModel)
 
     def keyGrip(self, handName, fractionMaxSpeed=1.0):
         """
@@ -266,10 +297,14 @@ class Motion:
         if self._vrep:
             logging.warning("'key grip' pose is not supported for vrep")
         else:
-            if self._handModel=="RH7D":
-                _nicomotion_internal.RH7D_hand.keyGrip(self._robot, handName, min(fractionMaxSpeed, self._maximumSpeed))
+            if self._handModel == "RH7D":
+                _nicomotion_internal.RH7D_hand.keyGrip(self._robot, handName,
+                                                       min(fractionMaxSpeed,
+                                                           self._maximumSpeed))
             else:
-                logging.warning("'key grip' pose is not supported for hand model %s", self._handModel)
+                logging.warning(
+                    "'key grip' pose is not supported for hand model %s",
+                    self._handModel)
 
     def pointAt(self, handName, fractionMaxSpeed=1.0, percentage=1.0):
         """
@@ -283,10 +318,14 @@ class Motion:
         if self._vrep:
             logging.warning("'Point at' pose is not supported for vrep")
         else:
-            if self._handModel=="RH7D":
-                _nicomotion_internal.RH7D_hand.pointAt(self._robot, handName, min(fractionMaxSpeed, self._maximumSpeed))
+            if self._handModel == "RH7D":
+                _nicomotion_internal.RH7D_hand.pointAt(self._robot, handName,
+                                                       min(fractionMaxSpeed,
+                                                           self._maximumSpeed))
             else:
-                logging.warning("'Point at' pose is not supported for hand model %s", self._handModel)
+                logging.warning(
+                    "'Point at' pose is not supported for hand model %s",
+                    self._handModel)
 
     def openHand(self, handName, fractionMaxSpeed=1.0, percentage=1.0):
         """
@@ -300,14 +339,23 @@ class Motion:
         :type percentage: float
         """
         if self._vrep:
-            _nicomotion_internal.hand.openHandVREP(self._robot, handName, min(fractionMaxSpeed, self._maximumSpeed), percentage)
+            _nicomotion_internal.hand.openHandVREP(self._robot, handName,
+                                                   min(fractionMaxSpeed,
+                                                       self._maximumSpeed),
+                                                   percentage)
         else:
-            if self._handModel=="RH4D":
-                _nicomotion_internal.hand.openHand(self._robot, handName, min(fractionMaxSpeed, self._maximumSpeed), percentage)
+            if self._handModel == "RH4D":
+                _nicomotion_internal.hand.openHand(self._robot, handName,
+                                                   min(fractionMaxSpeed,
+                                                       self._maximumSpeed),
+                                                   percentage)
             else:
                 if (percentage < 1.0):
-                    logging.warning("Open hand for RH7D doesn't support percentage parameter")
-                _nicomotion_internal.RH7D_hand.openHand(self._robot, handName, min(fractionMaxSpeed, self._maximumSpeed))
+                    logging.warning(
+                        "Open hand for RH7D doesn't support percentage parameter")
+                _nicomotion_internal.RH7D_hand.openHand(self._robot, handName,
+                                                        min(fractionMaxSpeed,
+                                                            self._maximumSpeed))
 
     def closeHand(self, handName, fractionMaxSpeed=1.0, percentage=1.0):
         """
@@ -321,16 +369,25 @@ class Motion:
         :type percentage: float
         """
         if self._vrep:
-            _nicomotion_internal.hand.closeHandVREP(self._robot, handName, min(fractionMaxSpeed, self._maximumSpeed), percentage)
+            _nicomotion_internal.hand.closeHandVREP(self._robot, handName,
+                                                    min(fractionMaxSpeed,
+                                                        self._maximumSpeed),
+                                                    percentage)
         else:
-            if self._handModel=="RH4D":
-                _nicomotion_internal.hand.closeHand(self._robot, handName, min(fractionMaxSpeed, self._maximumSpeed), percentage)
+            if self._handModel == "RH4D":
+                _nicomotion_internal.hand.closeHand(self._robot, handName,
+                                                    min(fractionMaxSpeed,
+                                                        self._maximumSpeed),
+                                                    percentage)
             else:
-                if percentage!=1.0:
-                    logging.warning("Close hand for RH7D doesn't support percentage parameter")
-                _nicomotion_internal.RH7D_hand.closeHand(self._robot, handName, min(fractionMaxSpeed, self._maximumSpeed))
+                if percentage != 1.0:
+                    logging.warning(
+                        "Close hand for RH7D doesn't support percentage parameter")
+                _nicomotion_internal.RH7D_hand.closeHand(self._robot, handName,
+                                                         min(fractionMaxSpeed,
+                                                             self._maximumSpeed))
 
-    def enableForceControlAll(self, goalForce = 500):
+    def enableForceControlAll(self, goalForce=500):
         """
         Enables force control for all joints which support this feature
 
@@ -408,12 +465,15 @@ class Motion:
         :type fractionMaxSpeed: float
         """
         if hasattr(self._robot, jointName):
-            if self._handModel == "RH7D" and _nicomotion_internal.RH7D_hand.isHandMotor(jointName):
-                _nicomotion_internal.RH7D_hand.setAngle(jointName, angle, fractionMaxSpeed)
+            if self._handModel == "RH7D" and _nicomotion_internal.RH7D_hand.isHandMotor(
+                    jointName):
+                _nicomotion_internal.RH7D_hand.setAngle(jointName, angle,
+                                                        fractionMaxSpeed)
             else:
                 motor = getattr(self._robot, jointName)
                 motor.compliant = False
-                motor.goal_speed = 1000.0 * min(fractionMaxSpeed, self._maximumSpeed)
+                motor.goal_speed = 1000.0 * min(fractionMaxSpeed,
+                                                self._maximumSpeed)
                 motor.goal_position = angle
         else:
             logging.warning('No joint "%s" found' % jointName)
@@ -432,11 +492,15 @@ class Motion:
         """
         if hasattr(self._robot, jointName):
             motor = getattr(self._robot, jointName)
-            if self._handModel == "RH7D" and _nicomotion_internal.RH7D_hand.isHandMotor(jointName):
-                _nicomotion_internal.RH7D_hand.setAngle(jointName, change + motor.present_position, fractionMaxSpeed)
+            if self._handModel == "RH7D" and _nicomotion_internal.RH7D_hand.isHandMotor(
+                    jointName):
+                _nicomotion_internal.RH7D_hand.setAngle(jointName,
+                                                        change + motor.present_position,
+                                                        fractionMaxSpeed)
             else:
                 motor.compliant = False
-                motor.goal_speed = 1000.0 * min(fractionMaxSpeed, self._maximumSpeed)
+                motor.goal_speed = 1000.0 * min(fractionMaxSpeed,
+                                                self._maximumSpeed)
                 motor.goal_position = change + motor.present_position
         else:
             logging.warning('No joint "%s" found' % jointName)
@@ -574,7 +638,8 @@ class Motion:
             if hasattr(motor, 'present_temperature'):
                 return motor.present_temperature
             else:
-                logging.warning('Joint %s has no present temperature' % jointName)
+                logging.warning(
+                    'Joint %s has no present temperature' % jointName)
                 return 0.0
         else:
             logging.warning('No joint "%s" found' % jointName)
@@ -590,16 +655,20 @@ class Motion:
         :rtype: float
         """
         if hasattr(self._robot, jointName):
-            if self._handModel == "RH4D" and _nicomotion_internal.hand.isHandMotor(jointName):
-                return _nicomotion_internal.hand.getPresentCurrent(jointName)
-            elif self._handModel == "RH7D" and _nicomotion_internal.RH7D_hand.isHandMotor(jointName):
+            if self._handModel == "RH4D" and _nicomotion_internal.hand.isHandMotor(
+                    jointName):
+                return _nicomotion_internal.hand.getPresentCurrent(self._robot,
+                                                                   jointName)
+            elif self._handModel == "RH7D" and _nicomotion_internal.RH7D_hand.isHandMotor(
+                    jointName):
                 return _nicomotion_internal.RH7D_hand.getPresentCurrent
             else:
                 motor = getattr(self._robot, jointName)
                 if hasattr(motor, 'present_current'):
                     return motor.present_current
                 else:
-                    logging.warning('Joint %s has no present current' % jointName)
+                    logging.warning(
+                        'Joint %s has no present current' % jointName)
                     return 0.0
         else:
             logging.warning('No joint "%s" found' % jointName)
@@ -613,7 +682,8 @@ class Motion:
         :param maximumSpeed: Maximum allowed speed (0 <= maximumSpeed <= 1.0)
         """
         if not 0.0 <= maximumSpeed <= 1.0:
-            logging.warning('New maximum speed out of bounds (%d)' % maximumSpeed)
+            logging.warning(
+                'New maximum speed out of bounds (%d)' % maximumSpeed)
             return
         self._maximumSpeed = maximumSpeed
 
@@ -637,7 +707,7 @@ class Motion:
             else:
                 logging.warning('Joint %s has no torque limit' % jointName)
 
-            if(stiffness < 0.001):
+            if (stiffness < 0.001):
                 self.disableTorque(jointName)
         else:
             logging.warning('No joint "%s" found' % jointName)
@@ -654,7 +724,7 @@ class Motion:
         """
         if hasattr(self._robot, jointName):
             motor = getattr(self._robot, jointName)
-            if motor.compliant: # no torque
+            if motor.compliant:  # no torque
                 return 0.0
             elif hasattr(motor, 'torque_limit'):
                 return motor.torque_limit / 100.0
@@ -751,17 +821,17 @@ class Motion:
             logging.warning('No joint "%s" found' % jointName)
 
     def getPose(self, objectName, relativeToObject=None):
-      """
-        Returns the current pose of the scene object with given name relative to the second given object
-
-        :param objectName: Name of the object
-        :type objectName: str
-        :param relativeToObject: Name of the object that the position should be relative to
-        :type relativeToObject: str
-        :return: Position of the requestet object in x,y,z coordinates relative to the second object
-        :rtype: list of three floats
         """
-      return self._robot.get_object_position(objectName,relativeToObject)
+          Returns the current pose of the scene object with given name relative to the second given object
+
+          :param objectName: Name of the object
+          :type objectName: str
+          :param relativeToObject: Name of the object that the position should be relative to
+          :type relativeToObject: str
+          :return: Position of the requestet object in x,y,z coordinates relative to the second object
+          :rtype: list of three floats
+          """
+        return self._robot.get_object_position(objectName, relativeToObject)
 
     def cleanup(self):
         """
@@ -780,5 +850,5 @@ class Motion:
         """
         Destructor
         """
-        if self._robot is  not None:
+        if self._robot is not None:
             self.cleanup()
