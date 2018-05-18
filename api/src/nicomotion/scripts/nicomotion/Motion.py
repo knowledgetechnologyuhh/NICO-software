@@ -1,8 +1,8 @@
-import logging
-import json
-import re
-import pprint
 import collections
+import json
+import logging
+import pprint
+import re
 
 import pypot.robot
 import pypot.vrep
@@ -257,7 +257,7 @@ class Motion:
             if self._handModel == "RH7D":
                 _nicomotion_internal.RH7D_hand.pinchToIndex(self._robot,
                                                             handName, min(
-                        fractionMaxSpeed, self._maximumSpeed))
+                                                                fractionMaxSpeed, self._maximumSpeed))
             else:
                 logging.warning(
                     "'pinch to index' pose is not supported for hand model %s",
@@ -465,10 +465,13 @@ class Motion:
         :type fractionMaxSpeed: float
         """
         if hasattr(self._robot, jointName):
-            if self._handModel == "RH7D" and _nicomotion_internal.RH7D_hand.isHandMotor(
-                    jointName):
-                _nicomotion_internal.RH7D_hand.setAngle(jointName, angle,
-                                                        fractionMaxSpeed)
+            if self._handModel == "RH7D" and _nicomotion_internal.RH7D_hand\
+                    .isHandMotor(jointName):
+                _nicomotion_internal.RH7D_hand.setAngle(self._robot, jointName,
+                                                        angle, min(
+                                                            fractionMaxSpeed,
+                                                            self._maximumSpeed
+                                                        ))
             else:
                 motor = getattr(self._robot, jointName)
                 motor.compliant = False
