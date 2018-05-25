@@ -1,3 +1,8 @@
+# todo 
+# Erik
+# get rid of the java style get and set functions and 
+# replace it with python style properties 
+
 import logging
 import cv2
 import os
@@ -79,7 +84,7 @@ class VideoDevice:
             return None
         return VideoDevice(id, framerate, width, height)
 
-    def __init__(self, id, framerate=20, width=640, height=480):
+    def __init__(self, id, framerate=20, width=640, height=480,compressed=True,pixel_format="MJPG"):
         """
         Initialises the VideoDevice. The device starts open and has to be
         opened.
@@ -89,6 +94,9 @@ class VideoDevice:
 
         :param id: device id
         :type id: int
+        :param uncompressed: using compressed or uncompressed stream of the camera
+        :type uncompressed: boolean
+        :param pixel_format: pixel format like 'UYVY' (econ-camera) or 'YUYV' (logitech) or 'MJPG' (both compressed)
         """
         self._deviceId = id
         self._valid = True
@@ -103,9 +111,50 @@ class VideoDevice:
         self._capture.set(cv2.CAP_PROP_FRAME_WIDTH, self._width)
         self._capture.set(cv2.CAP_PROP_FRAME_HEIGHT, self._height)
         self._capture.set(cv2.CAP_PROP_FPS, self._framerate)
+        
+        fourcc = cv2.VideoWriter_fourcc(*pixel_format)
+        #fourcc = cv2.VideoWriter_fourcc(*'UYVY')
+        self._capture.set(cv2.CAP_PROP_FOURCC,fourcc)
+        
         # Start thread
         self._thread = threading.Thread(target=self._eventloop)
         self._thread.start()
+        
+	
+	@classmethod	
+	def from_camera_type(cls,id, camera_type="c905",compressed=True):
+
+		"""
+		Initializes the video device with the best resulution quality avaiable for the cameras e-con See3CAM_CU135 (econ) 
+		or Logitech Webcam C905 (C905)
+		
+		To get the combination of framerate, x_res and y_res out of the camera do: v4l2-ctl -d /dev/video0 --list-formats-ext
+		"""
+        
+        #Opens Camera device with maximal resolution
+  
+		if camera_type=="c905" and compressed==True: 
+			return cls(id,framerate=10, width=1600, height=1200,compressed=compressed)
+		elif camera_type=="c905" and compressed==False: 
+			return cls(id,framerate=5, width=1600, height=1200,compressed=compressed)
+		elif camera_type=="econ" and compressed==True: 
+			return cls(id,framerate=20, width=4208, height=3120,compressed=compressed)		
+		elif camera_type=="econ" and compressed==False: 
+			return cls(id,framerate=20, width=4208, height=3120,compressed=compressed)	
+     
+	@classmethod	
+	def from_nico_vision_version(cls,id, nico_vision_version=1,compressed=True):
+		"""
+		Initializes the video device with the best resolution quality avaiable for the NICO vision version 1 (1) and NICO vision version 2 (2)
+		"""
+		if nico_vision_version==1 and compressed==True: 
+			return cls(id,framerate=10, width=1600, height=1200,compressed=compressed)
+		elif nico_vision_version==1 and compressed==False: 
+			return cls(id,framerate=5, width=1600, height=1200,compressed=compressed)
+		elif nico_vision_version==2 and compressed==True: 
+			return cls(id,framerate=20, width=4208, height=3120,compressed=compressed)		
+		elif nico_vision_version==2 and compressed==False: 
+			return cls(id,framerate=20, width=4208, height=3120,compressed=compressed)	
 
     def set_framerate(self, framerate):
         """
