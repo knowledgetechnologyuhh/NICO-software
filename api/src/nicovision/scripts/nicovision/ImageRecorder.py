@@ -24,7 +24,7 @@ The ImageRecorder class enables the capturing of images from a camera.
     """
 
     def __init__(self, device='', width=640, height=480, framerate=20,
-                 writer_threads=2):
+                 writer_threads=2,pixel_format="MJPG"):
         """
         Initialises the ImageRecorder with a given device.
 
@@ -85,6 +85,10 @@ The ImageRecorder class enables the capturing of images from a camera.
     def stop_recording(self):
         self._device.close()
         self._device.clean_callbacks()
+        
+    def custom_callback(self, iso_time,frame):
+		#Option to create a custom function, that modifies the frame before saving
+		return frame
 
     def _callback(self, rval, frame):
         """
@@ -94,5 +98,12 @@ The ImageRecorder class enables the capturing of images from a camera.
         :param frame: frame
         """
         if rval:
+            iso_time=datetime.datetime.today().isoformat()
+            
+            frame=self.custom_callback(datetime.datetime.today().isoformat(),frame)
+            
             self._image_writer.write_image(self._target.format(
-                datetime.datetime.today().isoformat()), frame)
+                iso_time), frame)
+            
+             
+

@@ -1,5 +1,7 @@
-# Simple Example using the Imagerecorder class
+# Advanced Example using the Imagerecorder class
 # takes the args resolution_x, resolution_y, framerate, number_of_cameras_to_use
+# modifies the custom_callback function
+# to crop the picture (right) and to crop and rotate the picture (left)
 # from the command line
 #
 # Authors:
@@ -13,7 +15,21 @@ from os.path import dirname, abspath
 from time import sleep
 import datetime
 import sys
+import cv2
 
+class leftcam_ImageRecorder(ImageRecorder.ImageRecorder):
+	
+	def custom_callback(self, iso_time,frame):
+		small = cv2.resize(frame, (0,0), fx=0.5, fy=0.5)
+		small=cv2.flip(small,-1)
+		return(small) 
+
+class rightcam_ImageRecorder(ImageRecorder.ImageRecorder):
+	
+	def custom_callback(self, iso_time,frame):
+		small = cv2.resize(frame, (0,0), fx=0.5, fy=0.5)
+		
+		return(small) 
 
 try:
     os.mkdir(dirname(abspath(__file__))+'/recorded_images')
@@ -42,16 +58,12 @@ else:
 	logging.getLogger().setLevel(logging.INFO)
 	print "devices" + str( ImageRecorder.get_devices() )
 	device = ImageRecorder.get_devices()[0]
-	ir = ImageRecorder.ImageRecorder(device, res_x, res_y,framerate=framerate,writer_threads=3,pixel_format="UYVY")
-	#ir = ImageRecorder.ImageRecorder(device, res_x, res_y,framerate=framerate,writer_threads=4,pixel_format="MJPG")
-	#ir = ImageRecorder.ImageRecorder(device, 1920, 1080,framerate=30,writer_threads=5)
-	#ir = ImageRecorder.ImageRecorder(device, 3840, 2160,framerate=30,writer_threads=5)
-	#ir = ImageRecorder.ImageRecorder(device, 1280, 720,framerate=20,writer_threads=5)
+	ir = leftcam_ImageRecorder(device, res_x, res_y,framerate=framerate,writer_threads=3,pixel_format="UYVY")
+
 	if amount_of_cams>=2:
 		device2 = ImageRecorder.get_devices()[1]
-		ir2 = ImageRecorder.ImageRecorder(device2, res_x, res_y,framerate=framerate,writer_threads=3,pixel_format="UYVY")
-	#ir2 = ImageRecorder.ImageRecorder(device2, 1920, 1080,framerate=30,writer_threads=5)
-	#ir2 = ImageRecorder.ImageRecorder(device2, 3840, 2160,framerate=30,writer_threads=5)
+		ir2 = rightcam_ImageRecorder(device2, res_x, res_y,framerate=framerate,writer_threads=3,pixel_format="UYVY")
+
 	sleep(2)
 	print("Start taking pictures")
 	print(datetime.datetime.today().isoformat())
