@@ -21,6 +21,11 @@ class ImageWriter:
     def _worker_thread(self):
         while True:
             cv2.imwrite(*self._queue.get())
+            
+            #fn,dummy=self._queue.get()
+            #import os
+            #open(fn, 'a').close()
+            
             self._queue.task_done()
 
     def _close(self):
