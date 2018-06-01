@@ -5,11 +5,28 @@
 
 # GNU GPL License
 
+
+
 from nicomotion import Motion
-from nicotouch.optoforcesensors import optoforce
+from nicomotion import Mover
 import pypot.dynamixel
 from time import sleep
 import datetime
+
+import logging
+from nicovision import ImageRecorder
+import os
+from os.path import dirname, abspath
+from time import sleep
+import datetime
+import sys
+import cv2
+
+from nicoaudio import pulse_audio_recorder
+
+fnl="left_cam_synced_data.csv"
+fnr="right_cam_synced_data.csv"
+robot=None
 
 import sqlite3
 import random
@@ -49,6 +66,9 @@ objects =["blue ball","blue_plush ball","red_plush ball","orange_plush ball","wh
 #yellow seal
 
 
+#action
+action="push"
+
 #definition for numbers per object
 number_of_samples_per_object=10
 
@@ -75,6 +95,55 @@ fMS = 0.01
 fMS_hand=1.0
 
 
+#Pandas structures for storing joint data
+import pandas as pd
+columns = ["r_arm_x","r_elbow_y","head_z","isotime"]
+dfl = pd.DataFrame(columns=columns)
+dfr = pd.DataFrame(columns=columns)
+
+
+def write_joint_data(robot,df,iso_time):
+	
+	#df = pd.DataFrame.append(data={"r_arm_x":[robot.getAngle("r_arm_x")],"r_elbow_y":[robot.getAngle("r_elbow_y")],"head_z":[robot.getAngle("head_z")],"isotime":[iso_time]})
+	dfn = pd.DataFrame(data={"r_arm_x":[robot.getAngle("r_arm_x")],"r_elbow_y":[robot.getAngle("r_elbow_y")],"head_z":[robot.getAngle("head_z")],"isotime":[iso_time]})
+	df = pd.concat([df, dfn], ignore_index=True)
+	
+	#df = pd.DataFrame(data={"r_arm_x":[robot.getAngle("r_arm_x")],"r_elbow_y":[robot.getAngle("r_elbow_y")],"head_z":[robot.getAngle("head_z")]})
+	return(df)
+
+
+
+class leftcam_ImageRecorder(ImageRecorder.ImageRecorder):
+	
+	def custom_callback(self, iso_time,frame):
+		
+		global dfl;
+		
+		#write joint data
+		
+		dfl=write_joint_data(robot,dfl,iso_time)
+		
+		#small = cv2.resize(frame, (0,0), fx=0.5, fy=0.5)
+		#small=cv2.flip(small,-1)
+		#return(small)
+		return(frame) 
+
+class rightcam_ImageRecorder(ImageRecorder.ImageRecorder):
+	
+	def custom_callback(self, iso_time,frame):
+		
+		global dfr;
+		
+		#write joint data
+		
+		dfr=write_joint_data(robot,dfr,iso_time)
+		
+		#small = cv2.resize(frame, (0,0), fx=0.5, fy=0.5)		
+		#return(small)
+		return(frame) 
+
+
+
 def get_sampled_numbers_for_object(object_name):
 
     sql="SELECT * FROM sample where object_name='" + object_name + " and action ='"+action+"';"
@@ -99,7 +168,7 @@ def print_progress():
         " - samples finished: " + str(get_sampled_numbers_for_object(o))
 
 
-    #Print out was is still needed
+#Print out was is still needed
 print "\n\nWe still need the following samples:"
 
 print_progress()
@@ -145,9 +214,51 @@ robot.enableForceControl("r_elbow_y", 20)
 # Instructions for the experimenter. Brig the robot in Initial position
 print "\n OK. The robot is positioned. We will start the experiment now.\n\n"
 
+pulse_device=pulse_audio_recorder.get_pulse_device()
+	
+res_x=1920
+res_y=1080
+framerate=30
+amount_of_cams=2
+logging.getLogger().setLevel(logging.INFO)
+	
+		
+try:
+	os.mkdir(dirname(abspath(__file__))+'/'+action)
+except OSError:
+	pass
 
 
 while ( get_needed_overall_numbers() > 0 ):
+	
+	#Select an object
+	o=random.choice(objects)
+	while (get_needed_numbers_for_object(o)<1):
+		o = random.choice(objects)
+
+	print "Randomly chosen object : " + o + "\n"
+
+	print "\n\n Please put the " + o + " on the robot fingers. Then press RETURN."
+	raw_input()
+
+	#!!!!Write Sample data in database
+	sql_command = format_str_sample.format(object_name=o, action=action, timecode= datetime.datetime.now().isoformat())
+	#print "\n " +sql_command
+	cursor.execute(sql_command)
+	sample_number=cursor.lastrowid
+	
+	str_sample_number=str(sample_number)
+
+	try:
+		os.mkdir(dirname(abspath(__file__))+'/'+action+'/camera1')
+	except OSError:
+		pass
+
+	try:
+		os.mkdir(dirname(abspath(__file__))+'/'+action+'/camera1')
+	except OSError:
+		pass
+
 
         #step over 8 movement steps
         for n in range(8):
