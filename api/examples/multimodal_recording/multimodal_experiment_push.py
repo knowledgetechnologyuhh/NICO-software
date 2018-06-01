@@ -80,7 +80,7 @@ MAX_CUR_THUMB=100
 # Experiment Data will be stored in two table database
 # with samples for every sample of a grasped onject and subsample for every motor step (like for 10 degrees)
 
-connection = sqlite3.connect("./experiment.db")
+connection = sqlite3.connect("./multimodal_experiment.db")
 cursor = connection.cursor()
 # status: 0-succesful , 1- overload, 2 - former_overload
 
@@ -146,7 +146,7 @@ class rightcam_ImageRecorder(ImageRecorder.ImageRecorder):
 
 def get_sampled_numbers_for_object(object_name):
 
-    sql="SELECT * FROM sample where object_name='" + object_name + " and action ='"+action+"';"
+    sql="SELECT * FROM sample where object_name='" + object_name + "' and action='"+action+"';"
     cursor.execute(sql)
     result = cursor.fetchall()
     return len(result)
@@ -221,6 +221,19 @@ res_y=1080
 framerate=30
 amount_of_cams=2
 logging.getLogger().setLevel(logging.INFO)
+
+#Vision Recording
+device = ImageRecorder.get_devices()[0]
+ir = leftcam_ImageRecorder(device, res_x, res_y,framerate=framerate,writer_threads=3,pixel_format="UYVY")
+
+if amount_of_cams>=2:
+	device2 = ImageRecorder.get_devices()[1]
+	ir2 = rightcam_ImageRecorder(device2, res_x, res_y,framerate=framerate,writer_threads=3,pixel_format="UYVY")
+
+sleep(2)
+	
+#Sound Recording
+ar = pulse_audio_recorder.AudioRecorder(audio_channels=2, samplerate=48000, datadir="./.", audio_device=pulse_device)
 	
 		
 try:
@@ -241,6 +254,9 @@ while ( get_needed_overall_numbers() > 0 ):
 	print "\n\n Please put the " + o + " on the robot fingers. Then press RETURN."
 	raw_input()
 
+	dfl = pd.DataFrame(columns=columns)
+	dfr = pd.DataFrame(columns=columns)
+	
 	#!!!!Write Sample data in database
 	sql_command = format_str_sample.format(object_name=o, action=action, timecode= datetime.datetime.now().isoformat())
 	#print "\n " +sql_command
@@ -248,36 +264,67 @@ while ( get_needed_overall_numbers() > 0 ):
 	sample_number=cursor.lastrowid
 	
 	str_sample_number=str(sample_number)
-
+	
+	cur_dir=dirname(abspath(__file__))+'/'+action+'/'+str_sample_number
+	#print "dir: " + cur_dir
+	#raw_input()
+	
 	try:
-		os.mkdir(dirname(abspath(__file__))+'/'+action+'/camera1')
+		os.mkdir(cur_dir)
 	except OSError:
 		pass
 
 	try:
-		os.mkdir(dirname(abspath(__file__))+'/'+action+'/camera1')
+		os.mkdir(cur_dir+'/camera1')
 	except OSError:
 		pass
 
+	try:
+		os.mkdir(cur_dir+'/camera2')
+	except OSError:
+		pass
 
-        #step over 8 movement steps
-        for n in range(8):
-
-            mov.move_file_position(mover_path + "lift_arm_experiment_pos_"+n+".csv",
-                                   subsetfname=mover_path + "subset_right_arm.csv",
-                                   move_speed=0.05)
-
-            sleep(1)
-
+	label=datetime.datetime.today().isoformat()
+	#ar.start_recording(label,fname="./"+action+'/'+str_sample_number+label+".wav",dir_name="./audio/")
+	ar.start_recording(label,fname=cur_dir+'/'+label+".wav",dir_name="")
+	
+	ir.start_recording(cur_dir+'/camera1/picture-{}.png')
+	if amount_of_cams>=2:
+		ir2.start_recording(cur_dir+'/camera2/picture-{}.png')
 
 
 
-        connection.commit()
-    connection.close()
-    print "\n\n Great! I got all samples together! Finishing experiment.\n"
-    print_progress()
+    #step over 8 movement steps
+    #for n in range(8):
 
-    robot=none
+    #    mov.move_file_position(mover_path + "lift_arm_experiment_pos_"+n+".csv",
+    #                               subsetfname=mover_path + "subset_right_arm.csv",
+    #                               move_speed=0.05)
+
+	sleep(5)
+
+	#Stop and finish camera recordings
+	ir.stop_recording()
+	if amount_of_cams>=2:
+		ir2.stop_recording()
+		
+	#Stop and write audio recordings
+	ar.stop_recording(0)
+
+	#Write joint data to file
+	for df_set in ((cur_dir+"/"+fnl,dfl),(cur_dir+"/"+fnr,dfr)):
+		fnp,dfp=df_set
+		with open(fnp, 'a') as f:
+			dfp.to_csv(f, header=True)
+
+
+	connection.commit()
+
+connection.close()
+print "\n\n Great! I got all samples together! Finishing experiment.\n"
+print_progress()
+
+robot=none
 
 #set the robot to be compliant
 
