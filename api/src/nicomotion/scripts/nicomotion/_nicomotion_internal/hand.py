@@ -90,17 +90,17 @@ def getPresentCurrent(robot, jointname):
         elif jointname.startswith('l_'):
             board = getattr(robot, "l_virtualhand_x")
 
-        if board != None:
-            if jointname.endswith("wrist_z"):
-                return board.present_current_port_1
-            elif jointname.endswith("wrist_x"):
-                return board.present_current_port_2
-            elif jointname.endswith("thumb_x"):
-                return board.present_current_port_3
-            elif jointname.endswith("indexfingers_x"):
-                return board.present_current_port_4
+        #if board != None:
+        #    if jointname.endswith("wrist_z"):
+        #        return board.present_current_port_1
+        #    elif jointname.endswith("wrist_x"):
+        #        return board.present_current_port_2
+        #    elif jointname.endswith("thumb_x"):
+        #        return board.present_current_port_3
+        #    elif jointname.endswith("indexfingers_x"):
+        #        return board.present_current_port_4
 
-        #return getattr(board, CURRENT_PORTS[jointname[2:]])
+        return getattr(board, CURRENT_PORTS[jointname[2:]])
 
     logging.warning("{} is not a handjoint".format(jointname))
     return 0
