@@ -35,35 +35,14 @@ from subprocess import call
 
 #experiment definitions (Objects and number of graspings)
 #definition of objects
-objects =["blue ball","blue_plush ball","red_plush ball","orange_plush ball","white cube"]
-
-#big_yellow die
-#medium_yellow die
-#small_yellow die
-#yellow sponge
-#green sponge
-#blue tissues
-#pink tissues
-#yellow apple
-#light_green apple
-#heavy_green apple
-#realistic_green apple
-#red car
-#blue car
-#yellow car
-#green car
-#light tomato
-#heavy tomato
-#small_red ball
-#large_red ball
-#small banana
-#plush banana
-#heavy banana
-#obergine banana
-#yellow duck
-#purple duck
-#orange fish
-#yellow seal
+objects =["blue ball","blue_plush ball","red_plush ball", "orange_plush ball", \
+          "white cube", "big_yellow die", "medium_yellow die","small_yellow die", \
+          "yellow sponge", "green sponge","blue tissues","pink tissues", \
+          "yellow apple", "light_green apple","heavy_green apple", "realistic_green apple", \
+          "red car","blue car","yellow car", "green car", \
+          "light tomato", "heavy tomato","small_red ball", "large_red ball", \
+          "small banana", "plush banana", "heavy banana","obergine banana", \
+          "yellow duck","purple duck","orange fish","yellow seal"]
 
 
 #action
@@ -97,7 +76,9 @@ fMS_hand=1.0
 
 #Pandas structures for storing joint data
 import pandas as pd
-columns = ["r_arm_x","r_elbow_y","head_z","isotime"]
+columns = ["r_shoulder_z_pos","r_shoulder_y_pos","r_arm_x_pos","r_elbow_y_pos","r_wrist_z_pos","r_wrist_x_pos","r_indexfingers_x_pos","r_thumb_x_pos","head_z_pos", "head_y_pos", \
+           "r_shoulder_z_cur","r_shoulder_y_cur","r_arm_x_cur","r_elbow_y_cur","r_wrist_z_cur","r_wrist_x_cur","r_indexfingers_x_cur","r_thumb_x_cur","head_z_cur", "head_y_cur", \
+           "isotime"]
 dfl = pd.DataFrame(columns=columns)
 dfr = pd.DataFrame(columns=columns)
 
@@ -105,7 +86,27 @@ dfr = pd.DataFrame(columns=columns)
 def write_joint_data(robot,df,iso_time):
 	
 	#df = pd.DataFrame.append(data={"r_arm_x":[robot.getAngle("r_arm_x")],"r_elbow_y":[robot.getAngle("r_elbow_y")],"head_z":[robot.getAngle("head_z")],"isotime":[iso_time]})
-	dfn = pd.DataFrame(data={"r_arm_x":[robot.getAngle("r_arm_x")],"r_elbow_y":[robot.getAngle("r_elbow_y")],"head_z":[robot.getAngle("head_z")],"isotime":[iso_time]})
+	dfn = pd.DataFrame(data={"r_shoulder_z_pos":[robot.getAngle("r_shoulder_z")],  \
+	                         "r_shoulder_y_pos":[robot.getAngle("r_shoulder_y")],  \
+	                         "r_arm_x_pos":[robot.getAngle("r_arm_x")],  \
+	                         "r_elbow_y_pos":[robot.getAngle("r_elbow_y")],  \
+	                         "r_wrist_z_pos":[robot.getAngle("r_wrist_z")],  \
+	                         "r_wrist_x_pos":[robot.getAngle("r_wrist_x")],  \
+	                         "r_indexfingers_x_pos":[robot.getAngle("r_indexfingers_x")],  \
+	                         "r_thumb_x_pos":[robot.getAngle("r_thumb_x")],  \
+	                         "head_z_pos":[robot.getAngle("head_z")],  \
+	                         "head_y_pos":[robot.getAngle("head_z")],  \
+	                         "r_shoulder_z_cur":[robot.getCurrent("r_shoulder_z")],  \
+	                         "r_shoulder_y_cur":[robot.getCurrent("r_shoulder_y")],  \
+	                         "r_arm_x_cur":[robot.getCurrent("r_arm_x")],  \
+	                         "r_elbow_y_cur":[robot.getCurrent("r_elbow_y")],  \
+	                         "r_wrist_z_cur":[robot.getCurrent("r_wrist_z")],  \
+	                         "r_wrist_x_cur":[robot.getCurrent("r_wrist_x")],  \
+	                         "r_indexfingers_x_cur":[robot.getCurrent("r_indexfingers_x")],  \
+	                         "r_thumb_x_cur":[robot.getCurrent("r_thumb_x")],  \
+	                         "head_z_cur":[robot.getCurrent("head_z")],  \
+	                         "head_y_cur":[robot.getCurrent("head_z")],  \
+                             "isotime":[iso_time]})
 	df = pd.concat([df, dfn], ignore_index=True)
 	
 	#df = pd.DataFrame(data={"r_arm_x":[robot.getAngle("r_arm_x")],"r_elbow_y":[robot.getAngle("r_elbow_y")],"head_z":[robot.getAngle("head_z")]})
@@ -186,7 +187,7 @@ raw_input()
 
 #Put the left arm in defined position
 robot = Motion.Motion("../../../json/nico_humanoid_legged_with_hands_mod.json",vrep=False)
-mover_path = "../../../../moves_and_positions/"
+mover_path = "../../../moves_and_positions/"
 mov = Mover.Mover(robot, stiff_off=False)
 
 
@@ -291,17 +292,12 @@ while ( get_needed_overall_numbers() > 0 ):
 	ir.start_recording(cur_dir+'/camera1/picture-{}.png')
 	if amount_of_cams>=2:
 		ir2.start_recording(cur_dir+'/camera2/picture-{}.png')
-
-
-
-    #step over 8 movement steps
-    #for n in range(8):
-
-    #    mov.move_file_position(mover_path + "lift_arm_experiment_pos_"+n+".csv",
-    #                               subsetfname=mover_path + "subset_right_arm.csv",
-    #                               move_speed=0.05)
-
-	sleep(5)
+    
+	for n in range(4):
+		mov.move_file_position(mover_path + "pos_push_"+str(n+1)+".csv", subsetfname=mover_path + "subset_right_arm.csv", move_speed=0.05)
+		sleep(1)
+	mov.move_file_position(mover_path + "pos_push_"+str(1)+".csv", subsetfname=mover_path + "subset_right_arm.csv", move_speed=0.05)
+	sleep(3)
 
 	#Stop and finish camera recordings
 	ir.stop_recording()
