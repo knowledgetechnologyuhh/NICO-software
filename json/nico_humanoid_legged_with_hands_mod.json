@@ -1,7 +1,7 @@
 {
   "controllers": {
     "all_controller": {
-      "sync_read": false,
+      "sync_read": true,
       "attached_motors": [
         "head",
         "arms",
@@ -228,7 +228,7 @@
     ,
     "r_indexfingers_x": {
       "offset": 0.0,
-      "type": "SR-SEED56",
+      "type": "SR-RH4D",
       "id": 27,
       "angle_limit": [
         -160,
@@ -238,7 +238,7 @@
     },
      "r_thumb_x": {
       "offset": 0.0,
-      "type": "SR-SEED56",
+      "type": "SR-RH4D",
       "id": 29,
       "angle_limit": [
         -160,
