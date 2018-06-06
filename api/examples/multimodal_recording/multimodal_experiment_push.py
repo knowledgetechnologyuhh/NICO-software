@@ -12,6 +12,7 @@ from nicomotion import Mover
 import pypot.dynamixel
 from time import sleep
 import datetime
+from nicotouch.optoforcesensors import optoforce
 
 import logging
 from nicovision import ImageRecorder
@@ -78,7 +79,7 @@ fMS_hand=1.0
 import pandas as pd
 columns = ["r_shoulder_z_pos","r_shoulder_y_pos","r_arm_x_pos","r_elbow_y_pos","r_wrist_z_pos","r_wrist_x_pos","r_indexfingers_x_pos","r_thumb_x_pos","head_z_pos", "head_y_pos", \
            "r_shoulder_z_cur","r_shoulder_y_cur","r_arm_x_cur","r_elbow_y_cur","r_wrist_z_cur","r_wrist_x_cur","r_indexfingers_x_cur","r_thumb_x_cur","head_z_cur", "head_y_cur", \
-           "isotime"]
+           "isotime","touch_isotime","touch_count","touch_x","touch_y","touch_z"]
 dfl = pd.DataFrame(columns=columns)
 dfr = pd.DataFrame(columns=columns)
 
@@ -86,6 +87,7 @@ dfr = pd.DataFrame(columns=columns)
 def write_joint_data(robot,df,iso_time):
 	
 	#df = pd.DataFrame.append(data={"r_arm_x":[robot.getAngle("r_arm_x")],"r_elbow_y":[robot.getAngle("r_elbow_y")],"head_z":[robot.getAngle("head_z")],"isotime":[iso_time]})
+	(stime, counter, status, x, y, z, checksum)=optoforce_sensor.get_sensor_all()
 	dfn = pd.DataFrame(data={"r_shoulder_z_pos":[robot.getAngle("r_shoulder_z")],  \
 	                         "r_shoulder_y_pos":[robot.getAngle("r_shoulder_y")],  \
 	                         "r_arm_x_pos":[robot.getAngle("r_arm_x")],  \
@@ -106,7 +108,12 @@ def write_joint_data(robot,df,iso_time):
 	                         "r_thumb_x_cur":[robot.getCurrent("r_thumb_x")],  \
 	                         "head_z_cur":[robot.getCurrent("head_z")],  \
 	                         "head_y_cur":[robot.getCurrent("head_z")],  \
-                             "isotime":[iso_time]})
+                             "isotime":[iso_time], \
+                             "touch_isotime":[stime], \
+                             "touch_count":[counter], \
+                             "touch_x":[x], \
+                             "touch_y":[y], \
+                             "touch_z":[z]})
 	df = pd.concat([df, dfn], ignore_index=True)
 	
 	#df = pd.DataFrame(data={"r_arm_x":[robot.getAngle("r_arm_x")],"r_elbow_y":[robot.getAngle("r_elbow_y")],"head_z":[robot.getAngle("head_z")]})
@@ -184,6 +191,9 @@ else:
 # Instructions for the experimenter. Brig the robot in Initial position
 print "\n Please put the robot in position. Right arm on the table. Left arm hanging down. Give RETURN after finished.\n"
 raw_input()
+
+#Optoforce_sensor
+optoforce_sensor = optoforce(ser_number=None, cache_frequency=30)
 
 #Put the left arm in defined position
 robot = Motion.Motion("../../../json/nico_humanoid_legged_with_hands_mod.json",vrep=False)
@@ -293,11 +303,16 @@ while ( get_needed_overall_numbers() > 0 ):
 	if amount_of_cams>=2:
 		ir2.start_recording(cur_dir+'/camera2/picture-{}.png')
     
-	for n in range(4):
-		mov.move_file_position(mover_path + "pos_push_"+str(n+1)+".csv", subsetfname=mover_path + "subset_right_arm.csv", move_speed=0.05)
-		sleep(1)
-	mov.move_file_position(mover_path + "pos_push_"+str(1)+".csv", subsetfname=mover_path + "subset_right_arm.csv", move_speed=0.05)
-	sleep(3)
+	#for n in range(4):
+	#	mov.move_file_position(mover_path + "pos_push_"+str(n+1)+".csv", subsetfname=mover_path + "subset_right_arm.csv", move_speed=0.05)
+	#	sleep(1)
+	#mov.move_file_position(mover_path + "pos_push_"+str(1)+".csv", subsetfname=mover_path + "subset_right_arm.csv", move_speed=0.05, )
+	#sleep(10)
+	robot.openHand("RHand", fractionMaxSpeed=0.4)
+	sleep(5)
+	robot.closeHand("RHand", fractionMaxSpeed=0.4)
+	sleep(5)
+	robot.openHand("RHand", fractionMaxSpeed=0.4)
 
 	#Stop and finish camera recordings
 	ir.stop_recording()
