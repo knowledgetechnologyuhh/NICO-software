@@ -6,6 +6,7 @@ import time
 import numpy as np
 import sys
 import datetime
+import threading
 
 """
 Created on Thu Jun 23 15:32:38 2016
@@ -31,7 +32,8 @@ class optoforce:
         ports = serial.tools.list_ports.comports()
         for p in ports:
             if "OptoForce" in p.description:
-                logging.info("Connecting to OptoForce sensor on port {}".format(p.device))
+                logging.info(
+                    "Connecting to OptoForce sensor on port {}".format(p.device))
                 try:
                     ser = serial.Serial(port=p.device,
                                         baudrate=1000000,
@@ -50,9 +52,11 @@ class optoforce:
 
                                 if isinstance(data, optoforce_driver.OptoforceSerialNumber):
                                     if ser_number is None or ser_number == str(data):
-                                        logging.info("Successfully connected to OptoForce sensor {} on port {}".format(str(data), p.device))
+                                        logging.info("Successfully connected to OptoForce sensor {} on port {}".format(
+                                            str(data), p.device))
                                         return ser
-                                    logging.info("OptoForce sensor on port {} skipped - serial number {} not matching {}".format(p.device, ser_number, str(data)))
+                                    logging.info("OptoForce sensor on port {} skipped - serial number {} not matching {}".format(
+                                        p.device, ser_number, str(data)))
                                     ser.close()
                                     del driver
 
@@ -60,14 +64,15 @@ class optoforce:
                                 pass
 
                 except serial.SerialException as e:
-                    logging.warning("Connection to OptoForce sensor port {} failed due to {}".format(p.device, e))
+                    logging.warning(
+                        "Connection to OptoForce sensor port {} failed due to {}".format(p.device, e))
 
         if ser_number is None:
             logging.fatal("No OptoForce sensor found")
         else:
-            logging.fatal("No matching OptoForce sensor found for serial number {}".format(ser_number))
+            logging.fatal(
+                "No matching OptoForce sensor found for serial number {}".format(ser_number))
         return None
-
 
     def get_sensor_values_m(self):
         sensorValues = self.ser.read(16)
@@ -83,18 +88,22 @@ class optoforce:
         if zAxis > 0x7FFF:
             zAxis -= 0x10000
             # zAxis += 255
-        return(xAxis,yAxis,zAxis)
+        return(xAxis, yAxis, zAxis)
         #print ('X Axis: ', xAxis, ' Y Axis: ', yAxis,' Z Axis: ',zAxis )
-            # i += 1
+        # i += 1
 
     def get_sensor_values_hex(self):
+        if self.cache_frequency != None and self.cached_sensor_array != None:
+            seq = self.cached_sensor_array
+        else:
+            seq = self.get_sensor_array()
         seq = self.get_sensor_array()
-        x=seq[8]+seq[9]
+        x = seq[8]+seq[9]
         y = seq[10] + seq[11]
         z = seq[12] + seq[13]
-        return (x,y,z)
+        return (x, y, z)
 
-    def get_sensor_values_from_array(self,seq):
+    def get_sensor_values_from_array(self, seq):
         # maxint signed
         maxint_s = 0x7FFF
         # maxint_unsigned_plus_one
@@ -108,35 +117,42 @@ class optoforce:
         z = int(seq[12] + seq[13], 16)
         if z > maxint_s:
             z = -maxint_u_po + z
-        return(x,y,z)
+        return(x, y, z)
 
     def get_sensor_values_raw(self):
 
-        seq = self.get_sensor_array()
-        (x,y,z)=self.get_sensor_values_from_array(seq)
-        return (x,y,z)
+        if self.cache_frequency != None and self.cached_sensor_array != None:
+            seq = self.cached_sensor_array
+        else:
+            seq = self.get_sensor_array()
+
+        (x, y, z) = self.get_sensor_values_from_array(seq)
+        return (x, y, z)
 
     def get_sensor_values(self):
-        x,y,z = self.get_sensor_values_raw()
-        quot=self.dev_counts*self.dev_nom_capacity*1.0
-        xn=x/quot
-        yn=y/quot
-        zn=z/quot
-        return (xn,yn,zn)
+        x, y, z = self.get_sensor_values_raw()
+        quot = self.dev_counts*self.dev_nom_capacity*1.0
+        xn = x/quot
+        yn = y/quot
+        zn = z/quot
+        return (xn, yn, zn)
 
     def get_sensor_all(self):
-        #return (time of sensor reading,reading counter, x,y,z, checksum)
-        seq = self.get_sensor_array()
-        (x,y,z)=self.get_sensor_values_from_array(seq)
+        # return (time of sensor reading,reading counter, x,y,z, checksum)
+        if self.cache_frequency != None and self.cached_sensor_array != None:
+            seq = self.cached_sensor_array
+        else:
+            seq = self.get_sensor_array()
+        (x, y, z) = self.get_sensor_values_from_array(seq)
         count = int(seq[4] + seq[5], 16)
-        #leave status in HEX
+        # leave status in HEX
         status = seq[6] + seq[7]
         checksum = int(seq[14] + seq[15], 16)
-        return (self.last_reading_time,count,status,x,y,z,checksum)
+        return (self.last_reading_time, count, status, x, y, z, checksum)
 
     def get_sensor_array(self):
 
-        #delete the comm buffers
+        # delete the comm buffers
         self.ser.flushInput()
         self.ser.flushOutput()
         seq = []
@@ -157,38 +173,62 @@ class optoforce:
         return joined_seq
         '''
         one_sequence = self.ser.read(16)
-        self.last_reading_time=datetime.datetime.now().isoformat()
+        self.last_reading_time = datetime.datetime.now().isoformat()
         for c in one_sequence:
             seq.append(c.encode('hex'))  # convert from ANSII
 
         return seq
 
     def get_sensor_string(self):
-        seq = self.get_sensor_array()
-        joined_seq = ''.join(str(v) for v in seq)  # Make a string from array
-        return joined_seq
+            seq = self.get_sensor_array()
+            joined_seq = ''.join(str(v)
+                                 for v in seq)  # Make a string from array
+            return joined_seq
 
-    def __init__(self,ser_number=None):
-        logging.getLogger().setLevel(logging.INFO)
+    def _worker_thread(self):
+            while True:
+                # we need better accurate frequency
+                # so substract the running time from the delay
+                time_before = time.time()
+                self.cached_sensor_array = self.get_sensor_array()
+                run_time = time.time() - time_before
+                time.sleep((1.0/self.cache_frequency)-run_time)
 
-        self.ser = self._scan_ports(ser_number)
+    # Can be run cached in memory or non cached
+    # non cahced will get live data from the USB-Serial
+    # and will take some time
+    # Start the cached mode by giving a cache frequency
+    def __init__(self, ser_number=None, cache_frequency=None):
+            logging.getLogger().setLevel(logging.INFO)
 
-        #Capacitys and Counts (measured at optoforce) for our sensors
-        self.dev_nom_capacity=10
-        self.dev_counts=None
-        self.last_reading_time=None
+            self.ser = self._scan_ports(ser_number)
 
-        if (ser_number=="DSE0A125"):
-            self.dev_counts=4014
+            # Capacitys and Counts (measured at optoforce) for our sensors
+            self.dev_nom_capacity = 10
+            self.dev_counts = None
+            self.last_reading_time = None
 
-        if (ser_number=="DSE0A093"):
-            self.dev_counts=4263
+            if (ser_number == "DSE0A125"):
+                self.dev_counts = 4014
 
-        #if self.ser.isOpen():
+            if (ser_number == "DSE0A093"):
+                self.dev_counts = 4263
+
+            self.cache_frequency = cache_frequency
+
+            self.cached_sensor_array = None
+
+            # Run in cached mode, Start the worker thread to get the data
+            if self.cache_frequency != None:
+                worker = threading.Thread(target=self._worker_thread)
+                worker.daemon = True
+                worker.start()
+            
+            time.sleep(0.2)
+
+        # if self.ser.isOpen():
         #    print 'Sensor detected and port opened successfully'
         #writtenMessage = bytearray([170, 0, 50, 3, 10, 4, 255, 1, 236])
-
-
 
 
 if __name__ == "__main__":
@@ -204,47 +244,52 @@ if __name__ == "__main__":
     # python Mover.py pp --file mov_take_something_with_left_arm.csv - -subset subset_left_arm_and_head.csv --speed 0.1
     # Record move file (trajectory)
 
-
     parser = argparse.ArgumentParser()
     parser.add_argument("command",
                         help="One of the commands raw (get raw sensor values), newton (get sensor values in Newton), string ( get the whole message as hex-string-representation ) "
-                             +" all (get all data  (time,sample counter, status,x,y,z,checksum)), csv (all data in csv format to store this right away)")
+                             + " all (get all data  (time,sample counter, status,x,y,z,checksum)), csv (all data in csv format to store this right away)")
     # fj freeze joints as they are by torquing it. You subset to freeze only a subset of the joints.
     parser.add_argument('--serial', nargs='?', default=None,
                         help="serial number of the sensors device")
     parser.add_argument('--cont', action="store_true", default=False,
                         help="do not stop after one reading")
-    #parser.add_argument('--stiffoff', action="store_true", default=False,
+    # parser.add_argument('--stiffoff', action="store_true", default=False,
     #                    help="sets the stiffness to off after movement")
     args = parser.parse_args()
     # print args
 
     command = args.command
 
-    optsens = optoforce(args.serial)
+    #optsens = optoforce(args.serial,cache_frequency=30)
+    optsens = optoforce(ser_number=None, cache_frequency=30)
 
-    oneTime=True
+    oneTime = True
     while args.cont or oneTime:
 
-        oneTime=False
+        oneTime = False
 
-        #optsens.get_sensor_values_mh()
+        # optsens.get_sensor_values_mh()
 
         if command == "raw":
             (x, y, z) = optsens.get_sensor_values_raw()
             print("x ,y, z : " + str(x) + "," + str(y) + "," + str(z))
 
-        elif command=="newton":
-            (x,y,z) = optsens.get_sensor_values()
-            print( "x ,y, z (in Newton) : " + str(x) + "," + str(y) + "," + str(z))
+        elif command == "newton":
+            (x, y, z) = optsens.get_sensor_values()
+            print("x ,y, z (in Newton) : " +
+                  str(x) + "," + str(y) + "," + str(z))
 
-        elif command=="string":
-            print( optsens.get_sensor_string())
+        elif command == "string":
+            print(optsens.get_sensor_string())
 
-        elif command=="all":
-            (time,counter, status,x, y, z,checksum) = optsens.get_sensor_all()
-            print("time, counter, status,x, y, z,checksum "  + str((time,counter, status,x, y, z,checksum)))
+        elif command == "all":
+            (stime, counter, status, x, y, z, checksum) = optsens.get_sensor_all()
+            print("time, counter, status,x, y, z,checksum " +
+                  str((stime, counter, status, x, y, z, checksum)))
 
-        elif command=="csv":
-            (time,counter, status,x, y, z,checksum) = optsens.get_sensor_all()
-            print(str(time)+","+str(counter) +"," + str(status) + "," +str(x) + "," + str(y) + "," + str(z)  + "," + str(checksum))
+        elif command == "csv":
+            (stime, counter, status, x, y, z, checksum) = optsens.get_sensor_all()
+            print(str(stime)+","+str(counter) + "," + str(status) + "," +
+                  str(x) + "," + str(y) + "," + str(z) + "," + str(checksum))
+        
+        time.sleep(0.03)
