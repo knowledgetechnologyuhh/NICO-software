@@ -37,7 +37,6 @@ class Motion:
         self._maximumSpeed = 1.0
         self._vrep = vrep
         self._vrepIO = None
-        self._handModel = "RH4D"
 
         with open(motorConfig, 'r') as config_file:
             config = json.load(config_file)
@@ -84,6 +83,8 @@ class Motion:
         if hasattr(self._robot, "r_middlefingers_x") or hasattr(self._robot,
                                                                 "l_middlefingers_x"):
             self._handModel = "RH7D"
+        else:
+            self._handModel = "RH4D"
         # remember initial situation as a safe state
         self.safeState = dict()
         for motor in self._robot.motors:
@@ -664,7 +665,7 @@ class Motion:
                                                                    jointName)
             elif self._handModel == "RH7D" and _nicomotion_internal.RH7D_hand.isHandMotor(
                     jointName):
-                return _nicomotion_internal.RH7D_hand.getPresentCurrent
+                return _nicomotion_internal.RH7D_hand.getPresentCurrent(self._robot, jointname)
             else:
                 motor = getattr(self._robot, jointName)
                 if hasattr(motor, 'present_current'):
