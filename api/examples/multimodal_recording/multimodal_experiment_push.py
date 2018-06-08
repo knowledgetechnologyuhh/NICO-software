@@ -6,7 +6,6 @@
 # GNU GPL License
 
 
-
 from nicomotion import Motion
 from nicomotion import Mover
 import pypot.dynamixel
@@ -48,6 +47,9 @@ objects =["blue ball","blue_plush ball","red_plush ball", "orange_plush ball", \
 
 #action
 action="push"
+
+#data_directory
+data_directory="/data2/20180608_multimodal_recording_pilot_data"
 
 #definition for numbers per object
 number_of_samples_per_object=10
@@ -196,10 +198,11 @@ raw_input()
 optoforce_sensor = optoforce(ser_number=None, cache_frequency=30)
 
 #Put the left arm in defined position
-robot = Motion.Motion("../../../json/nico_humanoid_legged_with_hands_mod.json",vrep=False)
+robot = Motion.Motion("../../../json/nico_humanoid_legged_minimal_for_multimodal_recordings.json",vrep=False)
 mover_path = "../../../moves_and_positions/"
 mov = Mover.Mover(robot, stiff_off=False)
 
+sleep(2)
 
 #set the robot to be compliant
 robot.disableTorqueAll()
@@ -248,7 +251,7 @@ ar = pulse_audio_recorder.AudioRecorder(audio_channels=2, samplerate=48000, data
 	
 		
 try:
-	os.mkdir(dirname(abspath(__file__))+'/'+action)
+	os.mkdir(data_directory+'/'+action)
 except OSError:
 	pass
 
@@ -276,7 +279,7 @@ while ( get_needed_overall_numbers() > 0 ):
 	
 	str_sample_number=str(sample_number)
 	
-	cur_dir=dirname(abspath(__file__))+'/'+action+'/'+str_sample_number
+	cur_dir=data_directory+'/'+action+'/'+str_sample_number
 	#print "dir: " + cur_dir
 	#raw_input()
 	
