@@ -24,6 +24,8 @@ import cv2
 
 from nicoaudio import pulse_audio_recorder
 
+from subprocess import call
+
 fnl="left_cam_synced_data.csv"
 fnr="right_cam_synced_data.csv"
 robot=None
@@ -343,10 +345,8 @@ while ( get_needed_overall_numbers() > 0 ):
 		#commit the database changes
 		connection.commit()
 	else:
-		#delete directory
-		#shutil.rmtree(cur_dir)
-		os.execute("rm -r " + cur_dir)
-		
+		call(["rm", "-rf", cur_dir])
+
 		#rollback the database changes
 		connection.rollback()
 
