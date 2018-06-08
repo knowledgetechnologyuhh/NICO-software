@@ -33,6 +33,8 @@ import random
 
 from subprocess import call
 
+import shutil
+
 #experiment definitions (Objects and number of graspings)
 #definition of objects
 objects =["blue ball","blue_plush ball","red_plush ball", "orange_plush ball", \
@@ -62,7 +64,7 @@ MAX_CUR_THUMB=100
 # Experiment Data will be stored in two table database
 # with samples for every sample of a grasped onject and subsample for every motor step (like for 10 degrees)
 
-connection = sqlite3.connect("./multimodal_experiment.db")
+connection = sqlite3.connect(data_directory+"/multimodal_experiment.db")
 cursor = connection.cursor()
 # status: 0-succesful , 1- overload, 2 - former_overload
 
@@ -202,7 +204,7 @@ robot = Motion.Motion("../../../json/nico_humanoid_legged_minimal_for_multimodal
 mover_path = "../../../moves_and_positions/"
 mov = Mover.Mover(robot, stiff_off=False)
 
-sleep(2)
+sleep(4)
 
 #set the robot to be compliant
 robot.disableTorqueAll()
@@ -306,16 +308,17 @@ while ( get_needed_overall_numbers() > 0 ):
 	if amount_of_cams>=2:
 		ir2.start_recording(cur_dir+'/camera2/picture-{}.png')
     
-	#for n in range(4):
-	#	mov.move_file_position(mover_path + "pos_push_"+str(n+1)+".csv", subsetfname=mover_path + "subset_right_arm.csv", move_speed=0.05)
-	#	sleep(1)
-	#mov.move_file_position(mover_path + "pos_push_"+str(1)+".csv", subsetfname=mover_path + "subset_right_arm.csv", move_speed=0.05, )
-	#sleep(10)
-	robot.openHand("RHand", fractionMaxSpeed=0.4)
-	sleep(5)
-	robot.closeHand("RHand", fractionMaxSpeed=0.4)
-	sleep(5)
-	robot.openHand("RHand", fractionMaxSpeed=0.4)
+	for n in range(4):
+		mov.move_file_position(mover_path + "pos_push_"+str(n+1)+".csv", subsetfname=mover_path + "subset_right_arm.csv", move_speed=0.05)
+		sleep(1)
+	mov.move_file_position(mover_path + "pos_push_"+str(1)+".csv", subsetfname=mover_path + "subset_right_arm.csv", move_speed=0.05, )
+	sleep(10)
+
+	#robot.openHand("RHand", fractionMaxSpeed=0.4)
+	#sleep(5)
+	#robot.closeHand("RHand", fractionMaxSpeed=0.4)
+	#sleep(5)
+	#robot.openHand("RHand", fractionMaxSpeed=0.4)
 
 	#Stop and finish camera recordings
 	ir.stop_recording()
@@ -325,20 +328,34 @@ while ( get_needed_overall_numbers() > 0 ):
 	#Stop and write audio recordings
 	ar.stop_recording(0)
 
-	#Write joint data to file
-	for df_set in ((cur_dir+"/"+fnl,dfl),(cur_dir+"/"+fnr,dfr)):
-		fnp,dfp=df_set
-		with open(fnp, 'a') as f:
-			dfp.to_csv(f, header=True)
+	answer="dummy"
+	while (answer!="R" and answer!=""):
+		print ("Has the recording of this sample been succesful or do you want to repeat it ? (R=Repeat) / (Return=Continue) ")
+		answer=raw_input()
+	
+	if answer=="":
+		#Write joint data to file
+		for df_set in ((cur_dir+"/"+fnl,dfl),(cur_dir+"/"+fnr,dfr)):
+			fnp,dfp=df_set
+			with open(fnp, 'a') as f:
+				dfp.to_csv(f, header=True)
 
+		#commit the database changes
+		connection.commit()
+	else:
+		#delete directory
+		#shutil.rmtree(cur_dir)
+		os.execute("rm -r " + cur_dir)
+		
+		#rollback the database changes
+		connection.rollback()
 
-	connection.commit()
 
 connection.close()
 print "\n\n Great! I got all samples together! Finishing experiment.\n"
 print_progress()
 
-robot=none
+robot=None
 
 #set the robot to be compliant
 
