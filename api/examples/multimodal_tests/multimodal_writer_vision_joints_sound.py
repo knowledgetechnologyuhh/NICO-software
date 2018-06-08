@@ -74,10 +74,10 @@ class rightcam_ImageRecorder(ImageRecorder.ImageRecorder):
 
 print len(sys.argv)
 
-if len(sys.argv)!=5:
+if len(sys.argv)!=6:
 
 	print "please call me with the parameters"
-	print "resolution_x, resolution_y, framerate, number_of_cameras_to_use"
+	print "resolution_x, resolution_y, framerate, number_of_cameras_to_use, data_directory"
 
 else:
 	
@@ -87,21 +87,25 @@ else:
 	res_y=int(sys.argv[2])
 	framerate=int(sys.argv[3])
 	amount_of_cams=int(sys.argv[4])
+	data_directory=str(sys.argv[5])
 	logging.getLogger().setLevel(logging.INFO)
+
+	if data_directory=="":
+		data_directory=os.mkdir(dirname(abspath(__file__)))
 	
 		
 	try:
-		os.mkdir(dirname(abspath(__file__))+'/recorded_images')
+		data_directory+'/recorded_images'
 	except OSError:
 		pass
 
 	try:
-		os.mkdir(dirname(abspath(__file__))+'/recorded_images/camera1')
+		data_directory+'/recorded_images/camera1'
 	except OSError:
 		pass
 
 	try:
-		os.mkdir(dirname(abspath(__file__))+'/recorded_images/camera2')
+		data_directory+'/recorded_images/camera2'
 	except OSError:
 		pass
 
@@ -110,7 +114,8 @@ else:
 	raw_input()
 
 	#Put the left arm in defined position
-	robot = Motion.Motion("../../../json/nico_humanoid_upper_rh7d.json",vrep=False)
+	#robot = Motion.Motion("../../../json/nico_humanoid_upper_rh7d.json",vrep=False)
+	robot = Motion.Motion("../../../json/nico_humanoid_legged_minimal_for_multimodal_recordings.json",vrep=False)
 
 	#set the robot to be compliant
 	robot.disableTorqueAll()
@@ -119,11 +124,11 @@ else:
 	
 	print "devices" + str( ImageRecorder.get_devices() )
 	device = ImageRecorder.get_devices()[0]
-	ir = leftcam_ImageRecorder(device, res_x, res_y,framerate=framerate,writer_threads=3,pixel_format="UYVY")
+	ir = leftcam_ImageRecorder(device, res_x, res_y,framerate=framerate,writer_threads=2,pixel_format="UYVY")
 
 	if amount_of_cams>=2:
 		device2 = ImageRecorder.get_devices()[1]
-		ir2 = rightcam_ImageRecorder(device2, res_x, res_y,framerate=framerate,writer_threads=3,pixel_format="UYVY")
+		ir2 = rightcam_ImageRecorder(device2, res_x, res_y,framerate=framerate,writer_threads=2,pixel_format="UYVY")
 
 	sleep(2)
 	
@@ -133,22 +138,22 @@ else:
 	
 	#label="s_"+str(sample_number)
 	label=datetime.datetime.today().isoformat()
-	ar.start_recording(label,fname=label+".wav",dir_name="./audio/")
+	ar.start_recording(label,fname=label+".wav",dir_name=data_directory+"/audio/")
 
 	
 	print("Start taking pictures")
 	print(datetime.datetime.today().isoformat())
 	ir.start_recording(
-		path=dirname(abspath(__file__))+'/recorded_images/camera1/picture-{}.png')
+		path=data_directory+'/recorded_images/camera1/picture-{}.png')
 	if amount_of_cams>=2:
 		ir2.start_recording(
-			 path=dirname(abspath(__file__))+'/recorded_images/camera2/picture-{}.png')
+			 path=data_directory+'/recorded_images/camera2/picture-{}.png')
 			 
 	#Some motor action here
 	for t in range(5):
-		robot.setAngle("head_z", 20, 0.05)
+		robot.setAngle("head_z", 20, 0.01)
 		sleep(0.5)
-		robot.setAngle("head_z", -20, 0.05)
+		robot.setAngle("head_z", -20, 0.01)
 		sleep(0.5)
 	print("Stop recording")
 	ar.stop_recording(0)
@@ -163,5 +168,5 @@ else:
 	
 	for df_set in ((fnl,dfl),(fnr,dfr)):
 		fnp,dfp=df_set
-		with open(fnp, 'a') as f:
+		with open( data_directory + "/" + fnp, 'a') as f:
 			dfp.to_csv(f, header=True)
