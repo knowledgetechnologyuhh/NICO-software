@@ -1,0 +1,154 @@
+{
+  "controllers": {
+    "all_controller": {
+      "sync_read": false,
+      "attached_motors": [
+        "head",
+        "arms",
+        "hands"
+      ],
+      "port": "auto"
+    }
+   },
+  "motorgroups": {
+    "head": [
+      "head_z",
+      "head_y"
+    ],
+
+    "r_arm": [
+      "r_shoulder_y",
+      "r_shoulder_z",
+      "r_arm_x",
+      "r_elbow_y"
+    ],
+    "arms": [
+      "r_arm"
+    ],
+    "r_hand": [
+      "r_wrist_z",
+      "r_wrist_x",
+      "r_indexfingers_x",
+      "r_thumb_x",
+      "r_virtualhand_x"
+
+    ],
+    "hands": [
+      "r_hand"    ]
+  },
+  "motors": {
+    "head_z": {
+      "offset": 0.0,
+      "type": "MX-64",
+      "id": 19,
+      "angle_limit": [
+        -179,
+        180
+      ],
+      "orientation": "direct"
+    },
+    "head_y": {
+      "offset": 0.0,
+      "type": "MX-64",
+      "id": 20,
+      "angle_limit": [
+        -89,
+        79
+      ],
+      "orientation": "direct"
+    },
+    "r_shoulder_y": {
+      "offset": 0.0,
+      "type": "MX-64",
+      "id": 1,
+      "angle_limit": [
+        -180,
+        179
+      ],
+      "orientation": "direct"
+    },
+    "r_shoulder_z": {
+      "offset": 0.0,
+      "type": "MX-64",
+      "id": 21,
+      "angle_limit": [
+        -100,
+         125
+      ],
+      "orientation": "direct"
+    },
+    "r_arm_x": {
+      "offset":-32.0 ,
+      "type": "MX-64",
+      "id": 3,
+      "angle_limit": [
+        -5,
+        170
+      ],
+      "orientation": "indirect"
+    },
+    "r_elbow_y": {
+      "offset": 0.0,
+      "type": "MX-64",
+      "id": 5,
+      "angle_limit": [
+        -100,
+        100
+      ],
+      "orientation": "direct"
+    },
+
+    "r_wrist_z": {
+      "offset": 0.0,
+      "type": "SR-SEED56",
+      "id": 23,
+      "angle_limit": [
+        -90,
+        90
+      ],
+      "orientation": "direct"
+    }
+    ,
+    "r_wrist_x": {
+      "offset": 0.0,
+      "type": "SR-SEED56",
+      "id": 25,
+      "angle_limit": [
+        -50,
+        35
+      ],
+      "orientation": "direct"
+    }
+    ,
+    "r_indexfingers_x": {
+      "offset": 0.0,
+      "type": "SR-SEED56",
+      "id": 29,
+      "angle_limit": [
+        -160,
+        160
+      ],
+      "orientation": "direct"
+    },
+     "r_thumb_x": {
+      "offset": 0.0,
+      "type": "SR-SEED56",
+      "id": 27,
+      "angle_limit": [
+        -160,
+        160
+      ],
+      "orientation": "direct"
+    },
+     "r_virtualhand_x": {
+      "offset": 0.0,
+      "type": "SR-EROSBRD",
+      "id": 31,
+      "angle_limit": [
+        -160,
+        160
+      ],
+      "orientation": "direct"
+    }
+   }
+}
