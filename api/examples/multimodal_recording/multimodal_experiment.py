@@ -1,7 +1,8 @@
 # MUltimodal Recording
 
 # Erik Strahl
-# Matthias Kerezl
+# Matthias Kerzel
+# Stefan Heinrich
 
 # GNU GPL License
 
@@ -12,7 +13,6 @@ import pypot.dynamixel
 from time import sleep
 import datetime
 from nicotouch.optoforcesensors import optoforce
-
 import logging
 from nicovision import ImageRecorder
 import os
@@ -21,19 +21,20 @@ from time import sleep
 import datetime
 import sys
 import cv2
-
 from nicoaudio import pulse_audio_recorder
-
 from subprocess import call
-
-fnl="left_cam_synced_data.csv"
-fnr="right_cam_synced_data.csv"
-robot=None
-
 import sqlite3
 import random
-
 from subprocess import call
+import matplotlib.pyplot as plt
+from scipy.io import wavfile
+import numpy as np
+
+
+fnl="left_cam_synced_data"
+fnr="right_cam_synced_data"
+fpostfix = ".csv"
+robot=None
 
 import shutil
 
@@ -105,6 +106,9 @@ columns = ["r_shoulder_z_pos","r_shoulder_y_pos","r_arm_x_pos","r_elbow_y_pos","
 dfl = pd.DataFrame(columns=columns)
 dfr = pd.DataFrame(columns=columns)
 
+#For accessing the json structure:
+sm_proprioception = ["r_shoulder_z","r_shoulder_y","r_arm_x","r_elbow_y","r_wrist_z","r_wrist_x","r_indexfingers_x","r_thumb_x","head_z", "head_y"]
+sm_tactile = ["touch_x","touch_y","touch_z"]
 
 def write_joint_data(robot,df,iso_time):
 	
@@ -200,6 +204,77 @@ def print_progress():
             print " For " + o + " - samples needed: " + str(get_needed_numbers_for_object(o))
             " - samples finished: " + str(get_sampled_numbers_for_object(o))
 
+def normalise_data_sensorimotor(config, sm_proprioception, sm_tactile, dfp):
+
+    dfp_norm = dfp
+
+    for x in sm_proprioception:
+        dfp_norm[[str(x) + "_pos"]] = \
+            (dfp[[str(x)+"_pos"]].values[:,0]
+             - config["motors"][str(x)]["angle_limit"][0]) \
+            / (config["motors"][str(x)]["angle_limit"][1]
+               - config["motors"][str(x)]["angle_limit"][0])
+
+    for x in sm_proprioception:
+        dfp_norm[[str(x) + "_cur"]] = \
+            (dfp[[str(x)+"_cur"]].values[:,0]
+             - config["motors"][str(x)]["current_limit"][0]) \
+            / (config["motors"][str(x)]["current_limit"][1]
+               - config["motors"][str(x)]["current_limit"][0])
+
+    for x in sm_tactile:
+        dfp_norm[[str(x)]] = \
+            (dfp[[str(x)]].values[:,0]
+             - config["optoforce"][str(x)]["force_limit"][0]) \
+            / (config["optoforce"][str(x)]["force_limit"][1]
+               - config["optoforce"][str(x)]["force_limit"][0])
+
+    return dfp_norm
+
+def plot_data_audio(audio_file, plot_audio_file):
+    sample_rate, samples = wavfile.read(audio_file)
+    samples_mono = 0.5*samples[:, 0] + 0.5*samples[:, 1]
+
+    plt.subplot(211)
+    plt.plot(samples_mono)
+    plt.ylabel('Amplitude')
+
+    plt.subplot(212)
+    plt.specgram(samples_mono,Fs=sample_rate)
+    plt.xlabel('Time')
+    plt.ylabel('Frequency')
+
+    plt.savefig(plot_audio_file)
+
+    return True
+
+def plot_data_sensorimotor(sm_proprioception, sm_tactile, dfp_norm, plot_file_sm):
+
+    sm_pos_norm = np.array([dfp_norm[[str(x)+"_pos"]].values[:,0] for x in sm_proprioception])
+
+    sm_cur_norm = np.array([dfp_norm[[str(x)+"_cur"]].values[:,0] for x in sm_proprioception])
+
+    sm_tactile_norm = np.array([(dfp_norm[[str(x)]].values[:,0]) for x in sm_tactile])
+
+    plt.subplot(311)
+    plt.plot(sm_pos_norm.T)
+    plt.ylabel('Position')
+    plt.ylim(-0.1, 1.1)
+
+    plt.subplot(312)
+    plt.plot(sm_cur_norm.T)
+    plt.ylabel('Current')
+    plt.ylim(-0.1, 1.1)
+
+    plt.subplot(313)
+    plt.plot(sm_tactile_norm.T)
+    plt.xlabel('Time')
+    plt.ylabel('Touch')
+    plt.ylim(-0.1, 1.1)
+
+    plt.savefig(plot_file_sm)
+
+    return True
 
 #Print out was is still needed
 print "\n\nWe still need the following samples:"
@@ -224,6 +299,7 @@ optoforce_sensor = optoforce(ser_number=None, cache_frequency=30)
 robot = Motion.Motion("../../../json/nico_humanoid_legged_minimal_for_multimodal_recordings.json",vrep=False)
 mover_path = "../../../moves_and_positions/"
 mov = Mover.Mover(robot, stiff_off=False)
+robot_config = robot.getConfig()
 
 sleep(4)
 
@@ -377,13 +453,31 @@ while ( get_needed_overall_numbers() > 0 ):
 	while (answer!="R" and answer!=""):
 		print ("Has the recording of this sample been succesful or do you want to repeat it ? (R=Repeat) / (Return=Continue) ")
 		answer=raw_input()
-	
+
+	# Hint (StH): we can use/extend the plot methods also for plotting within an opencv windows
+
 	if answer=="":
 		#Write joint data to file
-		for df_set in ((cur_dir+"/"+fnl,dfl),(cur_dir+"/"+fnr,dfr)):
-			fnp,dfp=df_set
+		for df_set in ((fnl, dfl),(fnr, dfr)):
+			fn, dfp = df_set
+			fnp = cur_dir + "/" + fn + fpostfix
+			fnpnorm = cur_dir + "/" + fn + "_norm" + fpostfix
+			fnplot = cur_dir + fn + "_norm" + ".svg"
 			with open(fnp, 'a') as f:
 				dfp.to_csv(f, header=True)
+
+			#Write joint data to file
+			dfp_norm = normalise_data_sensorimotor(robot_config, sm_proprioception,
+												   sm_tactile, dfp)
+			with open(fnpnorm, 'a') as f:
+				dfp_norm.to_csv(f, header=True)
+
+			#Plot sensorimotor data:
+			plot_data_sensorimotor(sm_proprioception, sm_tactile, dfp_norm,
+								   fnplot)
+
+		#Plot audio data:
+		plot_data_audio(cur_dir + '/' + label + ".wav", cur_dir + '/' + label + "_audio.svg")
 
 		#commit the database changes
 		connection.commit()
