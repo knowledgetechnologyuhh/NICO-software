@@ -30,6 +30,7 @@ import matplotlib.pyplot as plt
 from scipy.io import wavfile
 import numpy as np
 
+import check_data_integrity
 
 fnl = "left_cam_synced_data"
 fnr = "right_cam_synced_data"
@@ -313,7 +314,7 @@ print "\n Please put the robot in position. Right arm on the table. Left arm han
 raw_input()
 
 # Optoforce_sensor
-optoforce_sensor = optoforce(ser_number=None, cache_frequency=40)
+optoforce_sensor = optoforce(ser_number=None, cache_frequency=30)
 
 # Put the left arm in defined position
 robot = Motion.Motion(
@@ -438,10 +439,10 @@ while (get_needed_overall_numbers() > 0):
         ir2.start_recording(cur_dir+'/camera2/picture-{}.png')
 
     for n, wait_duration in enumerate(actions[action]):
-		print "breaks: " + str(wait_duration)
-		mov.move_file_position(mover_path + "pos_pull_"+str(n+1)+".csv",
-								subsetfname=mover_path + "subset_right_arm.csv", move_speed=0.05)
-		sleep(wait_duration)
+        print "breaks: " + str(wait_duration)
+        mov.move_file_position(mover_path + "pos_pull_"+str(n+1)+".csv",
+                               subsetfname=mover_path + "subset_right_arm.csv", move_speed=0.05)
+        sleep(wait_duration)
     mov.move_file_position(mover_path + "pos_pull_"+str(1)+".csv",
                            subsetfname=mover_path + "subset_right_arm.csv", move_speed=0.05, )
     sleep(10)
@@ -466,12 +467,13 @@ while (get_needed_overall_numbers() > 0):
     # Stop and write audio recordings
     ar.stop_recording(0)
 
-    print "\n Checking the data integrity of this sample - please wait a moment"
-	data_check_result = data_check_clean(cur_dir, dfl, dfr)
+    print "\n Waiting for pictures writing on disk - please wait a moment"
+    check_data_integrity.wait_for_camera_writing(cur_dir+'/camera1/')
+    check_data_integrity.wait_for_camera_writing(cur_dir+'/camera2/')
 
-	print "\n Waiting for pictures writing on disk - please wait a moment"
-    wait_for_camera_writing(cur_dir+'/camera1/')
-    wait_for_camera_writing(cur_dir+'/camera2/')
+    print "\n Checking the data integrity of this sample - please wait a moment"
+    data_check_result = check_data_integrity.data_check_clean(
+        cur_dir, dfl, dfr)
 
     answer = "dummy"
     if not data_check_result == "":
