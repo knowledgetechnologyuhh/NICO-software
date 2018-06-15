@@ -383,7 +383,7 @@ while (get_needed_overall_numbers() > 0):
     action = random.choice(actions.keys())
     o = random.choice(objects)
     while (get_needed_numbers_for_object(o, action) < 1):
-        action = random.choice(actions.keys)
+        action = random.choice(actions.keys())
         o = random.choice(objects)
 
     print "\nRandomly chosen action : " + action + "\n"
@@ -471,18 +471,18 @@ while (get_needed_overall_numbers() > 0):
     check_data_integrity.wait_for_camera_writing(cur_dir+'/camera1/')
     check_data_integrity.wait_for_camera_writing(cur_dir+'/camera2/')
 
-    #print "\n Checking the data integrity of this sample - please wait a moment"
-    #data_check_result = check_data_integrity.data_check_clean(
-    #    cur_dir, dfl, dfr)
+    print "\n Checking the data integrity of this sample - please wait a moment"
+    data_check_result = check_data_integrity.data_check_clean(
+        cur_dir, dfl, dfr)
 
     answer = "dummy"
-    #if not data_check_result == "":
-    #    answer = "R"
-    #    print("\n.Sorry. Detected problems with this sample. I have to delete the data. ")
-    #    print ("\n The detected problem is: " + data_check_result)
+    if not data_check_result == "":
+        answer = "R"
+        print("\n.Sorry. Detected problems with this sample. I have to delete the data. ")
+        print ("\n The detected problem is: " + data_check_result)
 
     while (answer != "R" and answer != ""):
-        print ("Has the recording of this sample been succesful or do you want to repeat it ? (R=Repeat) / (Return=Continue) ")
+        print ("\n\n\Has the recording of this sample been succesful or do you want to repeat it ? (R=Repeat) / (Return=Continue) \n\n\n")
         answer = raw_input()
 
     # Hint (StH): we can use/extend the plot methods also for plotting within an opencv windows
