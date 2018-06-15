@@ -62,7 +62,7 @@ objects = ["blue ball", "blue_plush ball", "red_plush ball", "orange_plush ball"
 
 actions = {
     "pull": [1.5, 2, 4, 2, 1.5],
-    "push": [1, 1, 1, 1]
+    "push": [1.0, 1.0, 1.0, 1.0]
 }
 
 # action="pull"
@@ -71,7 +71,7 @@ actions = {
 data_directory = "/data2/20180615_multimodal_recording_with_integrity_checks"
 
 # definition for numbers per object
-number_of_samples_per_object = 10
+number_of_samples_per_object = 2
 
 # definition of Maximum current - This protects the hands from breaking!! Do not change this, if you do not know!
 MAX_CUR_FINGER = 120
@@ -314,7 +314,7 @@ print "\n Please put the robot in position. Right arm on the table. Left arm han
 raw_input()
 
 # Optoforce_sensor
-optoforce_sensor = optoforce(ser_number=None, cache_frequency=30)
+optoforce_sensor = optoforce(ser_number=None, cache_frequency=40)
 
 # Put the left arm in defined position
 robot = Motion.Motion(
@@ -363,12 +363,12 @@ logging.getLogger().setLevel(logging.INFO)
 # Vision Recording
 device = ImageRecorder.get_devices()[0]
 ir = leftcam_ImageRecorder(
-    device, res_x, res_y, framerate=framerate, writer_threads=3, pixel_format="UYVY")
+    device, res_x, res_y, framerate=framerate, writer_threads=5, pixel_format="UYVY")
 
 if amount_of_cams >= 2:
     device2 = ImageRecorder.get_devices()[1]
     ir2 = rightcam_ImageRecorder(
-        device2, res_x, res_y, framerate=framerate, writer_threads=3, pixel_format="UYVY")
+        device2, res_x, res_y, framerate=framerate, writer_threads=5, pixel_format="UYVY")
 
 sleep(2)
 
@@ -440,10 +440,10 @@ while (get_needed_overall_numbers() > 0):
 
     for n, wait_duration in enumerate(actions[action]):
         print "breaks: " + str(wait_duration)
-        mov.move_file_position(mover_path + "pos_pull_"+str(n+1)+".csv",
+        mov.move_file_position(mover_path + "pos_"+action+"_"+str(n+1)+".csv",
                                subsetfname=mover_path + "subset_right_arm.csv", move_speed=0.05)
         sleep(wait_duration)
-    mov.move_file_position(mover_path + "pos_pull_"+str(1)+".csv",
+    mov.move_file_position(mover_path + "pos_"+action+"_"+str(1)+".csv",
                            subsetfname=mover_path + "subset_right_arm.csv", move_speed=0.05, )
     sleep(10)
 
@@ -471,15 +471,15 @@ while (get_needed_overall_numbers() > 0):
     check_data_integrity.wait_for_camera_writing(cur_dir+'/camera1/')
     check_data_integrity.wait_for_camera_writing(cur_dir+'/camera2/')
 
-    print "\n Checking the data integrity of this sample - please wait a moment"
-    data_check_result = check_data_integrity.data_check_clean(
-        cur_dir, dfl, dfr)
+    #print "\n Checking the data integrity of this sample - please wait a moment"
+    #data_check_result = check_data_integrity.data_check_clean(
+    #    cur_dir, dfl, dfr)
 
     answer = "dummy"
-    if not data_check_result == "":
-        answer = "R"
-        print("\n.Sorry. Detected problems with this sample. I have to delete the data. ")
-        print ("\n The detected problem is: " + data_check_result)
+    #if not data_check_result == "":
+    #    answer = "R"
+    #    print("\n.Sorry. Detected problems with this sample. I have to delete the data. ")
+    #    print ("\n The detected problem is: " + data_check_result)
 
     while (answer != "R" and answer != ""):
         print ("Has the recording of this sample been succesful or do you want to repeat it ? (R=Repeat) / (Return=Continue) ")
