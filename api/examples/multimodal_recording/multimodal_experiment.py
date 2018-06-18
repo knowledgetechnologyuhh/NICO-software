@@ -39,6 +39,9 @@ robot = None
 
 import shutil
 
+import logging
+logging.basicConfig(filename='example.log',level=logging.DEBUG,format='%(asctime)s %(levelname)s %(message)s')
+
 # experiment definitions (Objects and number of graspings)
 # definition of objects
 # objects =["blue ball","blue_plush ball","red_plush ball", "orange_plush ball", \
@@ -82,6 +85,7 @@ MAX_CUR_THUMB = 100
 # with samples for every sample of a grasped onject and subsample for every motor step (like for 10 degrees)
 
 print "database file: " + data_directory+"/multimodal_experiment.db"
+logging.info('Write to database file ' +  data_directory+"/multimodal_experiment.db" )
 
 connection = sqlite3.connect(data_directory+"/multimodal_experiment.db")
 
@@ -352,13 +356,14 @@ robot.setAngle("r_indexfingers_x", -160, 0.4)
 # Instructions for the experimenter. Brig the robot in Initial position
 print "\n OK. The robot is positioned. We will start the experiment now.\n\n"
 
+logging.info('Robot in position and ready')
+
 pulse_device = pulse_audio_recorder.get_pulse_device()
 
 res_x = 1920
 res_y = 1080
 framerate = 30
 amount_of_cams = 2
-logging.getLogger().setLevel(logging.INFO)
 
 # Vision Recording
 device = ImageRecorder.get_devices()[0]
@@ -376,6 +381,7 @@ sleep(2)
 ar = pulse_audio_recorder.AudioRecorder(
     audio_channels=2, samplerate=48000, datadir="./.", audio_device=pulse_device)
 
+logging.info(get_needed_overall_numbers() + ' are needed to record.')
 
 while (get_needed_overall_numbers() > 0):
 
@@ -385,6 +391,8 @@ while (get_needed_overall_numbers() > 0):
     while (get_needed_numbers_for_object(o, action) < 1):
         action = random.choice(actions.keys())
         o = random.choice(objects)
+    
+    logging.info("Chosen action / object pair : action = " +action " ; object= " + o)
 
     print "\nRandomly chosen action : " + action + "\n"
 
@@ -431,6 +439,8 @@ while (get_needed_overall_numbers() > 0):
         pass
 
     label = datetime.datetime.today().isoformat()
+    logging.info("Start recording for sample : " + str_sample_number)
+
     # ar.start_recording(label,fname="./"+action+'/'+str_sample_number+label+".wav",dir_name="./audio/")
     ar.start_recording(label, fname=cur_dir+'/'+label+".wav", dir_name="")
 
@@ -467,13 +477,20 @@ while (get_needed_overall_numbers() > 0):
     # Stop and write audio recordings
     ar.stop_recording(0)
 
+    logging.info(" Start of waiting for picture recording  ")
     print "\n Waiting for pictures writing on disk - please wait a moment"
     check_data_integrity.wait_for_camera_writing(cur_dir+'/camera1/')
     check_data_integrity.wait_for_camera_writing(cur_dir+'/camera2/')
+    logging.info(" End of waiting for picture recording  ")
 
+    logging.info("Checking data integrity")
     print "\n Checking the data integrity of this sample - please wait a moment"
     data_check_result = check_data_integrity.data_check_clean(
         cur_dir, dfl, dfr)
+    if data_check_result=="":
+        logging.info("automatic data integrity check was ok. ")
+    else:
+        logging.warning("data integrity returned an issue: " + data_check_result . ". data will get deleted.")
 
     answer = "dummy"
     if not data_check_result == "":
@@ -488,6 +505,7 @@ while (get_needed_overall_numbers() > 0):
     # Hint (StH): we can use/extend the plot methods also for plotting within an opencv windows
 
     if answer == "":
+        logging.info("manual data check decided to keep the data. data will be stored.")
         # Write joint data to file
         for df_set in ((fnl, dfl), (fnr, dfr)):
             fn, dfp = df_set
@@ -514,6 +532,7 @@ while (get_needed_overall_numbers() > 0):
         # commit the database changes
         connection.commit()
     else:
+        logging.warning("manual data check decided data are invalid. data will be deleted.")
         call(["rm", "-rf", cur_dir])
 
         # rollback the database changes
@@ -521,6 +540,7 @@ while (get_needed_overall_numbers() > 0):
 
 
 connection.close()
+logging.info("All needed samples recorded.")
 print "\n\n Great! I got all samples together! Finishing experiment.\n"
 print_progress()
 
