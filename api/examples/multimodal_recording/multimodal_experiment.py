@@ -74,7 +74,7 @@ actions = {
 data_directory = "/data2/20180615_multimodal_recording_with_integrity_checks"
 
 # definition for numbers per object
-number_of_samples_per_object = 2
+number_of_samples_per_object = 4
 
 # definition of Maximum current - This protects the hands from breaking!! Do not change this, if you do not know!
 MAX_CUR_FINGER = 120
@@ -337,8 +337,8 @@ robot.openHand('RHand', fractionMaxSpeed=fMS_hand)
 robot.enableForceControl("r_wrist_z", 50)
 robot.enableForceControl("r_wrist_x", 50)
 
-robot.enableForceControl("r_indexfingers_x", 50)
-robot.enableForceControl("r_thumb_x", 50)
+#robot.enableForceControl("r_indexfingers_x", 50)
+#robot.enableForceControl("r_thumb_x", 50)
 
 # enable torque of left arm joints
 robot.enableForceControl("head_z", 20)
@@ -381,7 +381,7 @@ sleep(2)
 ar = pulse_audio_recorder.AudioRecorder(
     audio_channels=2, samplerate=48000, datadir="./.", audio_device=pulse_device)
 
-logging.info(get_needed_overall_numbers() + ' are needed to record.')
+logging.info(str(get_needed_overall_numbers()) + ' are needed to record.')
 
 while (get_needed_overall_numbers() > 0):
 
@@ -392,7 +392,7 @@ while (get_needed_overall_numbers() > 0):
         action = random.choice(actions.keys())
         o = random.choice(objects)
     
-    logging.info("Chosen action / object pair : action = " +action " ; object= " + o)
+    logging.info("Chosen action / object pair : action = " +action+ " ; object= " + o)
 
     print "\nRandomly chosen action : " + action + "\n"
 
@@ -441,6 +441,7 @@ while (get_needed_overall_numbers() > 0):
     label = datetime.datetime.today().isoformat()
     logging.info("Start recording for sample : " + str_sample_number)
 
+
     # ar.start_recording(label,fname="./"+action+'/'+str_sample_number+label+".wav",dir_name="./audio/")
     ar.start_recording(label, fname=cur_dir+'/'+label+".wav", dir_name="")
 
@@ -448,11 +449,19 @@ while (get_needed_overall_numbers() > 0):
     if amount_of_cams >= 2:
         ir2.start_recording(cur_dir+'/camera2/picture-{}.png')
 
+
     for n, wait_duration in enumerate(actions[action]):
         print "breaks: " + str(wait_duration)
         mov.move_file_position(mover_path + "pos_"+action+"_"+str(n+1)+".csv",
                                subsetfname=mover_path + "subset_right_arm.csv", move_speed=0.05)
         sleep(wait_duration)
+    sleep(5)
+    robot.setAngle("r_indexfingers_x", 179, fractionMaxSpeed=0.8)
+    robot.setAngle("r_thumb_x",  179, fractionMaxSpeed=0.8)               
+    sleep(5)
+    robot.setAngle("r_indexfingers_x", -179, fractionMaxSpeed=0.8)
+    robot.setAngle("r_thumb_x",  -179, fractionMaxSpeed=0.8)
+    
     mov.move_file_position(mover_path + "pos_"+action+"_"+str(1)+".csv",
                            subsetfname=mover_path + "subset_right_arm.csv", move_speed=0.05, )
     sleep(10)
@@ -490,7 +499,7 @@ while (get_needed_overall_numbers() > 0):
     if data_check_result=="":
         logging.info("automatic data integrity check was ok. ")
     else:
-        logging.warning("data integrity returned an issue: " + data_check_result . ". data will get deleted.")
+        logging.warning("data integrity returned an issue: " + data_check_result + ". data will get deleted.")
 
     answer = "dummy"
     if not data_check_result == "":

@@ -144,34 +144,34 @@ def data_check_clean(dir_name, df_l, df_r):
             return "successive equal iso-time in touch-sensor-data"
 
     # if current data are too high or too low
-    for side in [df_l, df_r]:
-        for index, row in side.iterrows():
-            cur_values = [value for key,
-                          value in row.items() if key.endswith("_cur")]
-            cur_values_sorted = sorted(cur_values)
-            if (cur_values_sorted[0] < MIN_CUR):
-                # raw_input()
-                return "current to low"
-            cur_values_sorted_rev = sorted(cur_values, reverse=True)
-            if (cur_values_sorted_rev[0] > MAX_CUR):
-                #print cur_values_sorted_rev
-                # raw_input()
-                return "current to high"
-
-    # if position data are too high or too low
-    for side in [df_l, df_r]:
-        for index, row in side.iterrows():
-            pos_values = [value for key,
-                          value in row.items() if key.endswith("_pos")]
-            pos_values_sorted = sorted(pos_values)
-            if (pos_values_sorted[0] < MIN_POS):
-                print str(pos_values_sorted) + " " + str(pos_values_sorted[0])
-                raw_input()
-                return "pos to low"
-            pos_values_sorted_rev = sorted(pos_values, reverse=True)
-            if (pos_values_sorted_rev[0] > MAX_POS):
-                #print pos_values_sorted_rev
-                # raw_input()
-                return "pos to high"
+#    for side in [df_l, df_r]:
+#        for index, row in side.iterrows():
+#            cur_values = [value for key,
+#                          value in row.items() if key.endswith("_cur")]
+#            cur_values_sorted = sorted(cur_values)
+#            if (cur_values_sorted[0] < MIN_CUR):
+#                # raw_input()
+#                return "current to low"
+#            cur_values_sorted_rev = sorted(cur_values, reverse=True)
+#            if (cur_values_sorted_rev[0] > MAX_CUR):
+#                #print cur_values_sorted_rev
+#                # raw_input()
+#                return "current to high"
+#
+#    # if position data are too high or too low
+#    for side in [df_l, df_r]:
+#        for index, row in side.iterrows():
+#            pos_values = [value for key,
+#                          value in row.items() if key.endswith("_pos")]
+#            pos_values_sorted = sorted(pos_values)
+#            if (pos_values_sorted[0] < MIN_POS):
+#                print str(pos_values_sorted) + " " + str(pos_values_sorted[0])
+#                raw_input()
+#                return "pos to low"
+#            pos_values_sorted_rev = sorted(pos_values, reverse=True)
+#            if (pos_values_sorted_rev[0] > MAX_POS):
+#                #print pos_values_sorted_rev
+#                # raw_input()
+#                return "pos to high"
 
     return ""
