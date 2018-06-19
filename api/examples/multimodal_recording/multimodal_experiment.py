@@ -40,7 +40,7 @@ robot = None
 import shutil
 
 import logging
-logging.basicConfig(filename='example.log',level=logging.DEBUG,format='%(asctime)s %(levelname)s %(message)s')
+logging.basicConfig(filename='multimodal_recording.log',level=logging.DEBUG,format='%(asctime)s %(levelname)s %(message)s')
 
 # experiment definitions (Objects and number of graspings)
 # definition of objects
@@ -58,15 +58,8 @@ objects = ["blue ball", "blue_plush ball", "red_plush ball", "orange_plush ball"
            "big_yellow die", "small_yellow die", "yellow car", "green apple",
            "light tomato", "heavy tomato", "red ball", "red apple"]
 
-# definition of the actions
-# name of the action : [wait time for reaching the position]
-# the number of wait times defines as well the position steps to go
-# the position steps are defined in files named pos_[actionname]_[no of step].csv
-
-actions = {
-    "pull": [1.5, 2, 4, 2, 1.5],
-    "push": [1.0, 1.0, 1.0, 1.0]
-}
+import action_definitions
+actions=action_definitions.actions
 
 # action="pull"
 
@@ -450,21 +443,16 @@ while (get_needed_overall_numbers() > 0):
         ir2.start_recording(cur_dir+'/camera2/picture-{}.png')
 
 
-    for n, wait_duration in enumerate(actions[action]):
-        print "breaks: " + str(wait_duration)
-        mov.move_file_position(mover_path + "pos_"+action+"_"+str(n+1)+".csv",
-                               subsetfname=mover_path + "subset_right_arm.csv", move_speed=0.05)
-        sleep(wait_duration)
-    sleep(5)
-    robot.setAngle("r_indexfingers_x", 179, fractionMaxSpeed=0.8)
-    robot.setAngle("r_thumb_x",  179, fractionMaxSpeed=0.8)               
-    sleep(5)
-    robot.setAngle("r_indexfingers_x", -179, fractionMaxSpeed=0.8)
-    robot.setAngle("r_thumb_x",  -179, fractionMaxSpeed=0.8)
-    
-    mov.move_file_position(mover_path + "pos_"+action+"_"+str(1)+".csv",
-                           subsetfname=mover_path + "subset_right_arm.csv", move_speed=0.05, )
+    action_definitions.move_action(action)
     sleep(10)
+
+    #sleep(5)
+    #robot.setAngle("r_indexfingers_x", 179, fractionMaxSpeed=0.8)
+    #robot.setAngle("r_thumb_x",  179, fractionMaxSpeed=0.8)               
+    #sleep(5)
+    #robot.setAngle("r_indexfingers_x", -179, fractionMaxSpeed=0.8)
+    #robot.setAngle("r_thumb_x",  -179, fractionMaxSpeed=0.8)
+    
 
     # PULL action:
 
