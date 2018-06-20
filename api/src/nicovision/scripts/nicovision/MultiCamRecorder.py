@@ -2,6 +2,7 @@ import datetime
 import inspect
 import logging
 import os
+import subprocess
 import sys
 import threading
 import time
@@ -24,10 +25,38 @@ def get_devices():
 
 
 class MultiCamRecorder:
-    """docstring for ."""
+    """
+    The MultiCamRecorder class enables simultanious capturing of images from
+    multiple cameras.
+    """
 
     def __init__(self, devices=[], width=640, height=480, framerate=20,
-                 writer_threads=4, pixel_format="MJPG"):
+                 zoom=100, pan=0, tilt=0, writer_threads=4,
+                 pixel_format="MJPG"):
+        """
+        Initialises the MultiCamRecorder with given devices.
+
+        The devices must be contained in :meth:`get_devices`
+
+        :param devices: Device names
+        :type device: list(str)
+        :param width: Width of image
+        :type width: float
+        :param height: Height of image
+        :type height: float
+        :param framerate: number of frames per second
+        :type framerate: int
+        :param value: zoom value between 100 and 800
+        :type value: int
+        :param value: pan value between -648000 and 648000, step 3600
+        :type value: int
+        :param value: tilt value between -648000 and 648000, step 3600
+        :type value: int
+        :param writer_threads: Number of worker threads for image writer
+        :type writer_threads: int
+        :param pixel_format: fourcc codec
+        :type pixel_format: string
+        """
         self._deviceIds = []
         for device in devices:
             deviceId = VideoDevice.resolve_device(device)
@@ -44,6 +73,9 @@ class MultiCamRecorder:
         self._framerate = framerate
         self._width = width
         self._height = height
+        self.zoom(zoom)
+        self.pan(pan)
+        self.tilt(tilt)
 
         # Open cameras
         self._captures = []
@@ -53,7 +85,6 @@ class MultiCamRecorder:
             capture.set(cv2.CAP_PROP_FRAME_HEIGHT, self._height)
             capture.set(cv2.CAP_PROP_FPS, self._framerate)
             fourcc = cv2.VideoWriter_fourcc(*pixel_format)
-            # fourcc = cv2.VideoWriter_fourcc(*'UYVY')
             capture.set(cv2.CAP_PROP_FOURCC, fourcc)
             self._captures.append(capture)
 
@@ -65,6 +96,57 @@ class MultiCamRecorder:
                 target=self._eventloop, args=(id,)))
             self._threads[id].daemon = True
             self._threads[id].start()
+
+    def zoom(self, value):
+        """
+        Sets zoom value of all cameras that support it. Requires v4l-utils.
+        :param value: zoom value between 100 and 800
+        :type value: int
+        """
+        if type(value) is int and 100 <= value <= 800:
+            for id in self._deviceIds:
+                subprocess.call(
+                    ['v4l2-ctl -d {} -c zoom_absolute={}'.format(id, value)],
+                    shell=True)
+        else:
+            logging.warning(
+                "Zoom value has to be an integer between 100 and 800")
+
+    def pan(self, value):
+        """
+        Sets pan (x-axis) value of all cameras that support it. Requires
+        v4l-utils.
+        :param value: pan value between -648000 and 648000, step 3600
+        :type value: int
+        """
+        if(type(value) is int and -648000 <= value <= 648000 and
+           value % 3600 == 0):
+            for id in self._deviceIds:
+                subprocess.call(
+                    ['v4l2-ctl -d {} -c pan_absolute={}'.format(id, value)],
+                    shell=True)
+        else:
+            logging.warning(
+                "Pan value has to be a multiple of 3600 between -648000 and " +
+                "648000")
+
+    def tilt(self, value):
+        """
+        Sets tilt (y-axis) value of all cameras that support it. Requires
+        v4l-utils.
+        :param value: tilt value between -648000 and 648000, step 3600
+        :type value: int
+        """
+        if (type(value) is int and -648000 <= value <= 648000 and
+                value % 3600 == 0):
+            for id in self._deviceIds:
+                subprocess.call(
+                    ['v4l2-ctl -d {} -c tilt_absolute={}'.format(id, value)],
+                    shell=True)
+        else:
+            logging.warning(
+                "Tilt value has to be a multiple of 3600 between -648000 and" +
+                " 648000")
 
     def add_callback(self, function):
         """
