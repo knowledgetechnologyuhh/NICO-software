@@ -22,7 +22,7 @@ actions = {
     "push": [[1.0, 1.0, 1.0, 1.0],["open","no","no","no"]]
 }
 
-def move_action(action):
+def move_action(action,robot):
 
     wait_durations, hand_movements = actions[action] 
     for n, wait_duration in enumerate(wait_durations):
@@ -100,4 +100,4 @@ if __name__ == "__main__":
         robot.enableForceControl("r_arm_x", 20)
         robot.enableForceControl("r_elbow_y", 20)
 
-        move_action(sys.argv[1])
+        move_action(sys.argv[1],robot)
