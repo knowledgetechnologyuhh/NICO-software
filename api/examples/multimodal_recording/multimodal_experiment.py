@@ -443,7 +443,7 @@ while (get_needed_overall_numbers() > 0):
         ir2.start_recording(cur_dir+'/camera2/picture-{}.png')
 
 
-    action_definitions.move_action(action)
+    action_definitions.move_action(action,robot)
     sleep(10)
 
     #sleep(5)
