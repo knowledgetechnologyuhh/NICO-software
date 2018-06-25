@@ -1,12 +1,14 @@
+import atexit
 import logging
 import Queue
-import cv2
-import atexit
 import threading
+
+import cv2
 
 
 class ImageWriter:
     """Multithreaded image writer for high resolution image processing"""
+
     def __init__(self, workers=2):
         self._queue = Queue.Queue()
         self._workers = workers
@@ -21,11 +23,11 @@ class ImageWriter:
     def _worker_thread(self):
         while True:
             cv2.imwrite(*self._queue.get())
-            
-            #fn,dummy=self._queue.get()
-            #import os
-            #open(fn, 'a').close()
-            
+
+            # fn,dummy=self._queue.get()
+            # import os
+            # open(fn, 'a').close()
+
             self._queue.task_done()
 
     def _close(self):
