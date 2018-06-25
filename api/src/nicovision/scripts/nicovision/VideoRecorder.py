@@ -1,9 +1,10 @@
 import logging
-import cv2
 import os
 
-from VideoDevice import VideoDevice
+import cv2
+
 from Colorspace import Colorspace
+from VideoDevice import VideoDevice
 
 
 def get_devices():
@@ -41,8 +42,8 @@ class VideoCodec:
 class VideoRecorder:
 
     def __init__(self, device='', colorspace=Colorspace.RGB, framerate=20,
-                 width=640, height=480, videoformat=VideoCodec.MPEG1):
-
+                 width=640, height=480, zoom=100, pan=0, tilt=0
+                 videoformat=VideoCodec.MPEG1):
         """
         Initialises the VideoRecorder
 
@@ -56,11 +57,13 @@ class VideoRecorder:
         :type width: int
         :param height: Height of captured stream
         :type height: int
+        :param zoom: Zoom of camera (if supported)
+        :type zoom: int
         :param videoformat: Used video format
         :type videoformat: VideoCodec
         """
         self._device = VideoDevice.from_device(device, framerate, width,
-                                               height)
+                                               height, zoom, pan, tilt)
         self._running = False
         self._colorspace = colorspace
         self._framerate = framerate
@@ -68,6 +71,30 @@ class VideoRecorder:
         self._height = height
         self._format = videoformat
         self._encoder = None
+
+    def zoom(self, value):
+        """
+        Sets zoom value if camera supports it. Requires v4l-utils.
+        :param value: zoom value between 100 and 800
+        :type value: int
+        """
+        self._device.zoom(value)
+
+    def pan(self, value):
+        """
+        Sets pan (x-axis) value if camera supports it. Requires v4l-utils.
+        :param value: pan value between -648000 and 648000, step 3600
+        :type value: int
+        """
+        self._device.pan(value)
+
+    def tilt(self, value):
+        """
+        Sets tilt (y-axis) value if camera supports it. Requires v4l-utils.
+        :param value: tilt value between -648000 and 648000, step 3600
+        :type value: int
+        """
+        self._device.tilt(value)
 
     def is_recording(self):
         """
@@ -181,7 +208,7 @@ class VideoRecorder:
             else:
                 logging.error('Folder %s not existing' % folder)
         if not overwrite and os.path.exists(folder + file):
-            logging.error('File %s already exists' % folder+file)
+            logging.error('File %s already exists' % folder + file)
             return
 
         # Resolve codec
