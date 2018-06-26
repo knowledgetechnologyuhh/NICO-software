@@ -253,39 +253,43 @@ def plot_data_audio(audio_file, plot_audio_file):
     plt.xlabel('Time')
     plt.ylabel('Frequency')
 
-    plt.savefig(plot_audio_file)
+    plt.savefig(plot_audio_file, bbox_inches='tight')
 
     return True
 
 
-def plot_data_sensorimotor(sm_proprioception, sm_tactile, dfp_norm, plot_file_sm):
+def plot_data_sensorimotor(sm_proprioception, sm_tactile, dfp_norm, plot_file_sm, do_print_legend=False):
 
-    sm_pos_norm = np.array([dfp_norm[[str(x)+"_pos"]].values[:, 0]
-                            for x in sm_proprioception])
+    sm_pos_norm = np.array([dfp_norm[[str(x)+"_pos"]].values[:,0] for x in sm_proprioception])
 
-    sm_cur_norm = np.array([dfp_norm[[str(x)+"_cur"]].values[:, 0]
-                            for x in sm_proprioception])
+    sm_cur_norm = np.array([dfp_norm[[str(x)+"_cur"]].values[:,0] for x in sm_proprioception])
 
-    sm_tactile_norm = np.array(
-        [(dfp_norm[[str(x)]].values[:, 0]) for x in sm_tactile])
+    sm_tactile_norm = np.array([(dfp_norm[[str(x)]].values[:,0]) for x in sm_tactile])
 
     plt.subplot(311)
-    plt.plot(sm_pos_norm.T)
+    lines_pos = plt.plot(sm_pos_norm.T)
     plt.ylabel('Position')
+    if do_print_legend:
+        #plt.legend(lines_pos, sm_proprioception, ncol=2, bbox_to_anchor=(1.0, 1.06))
+        plt.legend(lines_pos, sm_proprioception, ncol=1, bbox_to_anchor=(1.0, 1.06))
     plt.ylim(-0.1, 1.1)
 
     plt.subplot(312)
-    plt.plot(sm_cur_norm.T)
+    lines_cur = plt.plot(sm_cur_norm.T)
     plt.ylabel('Current')
+    # if do_print_legend:
+    #     plt.legend(lines_cur, sm_proprioception, ncol=2, bbox_to_anchor=(1.0, 1.06))
     plt.ylim(-0.1, 1.1)
 
     plt.subplot(313)
-    plt.plot(sm_tactile_norm.T)
+    lines_tactile = plt.plot(sm_tactile_norm.T)
     plt.xlabel('Time')
     plt.ylabel('Touch')
+    if do_print_legend:
+        plt.legend(lines_tactile, sm_tactile, ncol=1, bbox_to_anchor=(1.0, 1.06))
     plt.ylim(-0.1, 1.1)
 
-    plt.savefig(plot_file_sm)
+    plt.savefig(plot_file_sm, bbox_inches='tight')
 
     return True
 
@@ -443,7 +447,7 @@ while (get_needed_overall_numbers() > 0):
         ir2.start_recording(cur_dir+'/camera2/picture-{}.png')
 
 
-    action_definitions.move_action(action)
+    action_definitions.move_action(action,robot)
     sleep(10)
 
     #sleep(5)
@@ -520,7 +524,7 @@ while (get_needed_overall_numbers() > 0):
 
             # Plot sensorimotor data:
             plot_data_sensorimotor(sm_proprioception, sm_tactile, dfp_norm,
-                                   fnplot)
+                                   fnplot, do_print_legend=True)
 
         # Plot audio data:
         plot_data_audio(cur_dir + '/' + label + ".wav",

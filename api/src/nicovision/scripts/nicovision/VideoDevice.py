@@ -1,14 +1,15 @@
-# todo 
+# TODO
 # Erik
-# get rid of the java style get and set functions and 
-# replace it with python style properties 
+# get rid of the java style get and set functions and
+# replace it with python style properties
 
-import logging
-import cv2
-import os
 import inspect
+import logging
+import os
 import threading
 import time
+
+import cv2
 
 
 class VideoDevice:
@@ -69,7 +70,8 @@ class VideoDevice:
             return -1
 
     @staticmethod
-    def from_device(device, framerate=20, width=640, height=480):
+    def from_device(device, framerate=20, width=640, height=480, zoom=100,
+                    pan=0, tilt=0):
         """
         Convenience method for creating a VideoDevice from a device
 
@@ -82,9 +84,10 @@ class VideoDevice:
         if id is -1:
             logging.error('Can not create VideoDevice from ID %s' % id)
             return None
-        return VideoDevice(id, framerate, width, height)
+        return VideoDevice(id, framerate, width, height, zoom, pan, tilt)
 
-    def __init__(self, id, framerate=20, width=640, height=480,compressed=True,pixel_format="MJPG"):
+    def __init__(self, id, framerate=20, width=640, height=480, zoom=100,
+                 pan=0, tilt=0, compressed=True, pixel_format="MJPG"):
         """
         Initialises the VideoDevice. The device starts open and has to be
         opened.
@@ -94,67 +97,130 @@ class VideoDevice:
 
         :param id: device id
         :type id: int
-        :param uncompressed: using compressed or uncompressed stream of the camera
+        :param uncompressed: using compressed or uncompressed stream of the
+        camera
         :type uncompressed: boolean
-        :param pixel_format: pixel format like 'UYVY' (econ-camera) or 'YUYV' (logitech) or 'MJPG' (both compressed)
+        :param pixel_format: pixel format like 'UYVY' (econ-camera) or 'YUYV'
+        (logitech) or 'MJPG' (both compressed)
         """
         self._deviceId = id
-        self._valid = True
         self._open = True
         self._callback = []
         self._running = True
         self._framerate = framerate
         self._width = width
         self._height = height
+        self.zoom(zoom)
+        self.pan(pan)
+        self.tilt(tilt)
         # Open camera
         self._capture = cv2.VideoCapture(id)
         self._capture.set(cv2.CAP_PROP_FRAME_WIDTH, self._width)
         self._capture.set(cv2.CAP_PROP_FRAME_HEIGHT, self._height)
         self._capture.set(cv2.CAP_PROP_FPS, self._framerate)
-        
+
         fourcc = cv2.VideoWriter_fourcc(*pixel_format)
-        #fourcc = cv2.VideoWriter_fourcc(*'UYVY')
-        self._capture.set(cv2.CAP_PROP_FOURCC,fourcc)
-        
+        # fourcc = cv2.VideoWriter_fourcc(*'UYVY')
+        self._capture.set(cv2.CAP_PROP_FOURCC, fourcc)
+
         # Start thread
         self._thread = threading.Thread(target=self._eventloop)
         self._thread.start()
-        
-	
-	@classmethod	
-	def from_camera_type(cls,id, camera_type="c905",compressed=True):
 
-		"""
-		Initializes the video device with the best resulution quality avaiable for the cameras e-con See3CAM_CU135 (econ) 
-		or Logitech Webcam C905 (C905)
-		
-		To get the combination of framerate, x_res and y_res out of the camera do: v4l2-ctl -d /dev/video0 --list-formats-ext
-		"""
-        
-        #Opens Camera device with maximal resolution
-  
-		if camera_type=="c905" and compressed==True: 
-			return cls(id,framerate=10, width=1600, height=1200,compressed=compressed)
-		elif camera_type=="c905" and compressed==False: 
-			return cls(id,framerate=5, width=1600, height=1200,compressed=compressed)
-		elif camera_type=="econ" and compressed==True: 
-			return cls(id,framerate=20, width=4208, height=3120,compressed=compressed)		
-		elif camera_type=="econ" and compressed==False: 
-			return cls(id,framerate=20, width=4208, height=3120,compressed=compressed)	
-     
-	@classmethod	
-	def from_nico_vision_version(cls,id, nico_vision_version=1,compressed=True):
-		"""
-		Initializes the video device with the best resolution quality avaiable for the NICO vision version 1 (1) and NICO vision version 2 (2)
-		"""
-		if nico_vision_version==1 and compressed==True: 
-			return cls(id,framerate=10, width=1600, height=1200,compressed=compressed)
-		elif nico_vision_version==1 and compressed==False: 
-			return cls(id,framerate=5, width=1600, height=1200,compressed=compressed)
-		elif nico_vision_version==2 and compressed==True: 
-			return cls(id,framerate=20, width=4208, height=3120,compressed=compressed)		
-		elif nico_vision_version==2 and compressed==False: 
-			return cls(id,framerate=20, width=4208, height=3120,compressed=compressed)	
+        @classmethod
+        def from_camera_type(cls, id, camera_type="c905", compressed=True):
+            """
+            Initializes the video device with the best resulution quality
+            avaiable for the cameras e-con See3CAM_CU135 (econ) or Logitech
+            Webcam C905 (C905)
+
+            To get the combination of framerate, x_res and y_res out of the
+            camera do: v4l2-ctl -d /dev/video0 --list-formats-ext
+            """
+
+        # Opens Camera device with maximal resolution
+
+            if camera_type == "c905" and compressed is True:
+                return cls(id, framerate=10, width=1600, height=1200,
+                           compressed=compressed)
+            elif camera_type == "c905" and compressed is False:
+                return cls(id, framerate=5, width=1600, height=1200,
+                           compressed=compressed)
+            elif camera_type == "econ" and compressed is True:
+                return cls(id, framerate=20, width=4208, height=3120,
+                           compressed=compressed)
+            elif camera_type == "econ" and compressed is False:
+                return cls(id, framerate=20, width=4208, height=3120,
+                           compressed=compressed)
+
+        @classmethod
+        def from_nico_vision_version(cls, id, nico_vision_version=1,
+                                     compressed=True):
+            """
+            Initializes the video device with the best resolution quality
+            avaiable for the NICO vision version 1 (1) and NICO vision version
+            2 (2)
+            """
+            if nico_vision_version == 1 and compressed is True:
+                return cls(id, framerate=10, width=1600, height=1200,
+                           compressed=compressed)
+            elif nico_vision_version == 1 and compressed is False:
+                return cls(id, framerate=5, width=1600, height=1200,
+                           compressed=compressed)
+            elif nico_vision_version == 2 and compressed is True:
+                return cls(id, framerate=20, width=4208, height=3120,
+                           compressed=compressed)
+            elif nico_vision_version == 2 and compressed is False:
+                return cls(id, framerate=20, width=4208, height=3120,
+                           compressed=compressed)
+
+    def zoom(self, value):
+        """
+        Sets zoom value if camera supports it. Requires v4l-utils.
+        :param value: zoom value between 100 and 800
+        :type value: int
+        """
+        if type(value) is int and 100 <= value <= 800:
+            subprocess.call(
+                ['v4l2-ctl -d {} -c zoom_absolute={}'.format(
+                    self._deviceId, value)], shell=True)
+        else:
+            logging.warning(
+                "Zoom value has to be an integer between 100 and 800")
+
+    def pan(self, value):
+        """
+        Sets pan (x-axis) value if camera supports it. Requires v4l-utils.
+        :param value: pan value between -648000 and 648000, step 3600
+        :type value: int
+        """
+        if(type(value) is int and -648000 <= value <= 648000 and
+           value % 3600 == 0):
+            subprocess.call(
+                ['v4l2-ctl -d {} -c pan_absolute={}'.format(
+                    self._deviceId, value)],
+                shell=True)
+        else:
+            logging.warning(
+                "Pan value has to be a multiple of 3600 between -648000 and " +
+                "648000")
+
+    def tilt(self, value):
+        """
+        Sets tilt (y-axis) value if camera supports it. Requires v4l-utils.
+        :param value: tilt value between -648000 and 648000, step 3600
+        :type value: int
+        """
+        if (type(value) is int and -648000 <= value <= 648000 and
+                value % 3600 == 0):
+            subprocess.call(
+                ['v4l2-ctl -d {} -c tilt_absolute={}'.format(
+                    self._deviceId, value)],
+                shell=True)
+        else:
+            logging.warning(
+                "Tilt value has to be a multiple of 3600 between -648000 and" +
+                " 648000")
 
     def set_framerate(self, framerate):
         """
@@ -193,8 +259,6 @@ class VideoDevice:
             self._capture.set(cv2.CAP_PROP_FRAME_WIDTH, self._width)
             self._capture.set(cv2.CAP_PROP_FRAME_HEIGHT, self._height)
             self._running = True
-
-        print("Resolution set")
 
     def get_resolution(self):
         """
@@ -280,4 +344,4 @@ class VideoDevice:
             rval, frame = self._capture.read()
             for function in self._callback:
                 function(rval, frame)
-            time.sleep(max(0, 1.0/self._framerate - (time.time() - t1)))
+            time.sleep(max(0, 1.0 / self._framerate - (time.time() - t1)))
