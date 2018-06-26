@@ -1,6 +1,7 @@
 # Simple Example using the Imagerecorder class
 # takes the args
-# resolution_x, resolution_y, framerate, number_of_cameras_to_use
+# resolution_x, resolution_y, framerate, number_of_cameras_to_use,
+# (optional) zoom
 # from the command line
 #
 # Authors:
@@ -21,15 +22,18 @@ try:
 except OSError:
     pass
 
-print len(sys.argv)
-if len(sys.argv) != 5:
-    print "please call me with the parameters"
-    print "resolution_x, resolution_y, framerate, number_of_cameras_to_use"
+print(len(sys.argv))
+if len(sys.argv) not in (5, 6):
+    print("please call me with the parameters")
+    print("resolution_x, resolution_y, framerate, number_of_cameras_to_use, " +
+          "(optional) zoom")
 else:
+
     res_x = int(sys.argv[1])
     res_y = int(sys.argv[2])
     framerate = int(sys.argv[3])
     amount_of_cams = int(sys.argv[4])
+    zoom = int(sys.argv[5]) if len(sys.argv) == 6 else 100
 
     for i in range(amount_of_cams):
         try:
@@ -43,8 +47,8 @@ else:
     if amount_of_cams == 1:
         device = ImageRecorder.get_devices()[0]
         ir = ImageRecorder.ImageRecorder(device, res_x, res_y,
-                                         framerate=framerate, writer_threads=3,
-                                         pixel_format="UYVY")
+                                         framerate=framerate, zoom=zoom,
+                                         writer_threads=3, pixel_format="UYVY")
         # ir = ImageRecorder.ImageRecorder(device, res_x, res_y,framerate=framerate,writer_threads=4,pixel_format="MJPG")
         # ir = ImageRecorder.ImageRecorder(device, 1920, 1080,framerate=30,writer_threads=5)
         # ir = ImageRecorder.ImageRecorder(device, 3840, 2160,framerate=30,writer_threads=5)
@@ -52,8 +56,8 @@ else:
     elif amount_of_cams >= 2:
         devices = ImageRecorder.get_devices()[0:amount_of_cams]
         ir = MultiCamRecorder.MultiCamRecorder(devices, res_x, res_y,
-                                               framerate=framerate,
-                                               writer_threads=3,
+                                               framerate=framerate, zoom=zoom,
+                                               writer_threads=4,
                                                pixel_format="UYVY")
     sleep(2)
     print("Start taking pictures")
