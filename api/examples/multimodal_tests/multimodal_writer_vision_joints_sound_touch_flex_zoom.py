@@ -9,6 +9,7 @@
 
 import logging
 from nicovision import ImageRecorder
+from nicovision import VideoDevice
 from nicomotion import Motion
 import os
 from os.path import dirname, abspath
@@ -20,6 +21,9 @@ import cv2
 from nicotouch.optoforcesensors import optoforce
 
 from nicoaudio import pulse_audio_recorder
+
+import subprocess
+
 
 fnl = "left_cam_synced_data.csv"
 fnr = "right_cam_synced_data.csv"
@@ -52,56 +56,10 @@ def write_joint_data(robot, df, iso_time):
     return(df)
 
 
-class zoom_image_recorder(ImageRecorder.ImageRecorder):
-
-    def zoom(self, value):
-        """
-        Sets zoom value of all cameras that support it. Requires v4l-utils.
-        :param value: zoom value between 100 and 800
-        :type value: int
-        """
-        if type(value) is int and 100 <= value <= 800:
-            subprocess.call(
-                ['v4l2-ctl -d {} -c zoom_absolute={}'.format(id, value)],
-                shell=True)
-        else:
-            logging.warning(
-                "Zoom value has to be an integer between 100 and 800")
-
-    def pan(self, value):
-        """
-        Sets pan (x-axis) value of all cameras that support it. Requires
-        v4l-utils.
-        :param value: pan value between -648000 and 648000, step 3600
-        :type value: int
-        """
-        if(type(value) is int and -648000 <= value <= 648000 and value % 3600 == 0):
-            subprocess.call(
-                ['v4l2-ctl -d {} -c pan_absolute={}'.format(id, value)],
-                shell=True)
-        else:
-            logging.warning(
-                "Pan value has to be a multiple of 3600 between -648000 and " +
-                "648000")
-
-    def tilt(self, value):
-        """
-        Sets tilt (y-axis) value of all cameras that support it. Requires
-        v4l-utils.
-        :param value: tilt value between -648000 and 648000, step 3600
-        :type value: int
-        """
-        if (type(value) is int and -648000 <= value <= 648000 and value % 3600 == 0):
-            subprocess.call(
-                ['v4l2-ctl -d {} -c tilt_absolute={}'.format(id, value)],
-                shell=True)
-        else:
-            logging.warning(
-                "Tilt value has to be a multiple of 3600 between -648000 and" +
-                " 648000")
 
 
-class leftcam_ImageRecorder(zoom_image_recorder):
+
+class leftcam_ImageRecorder(ImageRecorder.ImageRecorder):
 
     def custom_callback(self, iso_time, frame):
 
@@ -117,7 +75,7 @@ class leftcam_ImageRecorder(zoom_image_recorder):
         return(frame)
 
 
-class rightcam_ImageRecorder(zoom_image_recorder):
+class rightcam_ImageRecorder(ImageRecorder.ImageRecorder):
 
     def custom_callback(self, iso_time, frame):
 
@@ -153,18 +111,19 @@ else:
     if data_directory == "":
         data_directory = os.mkdir(dirname(abspath(__file__)))
 
+    
     try:
-        data_directory+'/recorded_images'
+        os.mkdir(data_directory+'/recorded_images')
     except OSError:
         pass
 
     try:
-        data_directory+'/recorded_images/camera1'
+        os.mkdir(data_directory+'/recorded_images/camera1')
     except OSError:
         pass
 
     try:
-        data_directory+'/recorded_images/camera2'
+        os.mkdir(data_directory+'/recorded_images/camera2')
     except OSError:
         pass
 
@@ -190,24 +149,26 @@ else:
     # zoom level, pan and tilt
     zoom_level = 200
     pan = -648000
+    #pan=36000
     # pan=3600*value
-    tilt = 3600
+    tilt =36000
 
     print "devices" + str(ImageRecorder.get_devices())
     device = ImageRecorder.get_devices()[0]
     ir = leftcam_ImageRecorder(
-        device, res_x, res_y, framerate=framerate, writer_threads=2, pixel_format="UYVY")
+        device, res_x, res_y,
+        zoom=zoom_level, pan=pan, tilt=tilt, framerate=framerate, writer_threads=4, pixel_format="UYVY")
 
-    ir.zoom(zoom_level)
-    ir.pan(pan)
-    ir.tilt(tilt)
+    #ir.zoom(zoom_level,cam_pathname=VideoDevice.PATH_LEGGED_NICO_LEFT)
+    #ir.pan(pan)
+    #ir.tilt(tilt)
 
 
     if amount_of_cams >= 2:
         device2 = ImageRecorder.get_devices()[1]
         ir2 = rightcam_ImageRecorder(
             device2, res_x, res_y, framerate=framerate, writer_threads=2, pixel_format="UYVY")
-        ir2.zoom(zoom_level)
+        #ir2.zoom(zoom_level)
         ir2.pan(pan)
         ir2.tilt(tilt)
 
