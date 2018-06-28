@@ -22,7 +22,7 @@ camera_settings = {
                 "white_balance_temperature_auto": 0,
                 "gamma": 220,
                 "gain" : 0,
-                "white_balance_temperature": 5000,
+                "white_balance_temperature": 32000,
                 "sharpness": 16,
                 "exposure_auto" : 0,
                 "exposure_absolute" : 312,

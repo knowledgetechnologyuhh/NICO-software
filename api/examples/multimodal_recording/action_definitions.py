@@ -18,13 +18,20 @@ from time import sleep
 #}
 
 actions = {
-    "pull": [[1.5, 2, 4, 2, 1.5],["thumb_bend","no","no","no","no"]],
-    "push": [[1.0, 1.0, 1.0, 1.0],["open","no","no","no"]]
+    "pull":  [[1, 1, 1, 4, 1],["thumb_bend","no","no","no","no"]],
+    "push":  [[1.0, 1.0, 1.0, 1.0],["open","no","no","no"]],
+    "scoot": [[1.0, 1.5, 2.0, 3.0, 2.0, 0.5],["open","no","close","no","no", "open"]],
+    "lift":  [[1.0, 1.5, 2.0, 3.0, 2.0, 0.5],["open","no","close","no","no", "open"]]
 }
+
 
 def move_action(action,robot):
 
-    wait_durations, hand_movements = actions[action] 
+    wait_durations, hand_movements = actions[action]
+
+    mover_path = "../../../moves_and_positions/"
+    mov = Mover.Mover(robot, stiff_off=False)
+
     for n, wait_duration in enumerate(wait_durations):
         
         if hand_movements[n]=="no":
@@ -32,12 +39,16 @@ def move_action(action,robot):
         
         elif hand_movements[n]=="open":
 
-            robot.openHand('RHand', fractionMaxSpeed=0.8)
+            #robot.openHand('RHand', fractionMaxSpeed=0.8)
+            robot.setAngle("r_thumb_x",-160,0.4)
+            robot.setAngle("r_indexfingers_x",-160,0.4)
+            
             sleep(0.5)
 
         elif hand_movements[n]=="close":
 
             robot.closeHand('RHand', fractionMaxSpeed=0.8)
+            #MK: I set the current limit to 250/250
             sleep(0.5)
 
         elif hand_movements[n]=="thumb_bend":
@@ -54,11 +65,13 @@ def move_action(action,robot):
 
 
         mov.move_file_position(mover_path + "pos_"+action+"_"+str(n+1)+".csv",
-                               subsetfname=mover_path + "subset_right_arm.csv", move_speed=0.05)
+                               subsetfname=mover_path + "subset_right_arm.csv", move_speed=0.075)
         sleep(wait_duration)
 
     mov.move_file_position(mover_path + "pos_"+action+"_"+str(1)+".csv",
-                           subsetfname=mover_path + "subset_right_arm.csv", move_speed=0.05, )
+                           subsetfname=mover_path + "subset_right_arm.csv", move_speed=0.075, )
+                        
+    mov=None
 
 
 if __name__ == "__main__":
@@ -81,7 +94,9 @@ if __name__ == "__main__":
         sleep(2)
 
         # set the robot to be compliant
-        robot.disableTorqueAll()
+        #MK: I deactivated this to prevent the robot from "bashing" it's hand into the table between trials
+        # The robot hand is always above the table and does not scrape over the surface
+        #robot.disableTorqueAll()
 
         #robot.openHand('RHand', fractionMaxSpeed=0.8)
 
