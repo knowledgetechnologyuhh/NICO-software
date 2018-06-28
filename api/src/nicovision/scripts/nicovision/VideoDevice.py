@@ -11,6 +11,13 @@ import time
 
 import cv2
 
+import subprocess
+
+VIDEO_DEVICE_PATH="/dev/v4l/by-id/"
+ID_STR_LEGGED_NICO_LEFT_CAM="usb-e-con_systems_See3CAM_CU135_09229807-video-index0"
+ID_STR_LEGGED_NICO_RIGHT_CAM="usb-e-con_systems_See3CAM_CU135_36249807-video-index0"
+PATH_LEGGED_NICO_LEFT_CAM=VIDEO_DEVICE_PATH+ID_STR_LEGGED_NICO_LEFT_CAM
+PATH_LEGGED_NICO_RIGHT_CAM=VIDEO_DEVICE_PATH+ID_STR_LEGGED_NICO_RIGHT_CAM
 
 class VideoDevice:
     """
@@ -191,15 +198,17 @@ class VideoDevice:
                 "Wrong value name in camera_value setting")
 
     def zoom(self, value):
+
         """
         Sets zoom value if camera supports it. Requires v4l-utils.
         :param value: zoom value between 100 and 800
         :type value: int
         """
         if type(value) is int and 100 <= value <= 800:
-            subprocess.call(
-                ['v4l2-ctl -d {} -c zoom_absolute={}'.format(
-                    self._deviceId, value)], shell=True)
+            call_str='v4l2-ctl -d {} -c zoom_absolute={}'.format(cam_pathname, value)
+            logging.debug(
+                "Zoom value call with " + call_str)
+            subprocess.call([call_str], shell=True)
         else:
             logging.warning(
                 "Zoom value has to be an integer between 100 and 800")

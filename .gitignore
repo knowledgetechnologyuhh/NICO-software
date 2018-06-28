@@ -24,6 +24,17 @@ _site/
 # catkin generated files
 api/build
 api/devel
+api/build-old
+api/devel-old
+api/src/CMakeFiles
+*/catkin_generated/*
 
+#data files
+api/examples/mixed-modules/touch-sensor-experiments/data
+api/examples/mixed-modules/touch-sensor-experiments/data_old
+api/examples/mixed-modules/touch-sensor-experiments/data_orig
+api/examples/mixed-modules/touch-sensor-experiments/data-very-small-dataset
+api/examples/mixed-modules/touch-sensor-experiments/arm_data
+ 
 # log file
 *.log

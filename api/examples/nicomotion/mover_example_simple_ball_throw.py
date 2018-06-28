@@ -17,18 +17,19 @@ key="c"
 while key != "q":
     #mov.play_movement(mover_path+"mov_from_table_to_get.csv",subsetfname=mover_path+"subset_left_arm_and_head.csv",move_speed=0.01)
     mov.move_file_position(mover_path + "pos_from_table_to_get.csv", subsetfname=mover_path + "subset_left_arm_and_head.csv",
-                      move_speed=0.01)
+                      move_speed=0.05)
     robot.openHand("LHand")
     raw_input()
-    robot.closeHand("LHand")
+    robot.closeHand("LHand",1.0,0.5)
     time.sleep(2)
     #mov.play_movement(mover_path+"mov_from_get_throw.csv",subsetfname=mover_path+"subset_left_arm.csv",move_speed=0.03)
     ttw=mov.move_file_position(mover_path + "pos_from_get_throw.csv", subsetfname=mover_path + "subset_left_arm.csv",
-                      move_speed=0.03)
+                      move_speed=0.05)
     print ttw
-    time.sleep(ttw+2)
-    robot.openHand("LHand")
-    time.sleep(0.7)
+    #time.sleep(ttw)
+    time.sleep(4.5)
+    robot.openHand("LHand",1.0,0.7)
+    time.sleep(0.5)
     ttw=mov.move_file_position(mover_path+"pos_throw_ball.csv",subsetfname=mover_path+"subset_left_arm.csv",move_speed=0.2)
     time.sleep(ttw)
     key=raw_input()
