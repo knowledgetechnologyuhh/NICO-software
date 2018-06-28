@@ -58,13 +58,13 @@ class ImageRecorder:
         self._target = 'picture-{}.png'
         self._image_writer = ImageWriter(writer_threads)
 
-    def zoom(self, value):
+    def zoom(self, value,cam_pathname=None):
         """
         Sets zoom value if camera supports it. Requires v4l-utils.
         :param value: zoom value between 100 and 800
         :type value: int
         """
-        self._device.zoom(value)
+        self._device.zoom(value,cam_pathname=cam_pathname)
 
     def pan(self, value):
         """
