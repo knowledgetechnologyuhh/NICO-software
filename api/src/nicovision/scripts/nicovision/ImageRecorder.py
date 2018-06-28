@@ -64,7 +64,7 @@ class ImageRecorder:
         :param value: zoom value between 100 and 800
         :type value: int
         """
-        self._device.camera_value(value_name ,value):
+        self._device.camera_value(value_name ,value)
 
     def zoom(self, value):
         """
