@@ -5,6 +5,7 @@
 # GNU GPL License
 
 from nicomotion import Motion
+from nicomotion import Mover
 from nicotouch.optoforcesensors import optoforce
 import pypot.dynamixel
 from time import sleep
@@ -60,8 +61,8 @@ timecode_local VARCHAR(30));"""
 format_str_subsample_arm = """INSERT INTO subsample_arm (subsample_number, sample_number , subsample_iteration, r_elbow_y_position, 
 r_arm_x_position, r_shoulder_z_position, r_shoulder_y_position, r_elbow_y_current, r_arm_x_current, r_shoulder_z_current, r_shoulder_y_current, timecode_local )
   VALUES (NULL, "{sample_number}",  "{subsample_iteration}", "{r_elbow_y_position}", "{r_arm_x_position}", 
-"{r_shoulder_z_position}","{r_shoulder_y_position}", "{r_elbow_y_position}", "{r_arm_x_position}", 
-"{r_shoulder_z_position}","{r_shoulder_y_position}", "{timecode_touch}");"""
+"{r_shoulder_z_position}","{r_shoulder_y_position}", "{r_elbow_y_current}", "{r_arm_x_current}", 
+"{r_shoulder_z_current}","{r_shoulder_y_current}", "{timecode_local}");"""
 
 
 format_str_sample = """INSERT INTO sample (sample_number,object_name , timecode)
@@ -145,16 +146,14 @@ sleep(1)
 
 # Instructions for the experimenter. Brig the robot in Initial position
 print "\n OK. The robot is positioned. We will start the experiment now.\n\n"
+# Data for touch sensor
+# Adapt this for the srial Interface you need for the sensor
+optsens = optoforce("/dev/ttyACM1", "DSE0A125")
 
+while ( get_needed_overall_numbers() > 0 ):
 
-with pypot.dynamixel.DxlIO('/dev/ttyACM0') as dxl_io:
-    dxl_io.enable_torque([27, 29])
-
-    # Data for touch sensor
-    # Adapt this for the srial Interface you need for the sensor
-    optsens = optoforce("/dev/ttyACM1", "DSE0A125")
-
-    while ( get_needed_overall_numbers() > 0 ):
+    with pypot.dynamixel.DxlIO('/dev/ttyACM0') as dxl_io:
+        dxl_io.enable_torque([27, 29])
 
         #open hand
         dxl_io.set_goal_position({27: -180.00})
@@ -227,7 +226,7 @@ with pypot.dynamixel.DxlIO('/dev/ttyACM0') as dxl_io:
                 print "!!Reached Overload!!"
 
             #Write the subsample data to the database
-            sql_command = format_str_subsample_arm.format(sample_number=sample_number, subsample_iteration = it, thumb_position=thumb_pos,finger_position=finger_pos,
+            sql_command = format_str_subsample.format(sample_number=sample_number, subsample_iteration = it, thumb_position=thumb_pos,finger_position=finger_pos,
                                                           thumb_current=cur_thumb, finger_current=cur_finger,
                                                       timecode_local=datetime.datetime.now().isoformat(),status=status,status_touch=sensor_status,
                                                           counter_touch=counter,x_touch=x,y_touch=y,z_touch=z,timecode_touch=time_touch)
@@ -250,94 +249,94 @@ with pypot.dynamixel.DxlIO('/dev/ttyACM0') as dxl_io:
 
             #raw_input()
 
-        robot = Motion.Motion("../../../../json/nico_humanoid_legged_with_hands_mod.json", vrep=False)
+    robot = Motion.Motion("../../../../json/nico_humanoid_legged_with_hands_mod.json", vrep=False)
 
-        mover_path = "../../../../moves_and_positions/"
-        mov = Mover.Mover(robot, stiff_off=False)
+    mover_path = "../../../../moves_and_positions/"
+    mov = Mover.Mover(robot, stiff_off=False)
 
-        # enable torque of left arm joints
-        robot.enableForceControl("head_z", 20)
-        robot.enableForceControl("head_y", 20)
+    # enable torque of left arm joints
+    robot.enableForceControl("head_z", 40)
+    robot.enableForceControl("head_y", 40)
 
-        robot.enableForceControl("r_shoulder_z", 20)
-        robot.enableForceControl("r_shoulder_y", 20)
-        robot.enableForceControl("r_arm_x", 20)
-        robot.enableForceControl("r_elbow_y", 20)
-
-
+    robot.enableForceControl("r_shoulder_z", 40)
+    robot.enableForceControl("r_shoulder_y", 40)
+    robot.enableForceControl("r_arm_x", 40)
+    robot.enableForceControl("r_elbow_y", 40)
 
 
+    #step over 8 movement steps
+    for n in range(1,9,1):
 
-        #step over 8 movement steps
-        for n in range(8):
+        mov.move_file_position(mover_path + "lift_arm_experiment_pos_"+str(n)+".csv",
+                               subsetfname=mover_path + "subset_right_arm_without_hand.csv",
+                               move_speed=0.03)
 
-            mov.move_file_position(mover_path + "lift_arm_experiment_pos_"+n+".csv",
-                                   subsetfname=mover_path + "subset_right_arm.csv",
-                                   move_speed=0.05)
+        sleep(.2)
 
-            sleep(1)
+        # Write the subsample data to the database
+        sql_command = format_str_subsample_arm.format(sample_number=sample_number, subsample_iteration=n,
+                                                  r_elbow_y_position=robot.getAngle("r_elbow_y"),
+                                                    r_arm_x_position = robot.getAngle("r_arm_x"),
+                                                  r_shoulder_z_position = robot.getAngle("r_shoulder_z"),
+                                                  r_shoulder_y_position = robot.getAngle("r_shoulder_y"),
+                                                  r_elbow_y_current=robot.getCurrent("r_elbow_y") ,
+                                                  r_arm_x_current=robot.getCurrent("r_arm_x"),
+                                                  r_shoulder_z_current=robot.getCurrent("r_shoulder_z"),
+                                                  r_shoulder_y_current=robot.getCurrent("r_shoulder_y"),
+                                                  timecode_local=datetime.datetime.now().isoformat())
 
-            # Write the subsample data to the database
-            sql_command = format_str_subsample.format(sample_number=sample_number, subsample_iteration=n,
-                                                      r_elbow_y_position=robot.getAngle("r_elbow_y"),
-                                                        r_arm_x_position = robot.getAngle("r_arm_x"),
-                                                      r_shoulder_z_position = robot.getAngle("r_shoulder_z"),
-                                                      r_shoulder_y_position = robot.getAngle("r_shoulder_y"),
-                                                      r_elbow_y_current=robot.getCurrent("r_elbow_y") ,
-                                                      r_arm_x_current=robot.getCurrent("r_arm_x"),
-                                                      r_shoulder_z_current=robot.getCurrent("r_shoulder_z"),
-                                                      r_shoulder_y_current=robot.getCurrent("r_shoulder_y"),
-                                                      timecode_local=datetime.datetime.now().isoformat())
+        print sql_command
+        cursor.execute(sql_command)
+        subsample_number = cursor.lastrowid
 
-            print sql_command
-            cursor.execute(sql_command)
-            subsample_number = cursor.lastrowid
+        # take 5 pictures (error in the driver)
+        for t in range(5):
+            img = cam.get_image()
 
-            # take 5 pictures (error in the driver)
-            for t in range(5):
-                img = cam.get_image()
-
-            pygame.image.save(img, "./arm_data/arm_" + str(subsample_number) + ".jpg")
-            # call(["fswebcam", "-r", "640x480", "-d", "/dev/video0", "--jpeg", "95", "-D", "1",
-            #      "./data/" + str(subsample_number) + ".jpg"])
-            sleep(.1)
-
-
-            #Write data to database here
-
-        for n in range(8,0,-1):
-            mov.move_file_position(mover_path + "lift_arm_experiment_pos_" + n + ".csv",
-                                   subsetfname=mover_path + "subset_right_arm.csv",
-                                   move_speed=0.05)
-
-            sleep(0.5)
-
-            # Write data to database here
-
-        # Step 2
-        # Move the arm upwards
-
-        # print "Motor Goal Position " + str(dxl_io.get_goal_position([27]))
-        # print "Thumb Present Position " + str(thumb_pos)
-        # print "Finger Present Position " + str(finger_pos)
-        ###
-
-        # print "Motor Max Torque" + str(dxl_io.get_max_torque([27]))
+        pygame.image.save(img, "./arm_data/arm_" + str(subsample_number) + ".jpg")
+        # call(["fswebcam", "-r", "640x480", "-d", "/dev/video0", "--jpeg", "95", "-D", "1",
+        #      "./data/" + str(subsample_number) + ".jpg"])
+        sleep(.1)
 
 
-        # print "Sensor raw" + str((x,y,z))
-        # (x, y, z) = optsens.get_sensor_values_hex()
-        # print "Sensor " + str((x, y, z))
-        # (time_touch, counter, sensor_status, x, y, z, checksum) = optsens.get_sensor_all()
-        # print str(time_touch) + "," + str(counter) + "," + str(sensor_status) + "," + str(x) + "," + str(y) + "," + str(z) + "," + str(checksum)
+        #Write data to database here
+
+    for n in range(8,0,-1):
+        mov.move_file_position(mover_path + "lift_arm_experiment_pos_" + str(n) + ".csv",
+                               subsetfname=mover_path + "subset_right_arm_without_hand.csv",
+                               move_speed=0.03)
+
+        sleep(0.5)
+
+        # Write data to database here
+
+    # Step 2
+    # Move the arm upwards
+
+    # print "Motor Goal Position " + str(dxl_io.get_goal_position([27]))
+    # print "Thumb Present Position " + str(thumb_pos)
+    # print "Finger Present Position " + str(finger_pos)
+    ###
+
+    # print "Motor Max Torque" + str(dxl_io.get_max_torque([27]))
 
 
-        connection.commit()
-    connection.close()
-    print "\n\n Great! I got all samples together! Finishing experiment.\n"
-    print_progress()
+    # print "Sensor raw" + str((x,y,z))
+    # (x, y, z) = optsens.get_sensor_values_hex()
+    # print "Sensor " + str((x, y, z))
+    # (time_touch, counter, sensor_status, x, y, z, checksum) = optsens.get_sensor_all()
+    # print str(time_touch) + "," + str(counter) + "," + str(sensor_status) + "," + str(x) + "," + str(y) + "," + str(z) + "," + str(checksum)
 
-    dxl_io.disable_torque([27, 29])
+
+    robot.disableTorqueAll()
+    robot = None
+    sleep(5)
+
+    connection.commit()
+connection.close()
+print "\n\n Great! I got all samples together! Finishing experiment.\n"
+print_progress()
+
 
 #set the robot to be compliant
 

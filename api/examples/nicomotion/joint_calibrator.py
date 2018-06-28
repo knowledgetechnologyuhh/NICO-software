@@ -7,8 +7,8 @@ print "Waiting for 2 seconds - Do not know why"
 time.sleep(2)
 #virtualRobot = Motion.Motion("../../../json/nico_humanoid_legged_with_hands_mod.json",vrep=True)
 #realRobot = Motion.Motion("../../../json/nico_humanoid_legged_with_hands_mod.json",vrep=False)
-virtualRobot = Motion.Motion("../../../json/nico_humanoid_upper.json",vrep=True)
-realRobot = Motion.Motion("../../../json/nico_humanoid_upper.json",vrep=False)
+virtualRobot = Motion.Motion("../../../json/nico_humanoid_legged_with_hands_mod.json",vrep=True)
+realRobot = Motion.Motion("../../../json/nico_humanoid_legged_with_hands_mod.json",vrep=False)
 
 for jNames in (realRobot.getJointNames()):
 

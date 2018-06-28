@@ -8,7 +8,7 @@ import sys
 import time
 from nicomotion import Motion
 
-robot = Motion.Motion("../../../json/nico_humanoid_upper_with_hands_vrep.json",vrep=True)
+robot = Motion.Motion("../../../json/nico_humanoid_upper_with_hands_vrep.json",vrep=False)
 
 position = -20
 for i in xrange(6):

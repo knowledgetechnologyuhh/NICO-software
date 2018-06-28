@@ -364,19 +364,19 @@ amount_of_cams = 2
 
 # zoom level, pan and tilt
 zoom_level = 150
-#pan = -648000
 pan = 0
-# pan=3600*value
 tilt = 0
 
 # Vision Recording
-device = ImageRecorder.get_devices()[0]
+#device = ImageRecorder.get_devices()[0]
+device=VideoDevice.PATH_LEGGED_NICO_LEFT_CAM
 ir = leftcam_ImageRecorder(
     device, res_x, res_y, zoom=zoom_level, pan=pan, tilt=tilt,
     framerate=framerate, writer_threads=5, pixel_format="UYVY")
 
 if amount_of_cams >= 2:
-    device2 = ImageRecorder.get_devices()[1]
+    #device2 = ImageRecorder.get_devices()[1]
+    device2=VideoDevice.PATH_LEGGED_NICO_RIGHT_CAM
     ir2 = rightcam_ImageRecorder(
         device2, res_x, res_y, zoom=zoom_level, pan=pan, tilt=tilt,
         framerate=framerate, writer_threads=5, pixel_format="UYVY")
