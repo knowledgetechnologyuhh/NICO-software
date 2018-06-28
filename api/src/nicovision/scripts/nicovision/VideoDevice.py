@@ -192,7 +192,7 @@ class VideoDevice:
         if value_name!=None:
             subprocess.call(
                 ['v4l2-ctl -d {} -c {}={}'.format(
-                    self._deviceId, value_str, value)], shell=True)
+                    self._deviceId, value_name, value)], shell=True)
         else:
             logging.warning(
                 "Wrong value name in camera_value setting")
@@ -205,7 +205,7 @@ class VideoDevice:
         :type value: int
         """
         if type(value) is int and 100 <= value <= 800:
-            call_str='v4l2-ctl -d {} -c zoom_absolute={}'.format(cam_pathname, value)
+            call_str='v4l2-ctl -d {} -c zoom_absolute={}'.format(self._deviceId, value)
             logging.debug(
                 "Zoom value call with " + call_str)
             subprocess.call([call_str], shell=True)
