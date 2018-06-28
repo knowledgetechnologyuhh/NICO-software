@@ -11,6 +11,12 @@ import time
 
 import cv2
 
+import subprocess
+
+PATH_LEGGED_NICO_LEFT="/dev/v4l/by-id/usb-e-con_systems_See3CAM_CU135_09229807-video-index0"
+PATH_LEGGED_NICO_RIGHT="/dev/v4l/by-id/usb-e-con_systems_See3CAM_CU135_36249807-video-index0"
+
+
 
 class VideoDevice:
     """
@@ -174,16 +180,20 @@ class VideoDevice:
                 return cls(id, framerate=20, width=4208, height=3120,
                            compressed=compressed)
 
-    def zoom(self, value):
+    def zoom(self, value,cam_pathname=None):
         """
         Sets zoom value if camera supports it. Requires v4l-utils.
         :param value: zoom value between 100 and 800
         :type value: int
         """
         if type(value) is int and 100 <= value <= 800:
-            subprocess.call(
-                ['v4l2-ctl -d {} -c zoom_absolute={}'.format(
-                    self._deviceId, value)], shell=True)
+
+            if cam_pathname==None:    
+                call_str='v4l2-ctl -d {} -c zoom_absolute={}'.format(self._deviceId, value)
+            else:
+                call_str='v4l2-ctl -d {} -c zoom_absolute={}'.format(cam_pathname, value)
+            logging.info ("Called camera hardware zoom with command : " + call_str)
+            subprocess.call([call_str], shell=True)
         else:
             logging.warning(
                 "Zoom value has to be an integer between 100 and 800")
