@@ -174,6 +174,22 @@ class VideoDevice:
                 return cls(id, framerate=20, width=4208, height=3120,
                            compressed=compressed)
 
+    def camera_value(self, value_name ,value):
+        """
+        Sets the a camera value over the v4l-utils. Requires v4l-utils.
+        :param value_name: name of the value to set like brightness, contrast, ...
+        :type value_name str
+        :param value: value to set 
+        :type value: int
+        """
+        if value_name!=None:
+            subprocess.call(
+                ['v4l2-ctl -d {} -c {}={}'.format(
+                    self._deviceId, value_str value)], shell=True)
+        else:
+            logging.warning(
+                "Wrong value name in camera_value setting")
+
     def zoom(self, value):
         """
         Sets zoom value if camera supports it. Requires v4l-utils.
