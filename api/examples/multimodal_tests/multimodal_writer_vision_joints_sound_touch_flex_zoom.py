@@ -154,7 +154,8 @@ else:
     tilt =36000
 
     print "devices" + str(ImageRecorder.get_devices())
-    device = ImageRecorder.get_devices()[0]
+    #device = ImageRecorder.get_devices()[0]
+    device=VideoDevice.PATH_LEGGED_NICO_LEFT_CAM
     ir = leftcam_ImageRecorder(
         device, res_x, res_y,
         zoom=zoom_level, pan=pan, tilt=tilt, framerate=framerate, writer_threads=4, pixel_format="UYVY")
@@ -165,7 +166,8 @@ else:
 
 
     if amount_of_cams >= 2:
-        device2 = ImageRecorder.get_devices()[1]
+        #device2 = ImageRecorder.get_devices()[1]
+        device2=VideoDevice.PATH_LEGGED_NICO_RIGHT_CAM
         ir2 = rightcam_ImageRecorder(
             device2, res_x, res_y, framerate=framerate, writer_threads=2, pixel_format="UYVY")
         #ir2.zoom(zoom_level)
