@@ -192,7 +192,7 @@ class VideoDevice:
         if value_name!=None:
             subprocess.call(
                 ['v4l2-ctl -d {} -c {}={}'.format(
-                    self._deviceId, value_str value)], shell=True)
+                    self._deviceId, value_str, value)], shell=True)
         else:
             logging.warning(
                 "Wrong value name in camera_value setting")
