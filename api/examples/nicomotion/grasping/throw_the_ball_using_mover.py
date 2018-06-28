@@ -413,7 +413,7 @@ while (True):
 
     thumbAngle = robot.getAngle("r_thumb_x")
 
-    print("thumbAngle")
+    print("#################thumbAngle####################")
     print(thumbAngle)
 
     if thumbAngle > 68:
@@ -436,12 +436,20 @@ while (True):
         #                       move_speed=0.01)
         #time.sleep(ttr)
 
-        robot.setAngle("r_shoulder_z", -10, fMS)
-        robot.setAngle("r_shoulder_y", 22, fMS)
-        robot.setAngle("r_arm_x", 26, fMS)
-        robot.setAngle("r_elbow_y", -80, fMS)
-        robot.setAngle("r_wrist_z", -180, fMS)
-        robot.setAngle("r_wrist_x", -85, fMS)
+        mov.move_file_position(mover_path + "pos_ball_tension.csv",
+                               subsetfname=mover_path + "subset_right_arm.csv",
+                               move_speed=0.04)
+        time.sleep(4.5)
+
+
+        robot.openHand('RHand', fractionMaxSpeed=0.5)
+
+        time.sleep(0.7)
+
+        mov.move_file_position(mover_path + "pos_right_ball_throw.csv",
+                               subsetfname=mover_path + "subset_right_arm.csv",
+                               move_speed=0.4)
+        time.sleep(4)
 
         #time.sleep(2)
         # move arm to block
@@ -449,20 +457,20 @@ while (True):
 
         #time.sleep(2)
 
-        robot.openHand('RHand', fractionMaxSpeed=0.05)
-        time.sleep(1)
+        #robot.openHand('RHand', fractionMaxSpeed=0.05)
+        #time.sleep(1)
         # robot.setAngle("r_shoulder_z", 13, fMS)
         # robot.setAngle("r_shoulder_y", 5, fMS)
         # robot.setAngle("r_arm_x", 26, fMS)
         # robot.setAngle("r_elbow_y", -95, fMS)
         # robot.setAngle("r_wrist_z", 3, fMS)
         # robot.setAngle("r_wrist_x", 174, fMS)
-        robot.setAngle("r_shoulder_z", 25, fMS)
-        robot.setAngle("r_shoulder_y", 21, fMS)
-        robot.setAngle("r_arm_x", 29, fMS)
+        #robot.setAngle("r_shoulder_z", 25, fMS)
+        #robot.setAngle("r_shoulder_y", 21, fMS)
+        #robot.setAngle("r_arm_x", 29, fMS)
         # robot.setAngle("r_elbow_y", -85, fMS)
-        robot.setAngle("r_wrist_z", 25, fMS)
-        robot.setAngle("r_wrist_x", -86, fMS)
+        #robot.setAngle("r_wrist_z", 25, fMS)
+        #robot.setAngle("r_wrist_x", -86, fMS)
 
         #time.sleep(2)
         #l_shove_position(robot)

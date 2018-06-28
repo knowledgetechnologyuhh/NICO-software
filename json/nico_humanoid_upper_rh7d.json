@@ -1,7 +1,7 @@
 {
   "controllers": {
     "all_controller": {
-      "sync_read": false,
+      "sync_read": true,
       "attached_motors": [
         "head",
         "arms",

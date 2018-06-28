@@ -13,10 +13,11 @@ import cv2
 
 import subprocess
 
-PATH_LEGGED_NICO_LEFT="/dev/v4l/by-id/usb-e-con_systems_See3CAM_CU135_09229807-video-index0"
-PATH_LEGGED_NICO_RIGHT="/dev/v4l/by-id/usb-e-con_systems_See3CAM_CU135_36249807-video-index0"
-
-
+VIDEO_DEVICE_PATH="/dev/v4l/by-id/"
+ID_STR_LEGGED_NICO_LEFT_CAM="usb-e-con_systems_See3CAM_CU135_09229807-video-index0"
+ID_STR_LEGGED_NICO_RIGHT_CAM="usb-e-con_systems_See3CAM_CU135_36249807-video-index0"
+PATH_LEGGED_NICO_LEFT_CAM=VIDEO_DEVICE_PATH+ID_STR_LEGGED_NICO_LEFT_CAM
+PATH_LEGGED_NICO_RIGHT_CAM=VIDEO_DEVICE_PATH+ID_STR_LEGGED_NICO_RIGHT_CAM
 
 class VideoDevice:
     """
@@ -180,19 +181,33 @@ class VideoDevice:
                 return cls(id, framerate=20, width=4208, height=3120,
                            compressed=compressed)
 
-    def zoom(self, value,cam_pathname=None):
+    def camera_value(self, value_name ,value):
+        """
+        Sets the a camera value over the v4l-utils. Requires v4l-utils.
+        :param value_name: name of the value to set like brightness, contrast, ...
+        :type value_name str
+        :param value: value to set 
+        :type value: int
+        """
+        if value_name!=None:
+            subprocess.call(
+                ['v4l2-ctl -d {} -c {}={}'.format(
+                    self._deviceId, value_str value)], shell=True)
+        else:
+            logging.warning(
+                "Wrong value name in camera_value setting")
+
+    def zoom(self, value):
+
         """
         Sets zoom value if camera supports it. Requires v4l-utils.
         :param value: zoom value between 100 and 800
         :type value: int
         """
         if type(value) is int and 100 <= value <= 800:
-
-            if cam_pathname==None:    
-                call_str='v4l2-ctl -d {} -c zoom_absolute={}'.format(self._deviceId, value)
-            else:
-                call_str='v4l2-ctl -d {} -c zoom_absolute={}'.format(cam_pathname, value)
-            logging.info ("Called camera hardware zoom with command : " + call_str)
+            call_str='v4l2-ctl -d {} -c zoom_absolute={}'.format(cam_pathname, value)
+            logging.debug(
+                "Zoom value call with " + call_str)
             subprocess.call([call_str], shell=True)
         else:
             logging.warning(
