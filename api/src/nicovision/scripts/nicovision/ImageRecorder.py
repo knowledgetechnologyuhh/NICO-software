@@ -54,7 +54,7 @@ class ImageRecorder:
         self._device = VideoDevice.from_device(device, framerate, width,
                                                height, zoom, pan, tilt)
         if self._device is None:
-            logging.error('Can not create device from path' + self._device)
+            logging.error('Can not create device from path' + str(self._device))
         self._target = 'picture-{}.png'
         self._image_writer = ImageWriter(writer_threads)
 
@@ -72,7 +72,7 @@ class ImageRecorder:
         :param value: zoom value between 100 and 800
         :type value: int
         """
-        self._device.zoom(value,cam_pathname=cam_pathname)
+        self._device.zoom(value)
 
     def pan(self, value):
         """
