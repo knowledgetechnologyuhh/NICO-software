@@ -1,0 +1,18 @@
+{
+  "standard": {
+    "brightness": 128,
+    "contrast": 32,
+    "saturation": 28,
+    "white_balance_temperature_auto": 1,
+    "gain": 0,
+    "power_line_frequency": 2,
+    "white_balance_temperature": 4000,
+    "sharpness": 191,
+    "backlight_compensation": 1,
+    "exposure_auto": 3,
+    "exposure_absolute": 166,
+    "exposure_auto_priority": 0,
+    "pan_absolute": 0,
+    "tilt_absolute": 0
+  }
+}

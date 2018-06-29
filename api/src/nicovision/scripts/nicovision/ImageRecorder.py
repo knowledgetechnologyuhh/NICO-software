@@ -25,8 +25,8 @@ class ImageRecorder:
     """
 
     def __init__(self, device='', width=640, height=480, framerate=20,
-                 zoom=100, pan=0, tilt=0, writer_threads=2,
-                 pixel_format="MJPG"):
+                 zoom=None, pan=None, tilt=None, settings_file=None,
+                 setting="standard", writer_threads=2, pixel_format="MJPG"):
         """
         Initialises the ImageRecorder with a given device.
 
@@ -40,31 +40,49 @@ class ImageRecorder:
         :type height: float
         :param framerate: number of frames per second
         :type framerate: int
-        :param value: zoom value between 100 and 800
+        :param value: zoom value between 100 and 800 (overwrites settings)
         :type value: int
         :param value: pan value between -648000 and 648000, step 3600
+        (overwrites settings)
         :type value: int
         :param value: tilt value between -648000 and 648000, step 3600
+        (overwrites settings)
         :type value: int
+        :param file_path: the settings file
+        :type file_path: str
+        :param setting: name of the setting that should be applied
+        :type setting: str
         :param writer_threads: Number of worker threads for image writer
         :type writer_threads: int
         :param pixel_format: fourcc codec
         :type pixel_format: string
         """
         self._device = VideoDevice.from_device(device, framerate, width,
-                                               height, zoom, pan, tilt)
+                                               height, zoom, pan, tilt,
+                                               settings_file, setting)
         if self._device is None:
-            logging.error('Can not create device from path' + str(self._device))
+            logging.error('Can not create device from path' +
+                          str(self._device))
         self._target = 'picture-{}.png'
         self._image_writer = ImageWriter(writer_threads)
 
-    def camera_value(self, value_name ,value):
+    def load_settings(self, file_path, setting="standard"):
+        """
+        Loads a settings json file and applies the given setting to all cameras
+        :param file_path: the settings file
+        :type file_path: str
+        :param setting: name of the setting that should be applied
+        :type setting: str
+        """
+        self._device.load_settings(file_path, setting)
+
+    def camera_value(self, value_name, value):
         """
         Sets zoom value if camera supports it. Requires v4l-utils.
         :param value: zoom value between 100 and 800
         :type value: int
         """
-        self._device.camera_value(value_name ,value)
+        self._device.camera_value(value_name, value)
 
     def zoom(self, value):
         """
