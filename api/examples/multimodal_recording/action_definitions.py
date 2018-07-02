@@ -69,7 +69,7 @@ def move_action(action,robot):
         sleep(wait_duration)
 
     mov.move_file_position(mover_path + "pos_"+action+"_"+str(1)+".csv",
-                           subsetfname=mover_path + "subset_right_arm.csv", move_speed=0.075, )
+                           subsetfname=mover_path + "subset_right_arm.csv", move_speed=0.03, )
                         
     mov=None
 

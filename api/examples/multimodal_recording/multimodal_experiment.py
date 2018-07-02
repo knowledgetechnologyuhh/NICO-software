@@ -15,6 +15,7 @@ import datetime
 from nicotouch.optoforcesensors import optoforce
 import logging
 from nicovision import ImageRecorder
+from nicovision import VideoDevice
 import os
 from os.path import dirname, abspath
 from time import sleep
@@ -369,14 +370,14 @@ tilt = 0
 
 # Vision Recording
 #device = ImageRecorder.get_devices()[0]
-device=VideoDevice.PATH_LEGGED_NICO_LEFT_CAM
+device=VideoDevice.ID_STR_LEGGED_NICO_LEFT_CAM
 ir = leftcam_ImageRecorder(
     device, res_x, res_y, zoom=zoom_level, pan=pan, tilt=tilt,
     framerate=framerate, writer_threads=5, pixel_format="UYVY")
 
 if amount_of_cams >= 2:
     #device2 = ImageRecorder.get_devices()[1]
-    device2=VideoDevice.PATH_LEGGED_NICO_RIGHT_CAM
+    device2=VideoDevice.ID_STR_LEGGED_NICO_RIGHT_CAM
     ir2 = rightcam_ImageRecorder(
         device2, res_x, res_y, zoom=zoom_level, pan=pan, tilt=tilt,
         framerate=framerate, writer_threads=5, pixel_format="UYVY")
