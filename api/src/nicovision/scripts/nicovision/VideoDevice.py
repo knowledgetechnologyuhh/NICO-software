@@ -6,18 +6,18 @@
 import inspect
 import logging
 import os
+import subprocess
 import threading
 import time
 
 import cv2
 
-import subprocess
+VIDEO_DEVICE_PATH = "/dev/v4l/by-id/"
+ID_STR_LEGGED_NICO_LEFT_CAM = "usb-e-con_systems_See3CAM_CU135_09229807-video-index0"
+ID_STR_LEGGED_NICO_RIGHT_CAM = "usb-e-con_systems_See3CAM_CU135_36249807-video-index0"
+PATH_LEGGED_NICO_LEFT_CAM = VIDEO_DEVICE_PATH + ID_STR_LEGGED_NICO_LEFT_CAM
+PATH_LEGGED_NICO_RIGHT_CAM = VIDEO_DEVICE_PATH + ID_STR_LEGGED_NICO_RIGHT_CAM
 
-VIDEO_DEVICE_PATH="/dev/v4l/by-id/"
-ID_STR_LEGGED_NICO_LEFT_CAM="usb-e-con_systems_See3CAM_CU135_09229807-video-index0"
-ID_STR_LEGGED_NICO_RIGHT_CAM="usb-e-con_systems_See3CAM_CU135_36249807-video-index0"
-PATH_LEGGED_NICO_LEFT_CAM=VIDEO_DEVICE_PATH+ID_STR_LEGGED_NICO_LEFT_CAM
-PATH_LEGGED_NICO_RIGHT_CAM=VIDEO_DEVICE_PATH+ID_STR_LEGGED_NICO_RIGHT_CAM
 
 class VideoDevice:
     """
@@ -77,8 +77,9 @@ class VideoDevice:
             return -1
 
     @staticmethod
-    def from_device(device, framerate=20, width=640, height=480, zoom=100,
-                    pan=0, tilt=0):
+    def from_device(device, framerate=20, width=640, height=480, zoom=None,
+                    pan=None, tilt=None, settings_file=None,
+                    setting="standard"):
         """
         Convenience method for creating a VideoDevice from a device
 
@@ -91,10 +92,12 @@ class VideoDevice:
         if id is -1:
             logging.error('Can not create VideoDevice from ID %s' % id)
             return None
-        return VideoDevice(id, framerate, width, height, zoom, pan, tilt)
+        return VideoDevice(id, framerate, width, height, zoom, pan, tilt,
+                           settings_file, setting)
 
-    def __init__(self, id, framerate=20, width=640, height=480, zoom=100,
-                 pan=0, tilt=0, compressed=True, pixel_format="MJPG"):
+    def __init__(self, id, framerate=20, width=640, height=480, zoom=None,
+                 pan=None, tilt=None, settings_file=None, setting="standard",
+                 compressed=True, pixel_format="MJPG"):
         """
         Initialises the VideoDevice. The device starts open and has to be
         opened.
@@ -117,9 +120,15 @@ class VideoDevice:
         self._framerate = framerate
         self._width = width
         self._height = height
-        self.zoom(zoom)
-        self.pan(pan)
-        self.tilt(tilt)
+        if settings_file is not None:
+            self.load_settings(settings_file, setting)
+        if zoom is not None:
+            self.zoom(zoom)
+        if pan is not None:
+            self.pan(pan)
+        if tilt is not None:
+            self.tilt(tilt)
+
         # Open camera
         self._capture = cv2.VideoCapture(id)
         self._capture.set(cv2.CAP_PROP_FRAME_WIDTH, self._width)
@@ -181,31 +190,46 @@ class VideoDevice:
                 return cls(id, framerate=20, width=4208, height=3120,
                            compressed=compressed)
 
-    def camera_value(self, value_name ,value):
+    def load_settings(self, file_path, setting="standard"):
         """
-        Sets the a camera value over the v4l-utils. Requires v4l-utils.
-        :param value_name: name of the value to set like brightness, contrast, ...
+        Loads a settings json file and applies the given setting to all cameras
+        :param file_path: the settings file
+        :type file_path: str
+        :param setting: name of the setting that should be applied
+        :type setting: str
+        """
+        with open(file_path, 'r') as file:
+            settings = json.load(file)
+        for value_name, value in settings[setting].iteritems():
+            self.camera_value(value_name, value)
+
+    def camera_value(self, value_name, value):
+        """
+        Sets the a camera value over the v4l-utils. Run 'v4l2-ctl -l' for full
+        list of controlls and values. Requires v4l-utils.
+        :param value_name: name of the value to set
         :type value_name str
-        :param value: value to set 
+        :param value: value to set
         :type value: int
         """
-        if value_name!=None:
+        if type(value) is int:
             subprocess.call(
                 ['v4l2-ctl -d {} -c {}={}'.format(
                     self._deviceId, value_name, value)], shell=True)
         else:
             logging.warning(
-                "Wrong value name in camera_value setting")
+                "Invalid value '{}' - value has to be an integer".format(value)
+            )
 
     def zoom(self, value):
-
         """
         Sets zoom value if camera supports it. Requires v4l-utils.
         :param value: zoom value between 100 and 800
         :type value: int
         """
         if type(value) is int and 100 <= value <= 800:
-            call_str='v4l2-ctl -d {} -c zoom_absolute={}'.format(self._deviceId, value)
+            call_str = 'v4l2-ctl -d {} -c zoom_absolute={}'.format(
+                self._deviceId, value)
             logging.debug(
                 "Zoom value call with " + call_str)
             subprocess.call([call_str], shell=True)

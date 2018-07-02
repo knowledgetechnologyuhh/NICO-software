@@ -1,5 +1,6 @@
 import datetime
 import inspect
+import json
 import logging
 import os
 import subprocess
@@ -31,7 +32,8 @@ class MultiCamRecorder:
     """
 
     def __init__(self, devices=[], width=640, height=480, framerate=20,
-                 zoom=100, pan=0, tilt=0, writer_threads=4,
+                 zoom=None, pan=None, tilt=None, settings_file=None,
+                 setting="standard", writer_threads=4,
                  pixel_format="MJPG"):
         """
         Initialises the MultiCamRecorder with given devices.
@@ -46,12 +48,18 @@ class MultiCamRecorder:
         :type height: float
         :param framerate: number of frames per second
         :type framerate: int
-        :param value: zoom value between 100 and 800
+        :param value: zoom value between 100 and 800 (overwrites settings)
         :type value: int
         :param value: pan value between -648000 and 648000, step 3600
+        (overwrites settings)
         :type value: int
         :param value: tilt value between -648000 and 648000, step 3600
+        (overwrites settings)
         :type value: int
+        :param file_path: the settings file
+        :type file_path: str
+        :param setting: name of the setting that should be applied
+        :type setting: str
         :param writer_threads: Number of worker threads for image writer
         :type writer_threads: int
         :param pixel_format: fourcc codec
@@ -73,9 +81,14 @@ class MultiCamRecorder:
         self._framerate = framerate
         self._width = width
         self._height = height
-        self.zoom(zoom)
-        self.pan(pan)
-        self.tilt(tilt)
+        if settings_file is not None:
+            self.load_settings(settings_file, setting)
+        if zoom is not None:
+            self.zoom(zoom)
+        if pan is not None:
+            self.pan(pan)
+        if tilt is not None:
+            self.tilt(tilt)
 
         # Open cameras
         self._captures = []
@@ -96,6 +109,38 @@ class MultiCamRecorder:
                 target=self._eventloop, args=(id,)))
             self._threads[id].daemon = True
             self._threads[id].start()
+
+    def load_settings(self, file_path, setting="standard"):
+        """
+        Loads a settings json file and applies the given setting to all cameras
+        :param file_path: the settings file
+        :type file_path: str
+        :param setting: name of the setting that should be applied
+        :type setting: str
+        """
+        with open(file_path, 'r') as file:
+            settings = json.load(file)
+        for value_name, value in settings[setting].iteritems():
+            self.camera_value(value_name, value)
+
+    def camera_value(self, value_name, value):
+        """
+        Sets the a camera value over the v4l-utils. Run 'v4l2-ctl -l' for full
+        list of controlls and values. Requires v4l-utils.
+        :param value_name: name of the value to set
+        :type value_name str
+        :param value: value to set
+        :type value: int
+        """
+        if type(value) is int:
+            for id in self._deviceIds:
+                subprocess.call(
+                    ['v4l2-ctl -d {} -c {}={}'.format(
+                        id, value_name, value)], shell=True)
+        else:
+            logging.warning(
+                "Invalid value '{}' - value has to be an integer".format(value)
+            )
 
     def zoom(self, value):
         """

@@ -42,7 +42,8 @@ class VideoCodec:
 class VideoRecorder:
 
     def __init__(self, device='', colorspace=Colorspace.RGB, framerate=20,
-                 width=640, height=480, zoom=100, pan=0, tilt=0
+                 width=640, height=480, zoom=None, pan=None, tilt=None,
+                 settings_file=None, setting="standard",
                  videoformat=VideoCodec.MPEG1):
         """
         Initialises the VideoRecorder
@@ -63,7 +64,8 @@ class VideoRecorder:
         :type videoformat: VideoCodec
         """
         self._device = VideoDevice.from_device(device, framerate, width,
-                                               height, zoom, pan, tilt)
+                                               height, zoom, pan, tilt,
+                                               settings_file, setting)
         self._running = False
         self._colorspace = colorspace
         self._framerate = framerate
@@ -71,6 +73,16 @@ class VideoRecorder:
         self._height = height
         self._format = videoformat
         self._encoder = None
+
+    def load_settings(self, file_path, setting="standard"):
+        """
+        Loads a settings json file and applies the given setting to all cameras
+        :param file_path: the settings file
+        :type file_path: str
+        :param setting: name of the setting that should be applied
+        :type setting: str
+        """
+        self._device.load_settings(file_path, setting)
 
     def zoom(self, value):
         """
