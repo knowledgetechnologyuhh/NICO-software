@@ -10,7 +10,7 @@
 from nicomotion import Motion
 from nicomotion import Mover
 import pypot.dynamixel
-from time import sleep
+import time
 import datetime
 from nicotouch.optoforcesensors import optoforce
 import logging
@@ -455,6 +455,8 @@ while (get_needed_overall_numbers() > 0):
     ir.start_recording(cur_dir+'/camera1/picture-{}.png')
     if amount_of_cams >= 2:
         ir2.start_recording(cur_dir+'/camera2/picture-{}.png')
+    #get the recording time
+    start = time.time()
 
 
     action_definitions.move_action(action,robot)
@@ -480,6 +482,9 @@ while (get_needed_overall_numbers() > 0):
     # sleep(5)
     # robot.openHand("RHand", fractionMaxSpeed=0.4)
 
+    #get the time
+    recording_time = time.time() -start
+
     # Stop and finish camera recordings
     ir.stop_recording()
     if amount_of_cams >= 2:
@@ -497,7 +502,8 @@ while (get_needed_overall_numbers() > 0):
     logging.info("Checking data integrity")
     print "\n Checking the data integrity of this sample - please wait a moment"
     data_check_result = check_data_integrity.data_check_clean(
-        cur_dir, dfl, dfr)
+        cur_dir, dfl, dfr,running_time=recording_time)
+        
     if data_check_result=="":
         logging.info("automatic data integrity check was ok. ")
     else:
