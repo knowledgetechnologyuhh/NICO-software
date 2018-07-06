@@ -11,10 +11,10 @@ class ImageWriter:
 
     def __init__(self, workers=2):
         self._queue = Queue.Queue()
-        self._workers = workers
-        worker = threading.Thread(target=self._worker_thread)
-        worker.daemon = True
-        worker.start()
+        for _ in range(workers):
+            worker = threading.Thread(target=self._worker_thread)
+            worker.daemon = True
+            worker.start()
         atexit.register(self._close)
 
     def write_image(self, path, image):
