@@ -143,15 +143,19 @@ class MultiCamRecorder:
         Sets zoom value of all cameras that support it. Requires v4l-utils.
         :param value: zoom value between 100 and 800
         :type value: int
+        :return: success
+        :rtype: bool
         """
         if type(value) is int and 100 <= value <= 800:
             for id in self._deviceIds:
                 subprocess.call(
                     ['v4l2-ctl -d {} -c zoom_absolute={}'.format(id, value)],
                     shell=True)
+            return True
         else:
             logging.warning(
                 "Zoom value has to be an integer between 100 and 800")
+            return False
 
     def pan(self, value):
         """
@@ -159,6 +163,8 @@ class MultiCamRecorder:
         v4l-utils.
         :param value: pan value between -648000 and 648000, step 3600
         :type value: int
+        :return: success
+        :rtype: bool
         """
         if(type(value) is int and -648000 <= value <= 648000 and
            value % 3600 == 0):
@@ -166,10 +172,12 @@ class MultiCamRecorder:
                 subprocess.call(
                     ['v4l2-ctl -d {} -c pan_absolute={}'.format(id, value)],
                     shell=True)
+            return True
         else:
             logging.warning(
                 "Pan value has to be a multiple of 3600 between -648000 and " +
                 "648000")
+            return False
 
     def tilt(self, value):
         """
@@ -177,6 +185,8 @@ class MultiCamRecorder:
         v4l-utils.
         :param value: tilt value between -648000 and 648000, step 3600
         :type value: int
+        :return: success
+        :rtype: bool
         """
         if (type(value) is int and -648000 <= value <= 648000 and
                 value % 3600 == 0):
@@ -184,10 +194,12 @@ class MultiCamRecorder:
                 subprocess.call(
                     ['v4l2-ctl -d {} -c tilt_absolute={}'.format(id, value)],
                     shell=True)
+            return True
         else:
             logging.warning(
                 "Tilt value has to be a multiple of 3600 between -648000 and" +
                 " 648000")
+            return False
 
     def add_callback(self, function):
         """
