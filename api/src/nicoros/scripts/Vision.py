@@ -5,6 +5,7 @@ import logging
 import sys
 
 import cv_bridge
+import nicomsg.srv
 import nicovision.MultiCamRecorder as MultiCamRecorder
 import rospy
 import sensor_msgs.msg
@@ -43,8 +44,6 @@ class NicoRosVision():
         """
         The NicoRosVision enables the sending of a camera image through ROS
 
-        :param mode: specifies which cameras to stream (stereo, left, right)
-        :type mode: str
         :param config: Configuration dict
         :type config: dict
         """
@@ -69,7 +68,60 @@ class NicoRosVision():
                 self._config['rostopic_prefix'] +
                 self._config['rostopic_right'],
                 sensor_msgs.msg.Image, queue_size=1))
+
+        logging.debug('Init ROS services')
+        rospy.Service(
+            '%s/setZoom' % config['rostopic_prefix'], nicomsg.srv.SetIntValue,
+            self._ROSPY_setZoom)
+        rospy.Service(
+            '%s/setPan' % config['rostopic_prefix'], nicomsg.srv.SetIntValue,
+            self._ROSPY_setPan)
+        rospy.Service(
+            '%s/setTilt' % config['rostopic_prefix'], nicomsg.srv.SetIntValue,
+            self._ROSPY_setTilt)
         logging.info('-- All done --')
+
+    def _ROSPY_setZoom(self, message):
+        """
+        Callback handle for :meth:`nicomotion.Motion.setZoom`
+
+        :param message: ROS message
+        :type message: nicomsg.srv.SetIntValue
+        :return: success
+        :rtype: bool
+        """
+        if self._device is None:
+            logging.warning("No video device initialized")
+            return False
+        return self._device.zoom(message.value)
+
+    def _ROSPY_setPan(self, message):
+        """
+        Callback handle for :meth:`nicomotion.Motion.setPan`
+
+        :param message: ROS message
+        :type message: nicomsg.srv.SetIntValue
+        :return: success
+        :rtype: bool
+        """
+        if self._device is None:
+            logging.warning("No video device initialized")
+            return False
+        return self._device.pan(message.value)
+
+    def _ROSPY_setTilt(self, message):
+        """
+        Callback handle for :meth:`nicomotion.Motion.setTilt`
+
+        :param message: ROS message
+        :type message: nicomsg.srv.SetIntValue
+        :return: success
+        :rtype: bool
+        """
+        if self._device is None:
+            logging.warning("No video device initialized")
+            return False
+        return self._device.tilt(message.value)
 
     def start_stream(self):
         """
