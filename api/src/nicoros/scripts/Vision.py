@@ -13,7 +13,9 @@ import sensor_msgs.msg
 
 class NicoRosVision():
     """
-    The NicoRosVision class exposes a camera stream over ROS
+    The NicoRosVision class exposes a camera stream over ROS. To run with
+    default parameters use "rosrun nicoros Vision.py"
+    (add -h to list optional parameters)
     """
 
     @staticmethod
@@ -42,7 +44,9 @@ class NicoRosVision():
 
     def __init__(self, config=None):
         """
-        The NicoRosVision enables the sending of a camera image through ROS
+        The NicoRosVision enables the sending of a camera image through ROS.
+        To run with default parameters use "rosrun nicoros Vision.py"
+        (add -h to list optional parameters)
 
         :param config: Configuration dict
         :type config: dict
