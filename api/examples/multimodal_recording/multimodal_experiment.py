@@ -33,6 +33,13 @@ import numpy as np
 
 import check_data_integrity
 
+from observer_recorder import Depth_and_RGB_Observer_Recorder
+from client import ClientWrapper
+
+#create the observer_recorder object 
+topics=("/camera/rgb/image_raw","/camera/depth/image_raw")
+d_and_rgb_osr=Depth_and_RGB_Observer_Recorder(topics)
+
 fnl = "left_cam_synced_data"
 fnr = "right_cam_synced_data"
 fpostfix = ".csv"
@@ -65,7 +72,7 @@ actions=action_definitions.actions
 # action="pull"
 
 # data_directory
-data_directory = "/data2/20180615_multimodal_recording_with_integrity_checks"
+data_directory = "/data2/20180718_multimodal_recording_pilot_beta"
 
 # definition for numbers per object
 number_of_samples_per_object = 4
@@ -78,6 +85,7 @@ MAX_CUR_THUMB = 100
 # Experiment Data will be stored in two table database
 # with samples for every sample of a grasped onject and subsample for every motor step (like for 10 degrees)
 
+#TODO: check if folder exist. otherwise create folder and create db file
 print "database file: " + data_directory+"/multimodal_experiment.db"
 logging.info('Write to database file ' +  data_directory+"/multimodal_experiment.db" )
 
@@ -358,8 +366,14 @@ logging.info('Robot in position and ready')
 
 pulse_device = pulse_audio_recorder.get_pulse_device()
 
+#res_x = 1024
+#res_y = 768
+#res_x = 800
+#res_y = 600
 res_x = 1920
 res_y = 1080
+#res_x = 1280
+#res_y = 720
 framerate = 30
 amount_of_cams = 2
 
@@ -368,19 +382,22 @@ zoom_level = 150
 pan = 0
 tilt = 0
 
+#Access observer server on wtmpc211
+d_and_rgb_osr = ClientWrapper(Depth_and_RGB_Observer_Recorder, 54010, server='wtmpc211')
+
 # Vision Recording
 #device = ImageRecorder.get_devices()[0]
 device=VideoDevice.ID_STR_LEGGED_NICO_LEFT_CAM
 ir = leftcam_ImageRecorder(
     device, res_x, res_y, zoom=zoom_level, pan=pan, tilt=tilt,
-    framerate=framerate, writer_threads=5, pixel_format="UYVY")
+    framerate=framerate, writer_threads=1, pixel_format="UYVY")
 
 if amount_of_cams >= 2:
     #device2 = ImageRecorder.get_devices()[1]
     device2=VideoDevice.ID_STR_LEGGED_NICO_RIGHT_CAM
     ir2 = rightcam_ImageRecorder(
         device2, res_x, res_y, zoom=zoom_level, pan=pan, tilt=tilt,
-        framerate=framerate, writer_threads=5, pixel_format="UYVY")
+        framerate=framerate, writer_threads=1, pixel_format="UYVY")
 
 sleep(2)
 
@@ -448,6 +465,9 @@ while (get_needed_overall_numbers() > 0):
     label = datetime.datetime.today().isoformat()
     logging.info("Start recording for sample : " + str_sample_number)
 
+    #Start observer recording
+    d_and_rgb_osr.start_recording()
+    #in case of lagg time.sleep(10)
 
     # ar.start_recording(label,fname="./"+action+'/'+str_sample_number+label+".wav",dir_name="./audio/")
     ar.start_recording(label, fname=cur_dir+'/'+label+".wav", dir_name="")
@@ -492,6 +512,13 @@ while (get_needed_overall_numbers() > 0):
 
     # Stop and write audio recordings
     ar.stop_recording(0)
+
+    # Stop observer recording
+    (f_rgb,f_depth)=d_and_rgb_osr.stop_recording()
+    from sc_copy import sc_copy
+    import os
+    sc_copy("wtmpc211:"+f_rgb,cur_dir+os.path.basename(f_rgb))
+    sc_copy("wtmpc211:"+f_depth,cur_dir+os.path.basename(f_depth))
 
     logging.info(" Start of waiting for picture recording  ")
     print "\n Waiting for pictures writing on disk - please wait a moment"
