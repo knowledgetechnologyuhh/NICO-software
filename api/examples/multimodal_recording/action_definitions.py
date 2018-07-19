@@ -20,8 +20,8 @@ from time import sleep
 actions = {
     "pull":  [[1, 1, 1, 4, 1],["thumb_bend","no","no","no","no"]],
     "push":  [[1.0, 1.0, 1.0, 1.0],["open","no","no","no"]],
-    "scoot": [[1.0, 1.5, 2.0, 3.0, 2.0, 0.5],["open","no","close","no","no", "open"]],
-    "lift":  [[1.0, 1.5, 2.0, 3.0, 2.0, 0.5],["open","no","close","no","no", "open"]]
+    "scoot": [[1.0, 2.0, 2.0, 3.0, 4.5, 3.0, 2.0],["open","no","no","close", "no", "no", "open"]],
+    "lift":  [[1.0, 2.0, 2.0, 3.0, 4.5, 3.0, 2.0],["open","no","no","close", "no", "no", "open"]]
 }
 
 

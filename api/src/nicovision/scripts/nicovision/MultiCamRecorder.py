@@ -15,6 +15,17 @@ from ImageWriter import ImageWriter
 from VideoDevice import VideoDevice
 
 
+def autodetect_nicoeyes():
+    """
+    Returns a tuple containing the detected path of left and right NICO eye
+    camera
+
+    :return: Devicenames as (left, right) tuple (None if not found)
+    :rtype: tuple
+    """
+    return VideoDevice.autodetect_nicoeyes()
+
+
 def get_devices():
     """
     Returns a list containing the possible path of all video capturing devices
@@ -73,14 +84,16 @@ class MultiCamRecorder:
                 sys.exit()
             self._deviceIds.append(deviceId)
 
+        self._open = False
         self._target = 'picture-{}.png'
-        self._image_writer = ImageWriter(writer_threads)
-        self._open = True
+        self._image_writer = None
+        if writer_threads > 0:
+            self._image_writer = ImageWriter(writer_threads)
         self._callback_functions = []
-        self._running = True
         self._framerate = framerate
         self._width = width
         self._height = height
+        self._pixel_format = pixel_format
         if settings_file is not None:
             self.load_settings(settings_file, setting)
         if zoom is not None:
@@ -91,24 +104,7 @@ class MultiCamRecorder:
             self.tilt(tilt)
 
         # Open cameras
-        self._captures = []
-        for id in self._deviceIds:
-            capture = cv2.VideoCapture(id)
-            capture.set(cv2.CAP_PROP_FRAME_WIDTH, self._width)
-            capture.set(cv2.CAP_PROP_FRAME_HEIGHT, self._height)
-            capture.set(cv2.CAP_PROP_FPS, self._framerate)
-            fourcc = cv2.VideoWriter_fourcc(*pixel_format)
-            capture.set(cv2.CAP_PROP_FOURCC, fourcc)
-            self._captures.append(capture)
-
-        # Start thread
-        self._barrier = Barrier.Barrier(len(self._deviceIds))
-        self._threads = []
-        for id in range(len(self._deviceIds)):
-            self._threads.append(threading.Thread(
-                target=self._eventloop, args=(id,)))
-            self._threads[id].daemon = True
-            self._threads[id].start()
+        self.open()
 
     def load_settings(self, file_path, setting="standard"):
         """
@@ -147,15 +143,19 @@ class MultiCamRecorder:
         Sets zoom value of all cameras that support it. Requires v4l-utils.
         :param value: zoom value between 100 and 800
         :type value: int
+        :return: success
+        :rtype: bool
         """
         if type(value) is int and 100 <= value <= 800:
             for id in self._deviceIds:
                 subprocess.call(
                     ['v4l2-ctl -d {} -c zoom_absolute={}'.format(id, value)],
                     shell=True)
+            return True
         else:
             logging.warning(
                 "Zoom value has to be an integer between 100 and 800")
+            return False
 
     def pan(self, value):
         """
@@ -163,6 +163,8 @@ class MultiCamRecorder:
         v4l-utils.
         :param value: pan value between -648000 and 648000, step 3600
         :type value: int
+        :return: success
+        :rtype: bool
         """
         if(type(value) is int and -648000 <= value <= 648000 and
            value % 3600 == 0):
@@ -170,10 +172,12 @@ class MultiCamRecorder:
                 subprocess.call(
                     ['v4l2-ctl -d {} -c pan_absolute={}'.format(id, value)],
                     shell=True)
+            return True
         else:
             logging.warning(
                 "Pan value has to be a multiple of 3600 between -648000 and " +
                 "648000")
+            return False
 
     def tilt(self, value):
         """
@@ -181,6 +185,8 @@ class MultiCamRecorder:
         v4l-utils.
         :param value: tilt value between -648000 and 648000, step 3600
         :type value: int
+        :return: success
+        :rtype: bool
         """
         if (type(value) is int and -648000 <= value <= 648000 and
                 value % 3600 == 0):
@@ -188,10 +194,12 @@ class MultiCamRecorder:
                 subprocess.call(
                     ['v4l2-ctl -d {} -c tilt_absolute={}'.format(id, value)],
                     shell=True)
+            return True
         else:
             logging.warning(
                 "Tilt value has to be a multiple of 3600 between -648000 and" +
                 " 648000")
+            return False
 
     def add_callback(self, function):
         """
@@ -216,32 +224,43 @@ class MultiCamRecorder:
         """
         self._callback = []
 
-    def start_recording(self, path="camera{}/picture-{}.png"):
-        self._target = path
+    def open(self):
         if not self._open:
-            # Open camera
-            for capture in self._captures:
-                capture = cv2.VideoCapture(self._deviceId)
+            # Open cameras
+            self._captures = []
+            for id in self._deviceIds:
+                capture = cv2.VideoCapture(id)
                 capture.set(cv2.CAP_PROP_FRAME_WIDTH, self._width)
                 capture.set(cv2.CAP_PROP_FRAME_HEIGHT, self._height)
                 capture.set(cv2.CAP_PROP_FPS, self._framerate)
-
-            # Start eventloop
-            self._running = True
+                fourcc = cv2.VideoWriter_fourcc(*self._pixel_format)
+                capture.set(cv2.CAP_PROP_FOURCC, fourcc)
+                self._captures.append(capture)
             self._open = True
+
+            # Start thread
+            self._barrier = Barrier.Barrier(len(self._deviceIds))
             self._threads = []
             for id in range(len(self._deviceIds)):
                 self._threads.append(threading.Thread(
                     target=self._eventloop, args=(id,)))
+                self._threads[id].daemon = True
                 self._threads[id].start()
-        self.add_callback(self._callback)
+
+    def start_recording(self, path="camera{}/picture-{}.png"):
+        if ImageWriter is not None:
+            self._target = path
+            self.open()
+            self.add_callback(self._callback)
+        else:
+            logging.warning(
+                "Could not start recording - No ImageWriter instantiated")
 
     def stop_recording(self):
         if not self._open:
             logging.warning('Trying to close a device which is not open')
             return
         self._barrier.abort()
-        self._running = False
         self._open = False
         map(lambda t: t.join(), self._threads)
         map(lambda c: c.release(), self._captures)
@@ -275,7 +294,7 @@ class MultiCamRecorder:
 
         This will call all registered callbacks for each frame
         """
-        while self._running:
+        while self._open:
             t1 = time.time()
             try:
                 self._barrier.wait()

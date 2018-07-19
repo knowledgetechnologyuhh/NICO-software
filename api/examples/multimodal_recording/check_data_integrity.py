@@ -14,8 +14,8 @@ FPS = 30
 # Maximum difference in seconds between sound recording and camera recording (picture numbers * FPS)
 MAX_DIFF_DUR_SOUND_VISION = 4
 
-# Maximum difference in seconds between sound recording and camera recording (picture numbers * FPS)
-MAX_DIFF_TIME_VISION = 2
+# Maximum difference in pictures between time and exspected camera recording frames (picture numbers * FPS)
+MAX_DIFF_TIME_VISION = 4
 
 # Maximum amount of touch sensor update errors
 MAX_UPD_TOUCH = 5
@@ -99,7 +99,7 @@ def data_check_clean(dir_name, df_l, df_r,running_time=None):
 
     # suspicious small amount of camera pictures
     if cam2_num < MIN_CAM_PICS or cam1_num < MIN_CAM_PICS:
-        errs.append "low amount of pics and data entries")
+        errs.append ("low amount of pics and data entries")
 
     if (abs(cam2_num-cam1_num) > MAX_NUM_DIF_CAMS):
         print "cam1: " + str(cam1_num) + " cam2: " + str(cam2_num)
@@ -108,9 +108,8 @@ def data_check_clean(dir_name, df_l, df_r,running_time=None):
     #Check the frames if accurate running time was given
     if (running_time!=None):
         exspected_frames=int(round(running_time*FPS))
-        if (abs(exspected_frames-cam1_num)>MAX_DIFF_TIME_VISION) or \ 
-            (abs(exspected_frames-cam2_num)>MAX_DIFF_TIME_VISION):
-            errs.append ("difference between exspected camera picture and recorded ones too high")
+        if (abs(exspected_frames-cam1_num)>MAX_DIFF_TIME_VISION) or (abs(exspected_frames-cam2_num)>MAX_DIFF_TIME_VISION):
+            errs.append ("difference between exspected camera picture and recorded ones too high: cam1-diff: " + str(exspected_frames-cam1_num) + " cam2-diff: " + str(exspected_frames-cam2_num))
 
     # if somethig is wrong with the soundfile, false
     import glob
@@ -188,6 +187,6 @@ def data_check_clean(dir_name, df_l, df_r,running_time=None):
                 errs.append ("pos to high")
     if errs ==[]:
         return ""
-    else
+    else:
         return errs
 

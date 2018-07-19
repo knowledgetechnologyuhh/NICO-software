@@ -18,6 +18,17 @@ ID_STR_LEGGED_NICO_RIGHT_CAM = "usb-e-con_systems_See3CAM_CU135_36249807-video-i
 PATH_LEGGED_NICO_LEFT_CAM = VIDEO_DEVICE_PATH + ID_STR_LEGGED_NICO_LEFT_CAM
 PATH_LEGGED_NICO_RIGHT_CAM = VIDEO_DEVICE_PATH + ID_STR_LEGGED_NICO_RIGHT_CAM
 
+NICO_EYES = {
+    'left': {
+        'old': "usb-046d_080a_2DE7B460-video-index0",
+        'new': "usb-e-con_systems_See3CAM_CU135_09229807-video-index0"
+    },
+    'right': {
+        'old': 'usb-046d_080a_17E79161-video-index0',
+        'new': "usb-e-con_systems_See3CAM_CU135_36249807-video-index0"
+    }
+}
+
 
 class VideoDevice:
     """
@@ -46,6 +57,27 @@ class VideoDevice:
         for file in os.listdir(VideoDevice._VIDEO_DEVICE_PATH):
             paths += [file]
         return paths
+
+    @staticmethod
+    def autodetect_nicoeyes():
+        """
+        Returns a tuple containing the detected path of left and right NICO eye
+        camera
+
+        :return: Devicenames as (left, right) tuple (None if not found)
+        :rtype: tuple
+        """
+        left, right = None, None
+        devices = VideoDevice.get_all_devices()
+        for _, device in NICO_EYES['left'].iteritems():
+            if device in devices:
+                left = device
+                break
+        for _, device in NICO_EYES['right'].iteritems():
+            if device in devices:
+                right = device
+                break
+        return (left, right)
 
     @staticmethod
     def resolve_device(device):

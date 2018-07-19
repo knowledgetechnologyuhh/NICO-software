@@ -507,13 +507,13 @@ while (get_needed_overall_numbers() > 0):
     if data_check_result=="":
         logging.info("automatic data integrity check was ok. ")
     else:
-        logging.warning("data integrity returned an issue: " + data_check_result + ". data will get deleted.")
+        logging.warning("data integrity returned an issue: " + str(data_check_result) + ". data will get deleted.")
 
     answer = "dummy"
     if not data_check_result == "":
         answer = "R"
         print("\n.Sorry. Detected problems with this sample. I have to delete the data. ")
-        print ("\n The detected problem is: " + data_check_result)
+        print ("\n The detected problem is: \n[" + str(data_check_result) + "]\n")
 
     while (answer != "R" and answer != ""):
         print ("\n\n\Has the recording of this sample been succesful or do you want to repeat it ? (R=Repeat) / (Return=Continue) \n\n\n")
