@@ -74,6 +74,7 @@ add_service_files(
    StartAudioStream.srv
    StopAudioStream.srv
    GetChannelStates.srv
+   SetIntValue.srv
 )
 
 ## Generate actions in the 'action' folder
