@@ -39,7 +39,8 @@ class Observer_Recorder:
                 '_fps:='+str(self.fps), 
                 '_codec:='+self.codec]
         self.p = subprocess.Popen(args,shell=False)
-        #print ("\n PID: " + str(self.p.pid))
+        print args
+        print ("\n PID: " + str(self.p.pid))
         #self.p.communicate()
         #self.p = subprocess.call(args,shell=False)
         return args
@@ -73,16 +74,17 @@ class Depth_and_RGB_Observer_Recorder:
         return (file_rgb,file_depth)
     
 if __name__ == '__main__':
-    #osr=Observer_Recorder("/camera/rgb/image_raw")
+    #osr=Observer_Recorder("/camera/color/image_raw")
     #osr.start_recording()
     #import time
     #time.sleep(3)
-    #osr.stop_recording()
+    #print(osr.stop_recording())
+    #raw_input()
     #time.sleep(3)
     #osr.start_recording()
     #time.sleep(3)
     #osr.stop_recording()
-    topics=("/camera/rgb/image_raw","/camera/depth/image_raw")
+    topics=("/camera/color/image_raw","/camera/depth/image_raw")
     d_and_rgb_osr=Depth_and_RGB_Observer_Recorder(topics)
     d_and_rgb_osr.start_recording()
     import time
@@ -90,11 +92,11 @@ if __name__ == '__main__':
     (f_rgb,f_depth)=d_and_rgb_osr.stop_recording()
     print "Files: " + str((f_rgb,f_depth))
     time.sleep(1)
-    import os
-    os.rename(f_rgb,"/tmp/rgb.avi")
-    print ("RGB video in /tmp/rgb.avi")
-    os.rename(f_depth,"/tmp/depth.avi")
-    print ("RGB video in /tmp/depth.avi")
+    #import os
+    #os.rename(f_rgb,"/tmp/rgb.avi")
+    #print ("RGB video in /tmp/rgb.avi")
+    #os.rename(f_depth,"/tmp/depth.avi")
+    #print ("RGB video in /tmp/depth.avi")
 
 
 
