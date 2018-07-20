@@ -3,7 +3,16 @@ nicoros - Vision
 
 The Vision class allows the access to the cameras through ROS.
 
-To start the interface run:
+To start the interface run one of the preset launch files:
+
+.. code-block:: bash
+
+  # old cameras
+  roslaunch nicoros nicoros_vision_Logitech_C905.launch
+  # new cameras
+  roslaunch nicoros nicoros_vision_See3CAM_CU135.launch
+
+or start the node manually using:
 
 .. code-block:: bash
 
@@ -14,6 +23,8 @@ Many options are available to change the behaviour. For a list of them run:
 .. code-block:: bash
 
    rosrun nicoros Vision.py -h
+
+most of these also apply to the launch files
 
 Exposed topics
 ##############
