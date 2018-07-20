@@ -3,6 +3,7 @@
 import argparse
 import logging
 import sys
+from os.path import abspath, dirname
 
 import cv_bridge
 import nicomsg.srv
@@ -57,7 +58,6 @@ class NicoRosVision():
         if config is None:
             self._config = NicoRosVision.getConfig()
         self._bridge = cv_bridge.CvBridge()
-
         logging.info('-- Init NicoRosVision --')
         rospy.init_node('nicorosvision', anonymous=True)
         logging.debug('Init ROS publishers')
@@ -237,7 +237,8 @@ if __name__ == '__main__':
                         help='Camera tilt (if supported). Default: None',
                         type=int)
     parser.add_argument('--settings-file', dest='settings_file',
-                        help='Path to camera settings json. Default: None',
+                        help='Path to camera settings json. (relativ to ' +
+                        'NICO-software directory) Default: None',
                         type=str)
     parser.add_argument('--setting', dest='setting',
                         help='Name of setting in settings json. (if any)' +
@@ -275,7 +276,8 @@ if __name__ == '__main__':
     if args.tilt:
         config['tilt'] = args.tilt
     if args.settings_file:
-        config['settings_file'] = args.settings_file
+        config['settings_file'] = dirname(abspath(__file__)) + \
+            '/../../../../' + args.settings_file
     if args.setting:
         config['setting'] = args.setting
     if args.rostopic_prefix:
@@ -298,7 +300,7 @@ if __name__ == '__main__':
             'warning': logging.WARNING,
             'critical': logging.CRITICAL,
         }[args.logLevel]
-    except:
+    except KeyError:
         sys.stderr.write(
             'LOGGING ERROR: Unknown log level %s\n' % args.logLevel)
         pass
