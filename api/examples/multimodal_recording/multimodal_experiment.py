@@ -517,8 +517,8 @@ while (get_needed_overall_numbers() > 0):
     (f_rgb,f_depth)=d_and_rgb_osr.stop_recording()
     from sc_copy import sc_copy
     import os
-    sc_copy("wtmpc211:"+f_rgb,cur_dir+os.path.basename(f_rgb))
-    sc_copy("wtmpc211:"+f_depth,cur_dir+os.path.basename(f_depth))
+    sc_copy("wtmpc211:"+f_rgb,cur_dir+"/rgb_"+os.path.basename(f_rgb))
+    sc_copy("wtmpc211:"+f_depth,cur_dir+"/depth_"+os.path.basename(f_depth))
 
     logging.info(" Start of waiting for picture recording  ")
     print "\n Waiting for pictures writing on disk - please wait a moment"
