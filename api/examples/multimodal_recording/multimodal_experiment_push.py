@@ -39,15 +39,19 @@ import shutil
 
 #experiment definitions (Objects and number of graspings)
 #definition of objects
-objects =["blue ball","blue_plush ball","red_plush ball", "orange_plush ball", \
-          "white cube", "big_yellow die", "medium_yellow die","small_yellow die", \
-          "yellow sponge", "green sponge","blue tissues","pink tissues", \
-          "yellow apple", "light_green apple","heavy_green apple", "realistic_green apple", \
-          "red car","blue car","yellow car", "green car", \
-          "light tomato", "heavy tomato","small_red ball", "large_red ball", \
-          "small banana", "plush banana", "heavy banana","obergine banana", \
-          "yellow duck","purple duck","orange fish","yellow seal"]
+#objects =["blue ball","blue_plush ball","red_plush ball", "orange_plush ball", \
+#          "white cube", "big_yellow die", "medium_yellow die","small_yellow die", \
+#          "yellow sponge", "green sponge","blue tissues","pink tissues", \
+#          "yellow apple", "light_green apple","heavy_green apple", "realistic_green apple", \
+#          "red car","blue car","yellow car", "green car", \
+#          "light tomato", "heavy tomato","small_red ball", "large_red ball", \
+#          "small banana", "plush banana", "heavy banana","aubergine banana", \
+#          "yellow duck","purple duck","orange fish","yellow seal"]
 
+#Test objects for Marcel
+objects =["blue ball","blue_plush ball","red_plush ball", "orange_plush ball", \
+          "big_yellow die","small_yellow die", "yellow car", "green apple", \
+          "light tomato", "heavy tomato","red ball", "red apple"]
 
 #action
 action="push"
@@ -269,7 +273,7 @@ while ( get_needed_overall_numbers() > 0 ):
 
 	print "Randomly chosen object : " + o + "\n"
 
-	print "\n\n Please put the " + o + " on the robot fingers. Then press RETURN."
+	print "\n\n Please put the " + o + " onto the table at the marked position. Then press RETURN."
 	raw_input()
 
 	dfl = pd.DataFrame(columns=columns)
@@ -312,7 +316,7 @@ while ( get_needed_overall_numbers() > 0 ):
     
 	for n in range(4):
 		mov.move_file_position(mover_path + "pos_push_"+str(n+1)+".csv", subsetfname=mover_path + "subset_right_arm.csv", move_speed=0.05)
-		sleep(1)
+		sleep(1.5)
 	mov.move_file_position(mover_path + "pos_push_"+str(1)+".csv", subsetfname=mover_path + "subset_right_arm.csv", move_speed=0.05, )
 	sleep(10)
 
