@@ -185,6 +185,16 @@ def data_check_clean(dir_name, df_l, df_r,running_time=None):
                 #print pos_values_sorted_rev
                 # raw_input()
                 errs.append ("pos to high")
+                
+    # if no rgb or depth video is copied over to the goal directory
+    rgb_name = glob.glob(dir_name+"/rgb_*")[0]
+    if rgb_name == "" or sf_name == None:
+        errs.append ("no external rgb video")
+    depth_name = glob.glob(dir_name+"/depth_*")[0]
+    if depth_name == "" or sf_name == None:
+        errs.append ("no external depth video")
+
+                
     if errs ==[]:
         return ""
     else:
