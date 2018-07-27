@@ -1,13 +1,21 @@
-Current status of development:
+Current status of development (MK):
 
-Issue with hand not responding on every 2nd initialization
+Issue with hand not responding on every 2nd initialization DONE
 - issue is known - workaround: use idle skript & restart application DONE
+
+Add Integrity Constraint for external cameras DONE
+- check for file existance DONE
+- evaluate of any error ever occurs
 
 Checking quality of data
 - disruptions & breaks in sound file - possilbe solutions
   - decrease and monitor loadon the entire system (load max when writing images)
   - move one cymera to another usb port
   - reduce resolution of images
+
+
+Re-evaluate settings for integrity constraints - ensure the experiment runs well most of the time
+- MAX_NUM_DIF_CAMS = 10 (error occurs too often - almost no trial under 10 frames difference)
 
 Evaluate rate of successful trials
 - often check fails for image count - do we accept a difference there?
