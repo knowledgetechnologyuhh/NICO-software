@@ -555,7 +555,7 @@ while (get_needed_overall_numbers() > 0):
             fn, dfp = df_set
             fnp = cur_dir + "/" + fn + fpostfix
             fnpnorm = cur_dir + "/" + fn + "_norm" + fpostfix
-            fnplot = cur_dir + fn + "_norm" + ".svg"
+            fnplot = cur_dir + "/" +  fn + "_norm" + ".svg"
             with open(fnp, 'a') as f:
                 dfp.to_csv(f, header=True)
 
