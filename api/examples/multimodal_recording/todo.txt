@@ -1,0 +1,15 @@
+Current status of development:
+
+Issue with hand not responding on every 2nd initialization
+- issue is known - workaround: use idle skript & restart application DONE
+
+Checking quality of data
+- disruptions & breaks in sound file - possilbe solutions
+  - decrease and monitor loadon the entire system (load max when writing images)
+  - move one cymera to another usb port
+  - reduce resolution of images
+
+Evaluate rate of successful trials
+- often check fails for image count - do we accept a difference there?
+- sometimes check fails for sound/image duration - could be related to errors in sound recording
+- rarely some odd errors - restar helps
