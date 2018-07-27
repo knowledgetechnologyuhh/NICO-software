@@ -77,7 +77,6 @@ objects = ["hard pink ball", "soft blue ball", "soft red ball", "soft orange bal
 simple_objects = ["pink sponge", "blue sponge","blue tissues","pink tissues"]
 objects = simple_objects
 
-
 import action_definitions
 actions=action_definitions.actions
 
