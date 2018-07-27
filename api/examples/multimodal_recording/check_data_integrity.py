@@ -6,7 +6,7 @@ import time
 MIN_CAM_PICS = 100
 
 # Maximum diffrence in numbers of pictures between the two cameras
-MAX_NUM_DIF_CAMS = 3
+MAX_NUM_DIF_CAMS = 10
 
 # We need the frames per second here
 FPS = 30
@@ -15,7 +15,7 @@ FPS = 30
 MAX_DIFF_DUR_SOUND_VISION = 4
 
 # Maximum difference in pictures between time and exspected camera recording frames (picture numbers * FPS)
-MAX_DIFF_TIME_VISION = 4
+MAX_DIFF_TIME_VISION = 30
 
 # Maximum amount of touch sensor update errors
 MAX_UPD_TOUCH = 5
@@ -36,7 +36,7 @@ MIN_POS = -180.0
 MAX_POS = 180.0
 
 # Maximum Difference between two position readings
-MAX_POS_DIFFERENCE = 5.0
+MAX_POS_DIFFERENCE = 25.0
 
 
 # Wait until all pictures are written on harddisk
@@ -185,6 +185,15 @@ def data_check_clean(dir_name, df_l, df_r,running_time=None):
                 #print pos_values_sorted_rev
                 # raw_input()
                 errs.append ("pos to high")
+
+    # if no rgb or depth video is copied over to the goal directory
+    rgb_name = glob.glob(dir_name+"/rgb_*")[0]
+    if rgb_name == "" or sf_name == None:
+        errs.append ("no external rgb video")
+    depth_name = glob.glob(dir_name+"/depth_*")[0]
+    if depth_name == "" or sf_name == None:
+        errs.append ("no external depth video")
+
     if errs ==[]:
         return ""
     else:

@@ -14,6 +14,19 @@ from nicovision import ImageRecorder
 
 camera_settings = {
         "standard": { 
+            "brightness": 2,
+                "contrast": 15,
+                "saturation": 32,
+                "white_balance_temperature_auto": 1,
+                "gamma": 220,
+                "gain" : 0,
+                "white_balance_temperature": 5000,
+                "sharpness": 16,
+                "exposure_auto" : 0,
+                "exposure_absolute" : 312,
+                "zoom_absolute": 100,
+                "tilt_absolute": 0,
+                "pan_absolute": 0
         },
         "multimodal_experiment": {
                 "brightness": 2,
@@ -22,7 +35,7 @@ camera_settings = {
                 "white_balance_temperature_auto": 0,
                 "gamma": 220,
                 "gain" : 0,
-                "white_balance_temperature": 32000,
+                "white_balance_temperature": 5000,
                 "sharpness": 16,
                 "exposure_auto" : 0,
                 "exposure_absolute" : 312,

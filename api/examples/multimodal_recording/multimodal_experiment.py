@@ -62,9 +62,21 @@ logging.basicConfig(filename='multimodal_recording.log',level=logging.DEBUG,form
 #          "yellow duck","purple duck","orange fish","yellow seal"]
 
 # Test objects for Marcel
-objects = ["blue ball", "blue_plush ball", "red_plush ball", "orange_plush ball",
-           "big_yellow die", "small_yellow die", "yellow car", "green apple",
-           "light tomato", "heavy tomato", "red ball", "red apple"]
+#objects = ["blue ball", "blue_plush ball", "red_plush ball", "orange_plush ball",
+#           "big_yellow die", "small_yellow die", "yellow car", "green apple",
+#           "light tomato", "heavy tomato", "red ball", "red apple"]
+
+objects = ["hard pink ball", "soft blue ball", "soft red ball", "soft orange ball", # color for plush balls determined by the color of the small manifactuerer label
+           "light red car","blue car","yellow car", "heavy green car",
+           "pink sponge", "blue sponge","blue tissues","pink tissues",
+           "small hard banana", "soft banana", "light hard banana", "heavy hard banana",
+           "green frog","purple duck","orange fish","yellow seal",
+           "big yellow die", "small yellow die",
+           "light soft apple", "heavy soft apple", "light hard apple", "light hard apple"]
+
+simple_objects = ["pink sponge", "blue sponge","blue tissues","pink tissues"]
+objects = simple_objects
+
 
 import action_definitions
 actions=action_definitions.actions
@@ -511,6 +523,7 @@ while (get_needed_overall_numbers() > 0):
         ir2.stop_recording()
 
     # Stop and write audio recordings
+    print "\n Stop recording..."
     ar.stop_recording(0)
 
     # Stop observer recording
@@ -555,7 +568,7 @@ while (get_needed_overall_numbers() > 0):
             fn, dfp = df_set
             fnp = cur_dir + "/" + fn + fpostfix
             fnpnorm = cur_dir + "/" + fn + "_norm" + fpostfix
-            fnplot = cur_dir + fn + "_norm" + ".svg"
+            fnplot = cur_dir + "/" +  fn + "_norm" + ".svg"
             with open(fnp, 'a') as f:
                 dfp.to_csv(f, header=True)
 
