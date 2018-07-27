@@ -62,9 +62,17 @@ logging.basicConfig(filename='multimodal_recording.log',level=logging.DEBUG,form
 #          "yellow duck","purple duck","orange fish","yellow seal"]
 
 # Test objects for Marcel
-objects = ["blue ball", "blue_plush ball", "red_plush ball", "orange_plush ball",
-           "big_yellow die", "small_yellow die", "yellow car", "green apple",
-           "light tomato", "heavy tomato", "red ball", "red apple"]
+#objects = ["blue ball", "blue_plush ball", "red_plush ball", "orange_plush ball",
+#           "big_yellow die", "small_yellow die", "yellow car", "green apple",
+#           "light tomato", "heavy tomato", "red ball", "red apple"]
+
+objects = ["pink ball", "blue plush ball", "red ball", "orange plush ball", # color for plush balls determined by the color of the small manifactuerer label
+           "red car","blue car","yellow car", "green car",
+           "pink sponge", "blue sponge","blue tissues","pink tissues",
+           "small plastic banana", "plush banana", "heavy plastic banana","light plastic banana",
+           "green frog","purple duck","orange fish","yellow seal",
+           "big yellow die", "small yellow die",
+           "light plastic apple", "heavy plastic apple", "light green plush apple", "dark green plush apple"]
 
 import action_definitions
 actions=action_definitions.actions
