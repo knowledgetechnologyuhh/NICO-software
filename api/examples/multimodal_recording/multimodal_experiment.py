@@ -86,7 +86,7 @@ actions=action_definitions.actions
 data_directory = "/data2/20180718_multimodal_recording_pilot_beta"
 
 # definition for numbers per object
-number_of_samples_per_object = 4
+number_of_samples_per_object = 1
 
 # definition of Maximum current - This protects the hands from breaking!! Do not change this, if you do not know!
 MAX_CUR_FINGER = 120
@@ -381,8 +381,8 @@ pulse_device = pulse_audio_recorder.get_pulse_device()
 #res_y = 768
 #res_x = 800
 #res_y = 600
-res_x = 1920
-res_y = 1080
+res_x = 960 #1920
+res_y = 540 #1080
 #res_x = 1280
 #res_y = 720
 framerate = 30
@@ -491,7 +491,7 @@ while (get_needed_overall_numbers() > 0):
 
 
     action_definitions.move_action(action,robot)
-    sleep(10)
+    sleep(4)
 
     #sleep(5)
     #robot.setAngle("r_indexfingers_x", 179, fractionMaxSpeed=0.8)
