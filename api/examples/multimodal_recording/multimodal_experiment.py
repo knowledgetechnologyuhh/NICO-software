@@ -21,7 +21,7 @@ from os.path import dirname, abspath
 from time import sleep
 import datetime
 import sys
-import cv2
+import cv2 as cv
 from nicoaudio import pulse_audio_recorder
 from subprocess import call
 import sqlite3
@@ -33,22 +33,13 @@ import numpy as np
 
 import check_data_integrity
 
-from observer_recorder import Depth_and_RGB_Observer_Recorder
-from client import ClientWrapper
-
-#create the observer_recorder object 
-topics=("/camera/rgb/image_raw","/camera/depth/image_raw")
-d_and_rgb_osr=Depth_and_RGB_Observer_Recorder(topics)
-
-fnl = "left_cam_synced_data"
-fnr = "right_cam_synced_data"
-fpostfix = ".csv"
-robot = None
-
 import shutil
 
 import logging
 logging.basicConfig(filename='multimodal_recording.log',level=logging.DEBUG,format='%(asctime)s %(levelname)s %(message)s')
+
+# if this flag is set, the control of the recording is done via a GUI window
+use_GUI = False
 
 # experiment definitions (Objects and number of graspings)
 # definition of objects
@@ -87,6 +78,18 @@ data_directory = "/data2/20180718_multimodal_recording_pilot_beta"
 
 # definition for numbers per object
 number_of_samples_per_object = 1
+
+#create the observer_recorder object
+from observer_recorder import Depth_and_RGB_Observer_Recorder
+from client import ClientWrapper
+topics=("/camera/rgb/image_raw","/camera/depth/image_raw")
+d_and_rgb_osr=Depth_and_RGB_Observer_Recorder(topics)
+
+#TODO add comment here
+fnl = "left_cam_synced_data"
+fnr = "right_cam_synced_data"
+fpostfix = ".csv"
+robot = None
 
 # definition of Maximum current - This protects the hands from breaking!! Do not change this, if you do not know!
 MAX_CUR_FINGER = 120
@@ -130,6 +133,16 @@ sm_proprioception = ["r_shoulder_z", "r_shoulder_y", "r_arm_x", "r_elbow_y",
                      "r_wrist_z", "r_wrist_x", "r_indexfingers_x", "r_thumb_x", "head_z", "head_y"]
 sm_tactile = ["touch_x", "touch_y", "touch_z"]
 
+#use an opencv gui (works with the presenter)
+gui_height = 1080  # 1350
+gui_width = 1840  # 2400
+gui_font = cv.FONT_HERSHEY_SIMPLEX
+gui_fsize = 1.5
+gui_line_dist = 60
+gui = np.zeros((gui_height, gui_width, 3), np.uint8)
+if use_GUI:
+    cv.imshow('Multi-modal recording', gui)
+    cv.moveWindow('Multi-modal recording', 360, 0)
 
 def write_joint_data(robot, df, iso_time):
 
@@ -331,8 +344,37 @@ else:
 
 
 # Instructions for the experimenter. Brig the robot in Initial position
-print "\n Please put the robot in position. Right arm on the table. Left arm hanging down. Give RETURN after finished.\n"
-raw_input()
+print "\n Please put the robot in position. Right arm on the table. Left arm hanging down."
+if use_GUI:
+    cv.putText(gui,
+                "Please put the robot in position.",
+                (40, gui_line_dist * 2), gui_font,
+                gui_fsize, (255, 128, 128), 2)
+    cv.putText(gui,
+                "Right arm on the table. Left arm hanging down.",
+                (40, gui_line_dist * 3), gui_font,
+                gui_fsize, (255, 128, 128), 2)
+    cv.putText(gui,
+                "Give any Button when finished.",
+                (40, gui_line_dist * 4), gui_font,
+                gui_fsize, (255, 128, 128), 2)
+    cv.imshow('Multi-modal recording', gui)
+    c = cv.waitKey(0)
+    if c == 27:  # ESC
+        cv.destroyAllWindows()
+        # TODO close all recordings
+        sys.exit()
+
+    cv.putText(gui,
+               "... initialising all modules now ...",
+               (40, gui_line_dist * 6), gui_font,
+               gui_fsize, (255, 255, 128), 2)
+    cv.imshow('Multi-modal recording', gui)
+    c = cv.waitKey(1)
+else:
+    print " Give RETURN after finished.\n"
+    raw_input()
+    print " ... initialising all modules now ...\n"
 
 # Optoforce_sensor
 optoforce_sensor = optoforce(ser_number=None, cache_frequency=40)
@@ -433,9 +475,29 @@ while (get_needed_overall_numbers() > 0):
 
     print "Randomly chosen object : " + o + "\n"
 
-    print "\n\n Please put the " + o + \
-        " onto the table at the marked position. Then press RETURN."
-    raw_input()
+    print "\n Please put the " + o + \
+        " onto the table at the marked position. "
+    if use_GUI:
+        gui = np.zeros((gui_height, gui_width, 3), np.uint8)
+        datum = "test me."
+        cv.putText(gui,
+                    "Prepare the following interaction and press any key when ready ...",
+                    (40, gui_line_dist * 2), gui_font,
+                    gui_fsize, (255, 255, 128), 2)
+        cv.putText(gui,
+                    "" + action + " " + o,
+                    (40, gui_line_dist * 3), gui_font,
+                    gui_fsize, (128, 255, 255), 2)
+        cv.imshow('Multi-modal recording', gui)
+
+        c = cv.waitKey(0)
+        if c == 27:  # ESC
+            cv.destroyAllWindows()
+            # TODO close all recordings
+            break
+    else:
+        print " Then press RETURN."
+        raw_input()
 
     try:
         os.mkdir(data_directory+'/'+action)
@@ -475,6 +537,14 @@ while (get_needed_overall_numbers() > 0):
 
     label = datetime.datetime.today().isoformat()
     logging.info("Start recording for sample : " + str_sample_number)
+
+    print "\n Stop recording..."
+    if use_GUI:
+        cv.putText(gui,
+                   "... recording  ...",
+                   (40, gui_line_dist * 4), gui_font,
+                   gui_fsize, (255, 255, 128), 2)
+        cv.imshow('Multi-modal recording', gui)
 
     #Start observer recording
     d_and_rgb_osr.start_recording()
@@ -554,14 +624,42 @@ while (get_needed_overall_numbers() > 0):
         print("\n.Sorry. Detected problems with this sample. I have to delete the data. ")
         print ("\n The detected problem is: \n[" + str(data_check_result) + "]\n")
 
-    while (answer != "R" and answer != ""):
-        print ("\n\n\Has the recording of this sample been succesful or do you want to repeat it ? (R=Repeat) / (Return=Continue) \n\n\n")
-        answer = raw_input()
+    is_user_accept_sample = False
+
+    if use_GUI:
+        cv.putText(gui,
+                    "Are you confident that the recording went well?",
+                    (40, gui_line_dist * 5), gui_font,
+                    gui_fsize, (255, 128, 128), 2)
+        cv.putText(gui,
+                    "Press LEFT for no or press RIGHT for yes!",
+                    (40, gui_line_dist * 6), gui_font,
+                    gui_fsize, (255, 255, 128), 2)
+        cv.imshow('Multi-modal recording', gui)
+        if c == 27:  # ESC
+            cv.destroyAllWindows()
+            # TODO close all recordings
+            break
+        elif c == 83 or c == ord('y'):  # RIGHT key
+            is_user_accept_sample = True
+    else:
+        while (answer != "R" and answer != ""):
+            print ("\n\n\Has the recording of this sample been succesful or do you want to repeat it ? (R=Repeat) / (Return=Continue) \n\n\n")
+            answer = raw_input()
+        if answer == "":
+            is_user_accept_sample = True
 
     # Hint (StH): we can use/extend the plot methods also for plotting within an opencv windows
 
-    if answer == "":
+    if is_user_accept_sample:
         logging.info("manual data check decided to keep the data. data will be stored.")
+        if use_GUI:
+            cv.putText(gui,
+                       "Done. Recordings will get saved now. Thank you.",
+                       (40, gui_line_dist * 7), gui_font,
+                       gui_fsize, (128, 255, 128), 2)
+            cv.imshow('Multi-modal recording', gui)
+
         # Write joint data to file
         for df_set in ((fnl, dfl), (fnr, dfr)):
             fn, dfp = df_set
@@ -589,17 +687,30 @@ while (get_needed_overall_numbers() > 0):
         connection.commit()
     else:
         logging.warning("manual data check decided data are invalid. data will be deleted.")
+        if use_GUI:
+            cv.putText(gui,
+                       "No Problem, we will repeat this later. Thank you.",
+                       (40, gui_line_dist * 7), gui_font,
+                       gui_fsize, (128, 128, 255), 2)
+            cv.imshow('Multi-modal recording', gui)
+
         call(["rm", "-rf", cur_dir])
 
         # rollback the database changes
         connection.rollback()
 
-
-connection.close()
+try:
+    connection.close()
+except sqlite3.ProgrammingError as e:
+    print e
+if use_GUI:
+    cv.destroyAllWindows()
 logging.info("All needed samples recorded.")
 print "\n\n Great! I got all samples together! Finishing experiment.\n"
 print_progress()
 
 robot = None
+
+#TODO (important!): close all possibly open threads
 
 # set the robot to be compliant
