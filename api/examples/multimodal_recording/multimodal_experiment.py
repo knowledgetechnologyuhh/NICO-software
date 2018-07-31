@@ -39,7 +39,7 @@ import logging
 logging.basicConfig(filename='multimodal_recording.log',level=logging.DEBUG,format='%(asctime)s %(levelname)s %(message)s')
 
 # if this flag is set, the control of the recording is done via a GUI window
-use_GUI = False
+use_GUI = True
 
 # experiment definitions (Objects and number of graspings)
 # definition of objects
@@ -538,13 +538,14 @@ while (get_needed_overall_numbers() > 0):
     label = datetime.datetime.today().isoformat()
     logging.info("Start recording for sample : " + str_sample_number)
 
-    print "\n Stop recording..."
+    print "\n Start recording..."
     if use_GUI:
         cv.putText(gui,
                    "... recording  ...",
                    (40, gui_line_dist * 4), gui_font,
                    gui_fsize, (255, 255, 128), 2)
         cv.imshow('Multi-modal recording', gui)
+        cv.waitKey(1)
 
     #Start observer recording
     d_and_rgb_osr.start_recording()
@@ -604,6 +605,13 @@ while (get_needed_overall_numbers() > 0):
 
     logging.info(" Start of waiting for picture recording  ")
     print "\n Waiting for pictures writing on disk - please wait a moment"
+    if use_GUI:
+        cv.putText(gui,
+                   "... writing pictures on disk and checking data integrity ...",
+                   (40, gui_line_dist * 5), gui_font,
+                   gui_fsize, (255, 255, 128), 2)
+        cv.imshow('Multi-modal recording', gui)
+        cv.waitKey(1)
     check_data_integrity.wait_for_camera_writing(cur_dir+'/camera1/')
     check_data_integrity.wait_for_camera_writing(cur_dir+'/camera2/')
     logging.info(" End of waiting for picture recording  ")
@@ -619,46 +627,59 @@ while (get_needed_overall_numbers() > 0):
         logging.warning("data integrity returned an issue: " + str(data_check_result) + ". data will get deleted.")
 
     answer = "dummy"
-    if not data_check_result == "":
-        answer = "R"
-        print("\n.Sorry. Detected problems with this sample. I have to delete the data. ")
-        print ("\n The detected problem is: \n[" + str(data_check_result) + "]\n")
 
-    is_user_accept_sample = False
+    is_accept_sample = False
 
     if use_GUI:
-        cv.putText(gui,
-                    "Are you confident that the recording went well?",
-                    (40, gui_line_dist * 5), gui_font,
-                    gui_fsize, (255, 128, 128), 2)
-        cv.putText(gui,
-                    "Press LEFT for no or press RIGHT for yes!",
-                    (40, gui_line_dist * 6), gui_font,
-                    gui_fsize, (255, 255, 128), 2)
-        cv.imshow('Multi-modal recording', gui)
-        if c == 27:  # ESC
-            cv.destroyAllWindows()
-            # TODO close all recordings
-            break
-        elif c == 83 or c == ord('y'):  # RIGHT key
-            is_user_accept_sample = True
+        if not data_check_result == "":
+            cv.putText(gui,
+                       "Sorry. Detected problems with this sample and cannot use it.",
+                       (40, gui_line_dist * 6), gui_font,
+                       gui_fsize, (128, 128, 255), 2)
+            cv.imshow('Multi-modal recording', gui)
+            cv.waitKey(1000)
+        else:
+            cv.putText(gui,
+                        "Are you confident that the recording went well?",
+                        (40, gui_line_dist * 6), gui_font,
+                        gui_fsize, (255, 128, 128), 2)
+            cv.putText(gui,
+                        "Press LEFT for no or press RIGHT for yes!",
+                        (40, gui_line_dist * 7), gui_font,
+                        gui_fsize, (255, 255, 128), 2)
+            cv.imshow('Multi-modal recording', gui)
+            c = cv.waitKey(0)
+            if c == 27:  # ESC
+                cv.destroyAllWindows()
+                break
+            elif c == 83 or c == 121:  # RIGHT key
+                print "WAS HERE!"
+                is_accept_sample = True
     else:
+        if not data_check_result == "":
+            answer = "R"
+            print(
+                "\n.Sorry. Detected problems with this sample. I have to delete the data. ")
+            print ("\n The detected problem is: \n[" + str(
+                data_check_result) + "]\n")
+
         while (answer != "R" and answer != ""):
             print ("\n\n\Has the recording of this sample been succesful or do you want to repeat it ? (R=Repeat) / (Return=Continue) \n\n\n")
             answer = raw_input()
         if answer == "":
-            is_user_accept_sample = True
+            is_accept_sample = True
 
     # Hint (StH): we can use/extend the plot methods also for plotting within an opencv windows
 
-    if is_user_accept_sample:
+    if is_accept_sample:
         logging.info("manual data check decided to keep the data. data will be stored.")
         if use_GUI:
             cv.putText(gui,
                        "Done. Recordings will get saved now. Thank you.",
-                       (40, gui_line_dist * 7), gui_font,
+                       (40, gui_line_dist * 8), gui_font,
                        gui_fsize, (128, 255, 128), 2)
             cv.imshow('Multi-modal recording', gui)
+            c = cv.waitKey(1)
 
         # Write joint data to file
         for df_set in ((fnl, dfl), (fnr, dfr)):
@@ -685,14 +706,17 @@ while (get_needed_overall_numbers() > 0):
 
         # commit the database changes
         connection.commit()
+        sleep(2)
     else:
         logging.warning("manual data check decided data are invalid. data will be deleted.")
         if use_GUI:
             cv.putText(gui,
                        "No Problem, we will repeat this later. Thank you.",
-                       (40, gui_line_dist * 7), gui_font,
+                       (40, gui_line_dist * 8), gui_font,
                        gui_fsize, (128, 128, 255), 2)
             cv.imshow('Multi-modal recording', gui)
+            c = cv.waitKey(3000)
+
 
         call(["rm", "-rf", cur_dir])
 
