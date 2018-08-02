@@ -9,7 +9,7 @@ def recorder_server_wrapper():
     from observer_recorder import Depth_and_RGB_Observer_Recorder
     
     #create the observer_recorder object 
-    topics=("/camera/color/image_raw","/camera/depth/image_raw")
+    topics=("/usb_cam/image_raw","/camera/color/image_raw","/camera/depth/image_raw")
     d_and_rgb_osr=Depth_and_RGB_Observer_Recorder(topics)
 
     #wrap the test object in the server wrapper.
