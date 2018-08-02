@@ -84,13 +84,13 @@ only failures due to position of joints - mostly during lift/scoot trials
 
 Integrate GUI into recording script
 
-Check Observer-HD recording
-- camera resolution is wrong
-- camera image not sharp
+Check Observer-HD recording - DONE.
+- camera resolution is wrong - 1920x1080 for hd and VGA for rgb+d
+- camera image not sharp - ok
 
 Checked Observer-Depth recording
 - issues with wrong duration (speed seems to be slow - double length of recording)
-- quality of depth sensing is bad - white vs. black surfaces are messured differenty - black surfaces are     almost not registered
+- quality of depth sensing is bad - white vs. black surfaces are messured differenty - black surfaces are     almost not registered - all DONE, was wrong max depth distance
 
 Evaluate rate of successful trials
 - often check fails for image count - do we accept a difference there?
