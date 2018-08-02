@@ -1,2 +1,2 @@
-"head_z","head_y","r_shoulder_y","r_shoulder_z","r_arm_x","r_elbow_y","r_wrist_z","r_wrist_x","r_indexfingers_x","r_thumb_x","r_virtualhand_x"
-"-1.8","46.99","20.88","27.3","33.54","-76.53","-152.57","137.8","-180.0","-167.52","-180.0"
+head_z,head_y,r_shoulder_y,r_shoulder_z,r_arm_x,r_elbow_y,r_wrist_z,r_wrist_x,r_indexfingers_x,r_thumb_x,r_virtualhand_x
+-1.8,46.99,20.88,27.3,33.54,-76.53,-152.57,0,-180,-167.52,-180
