@@ -48,7 +48,7 @@ def observer_client_wrapper():
     #print ("RGB video in /tmp/depth_remote.avi")
     from sc_copy import sc_copy
     import os
-    sc_copy("wtmpc211:"+f_hd,"/tmp/hd_"+os.path.basename(f_rgb))
+    sc_copy("wtmpc211:"+f_hd,"/tmp/hd_"+os.path.basename(f_hd))
     sc_copy("wtmpc211:"+f_rgb,"/tmp/rgb_"+os.path.basename(f_rgb))
     sc_copy("wtmpc211:"+f_depth,"/tmp/depth_"+os.path.basename(f_depth))
     

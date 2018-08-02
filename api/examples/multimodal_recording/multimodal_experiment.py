@@ -82,7 +82,7 @@ number_of_samples_per_object = 1
 #create the observer_recorder object
 from observer_recorder import Depth_and_RGB_Observer_Recorder
 from client import ClientWrapper
-topics=("/camera/rgb/image_raw","/camera/depth/image_raw")
+topics=("/usb_cam/image_raw","/camera/color/image_raw","/camera/depth/image_raw")
 d_and_rgb_osr=Depth_and_RGB_Observer_Recorder(topics)
 
 #TODO add comment here
@@ -597,9 +597,10 @@ while (get_needed_overall_numbers() > 0):
     ar.stop_recording(0)
 
     # Stop observer recording
-    (f_rgb,f_depth)=d_and_rgb_osr.stop_recording()
+    (f_hd,f_rgb,f_depth)=d_and_rgb_osr.stop_recording()
     from sc_copy import sc_copy
     import os
+    sc_copy("wtmpc211:"+f_hd,cur_dir+"/hd_"+os.path.basename(f_hd))
     sc_copy("wtmpc211:"+f_rgb,cur_dir+"/rgb_"+os.path.basename(f_rgb))
     sc_copy("wtmpc211:"+f_depth,cur_dir+"/depth_"+os.path.basename(f_depth))
 
@@ -648,13 +649,13 @@ while (get_needed_overall_numbers() > 0):
                         (40, gui_line_dist * 7), gui_font,
                         gui_fsize, (255, 255, 128), 2)
             cv.imshow('Multi-modal recording', gui)
+            print "key: " + str(c)
             c = cv.waitKey(0)
             if c == 27:  # ESC
                 cv.destroyAllWindows()
                 break
-            elif c == 83 or c == 121:  # RIGHT key
-                print "WAS HERE!"
-                is_accept_sample = True
+            elif c == 83 or c == 86 or c == 121:  # RIGHT key
+                 is_accept_sample = True
     else:
         if not data_check_result == "":
             answer = "R"
