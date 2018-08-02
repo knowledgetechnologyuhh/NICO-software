@@ -59,7 +59,7 @@ class Depth_and_RGB_Observer_Recorder:
         self.hd_topic,self.rgb_topic,self.depth_topic=topics_to_record
         self.osr_hd = Observer_Recorder(self.hd_topic,fps=fps,codec=codec)
         self.osr_rgb = Observer_Recorder(self.rgb_topic,fps=fps,codec=codec)
-        self.osr_depth = Observer_Recorder(self.depth_topic,fps=fps,depth_range=180)
+        self.osr_depth = Observer_Recorder(self.depth_topic,fps=fps,depth_range=1800)
         
         
     def start_recording(self):

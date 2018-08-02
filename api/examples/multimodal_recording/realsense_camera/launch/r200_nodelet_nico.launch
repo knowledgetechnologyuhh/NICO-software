@@ -1,0 +1,54 @@
+<!-- Sample launch file for using RealSense R200 camera with default configurations -->
+<launch>
+  <arg name="camera"       default="camera" />
+  <arg name="hd_camera"       default="hdcamera" />
+  <arg name="rgbd_camera_type"  default="R200" /> <!-- Type of camera -->
+  <arg name="hd_camera_type"  default="R200" /> <!-- Type of camera -->
+  <arg name="serial_no"    default="" />
+  <arg name="usb_port_id"  default="" /> <!-- USB "Bus#-Port#" -->
+  <arg name="manager"      default="nodelet_manager" />
+
+  <!-- These 'arg' tags are just place-holders for passing values from test files.
+  The recommended way is to pass the values directly into the 'param' tags. -->
+  <arg name="mode"              default="manual" />
+  <arg name="hd_width"     default="1920" />
+  <arg name="hd_height"    default="1080" />
+  <arg name="color_width"  default="640" />
+  <arg name="color_height" default="480" />
+  <arg name="depth_width"  default="640" />
+  <arg name="depth_height" default="480" />  
+  <arg name="fps"    default="30" />
+  <!-- TODO -->
+  <arg name="hd_zoom"     default="60" />
+  <arg name="rgbd_range"   default="200" />
+
+  <param name="$(arg camera)/driver/mode"              type="str"  value="$(arg mode)" />
+  <param name="$(arg camera)/driver/color_fps"         type="int"  value="$(arg fps)" />
+  <param name="$(arg camera)/driver/depth_fps"         type="int"  value="$(arg fps)" />
+  <param name="$(arg camera)/driver/color_width"         type="int"  value="$(arg color_width)" />
+  <param name="$(arg camera)/driver/color_height"         type="int"  value="$(arg color_height)" />
+  <param name="$(arg camera)/driver/depth_width"         type="int"  value="$(arg depth_width)" />
+  <param name="$(arg camera)/driver/depth_height"         type="int"  value="$(arg depth_height)" />
+  <!-- Refer to the Wiki http://wiki.ros.org/realsense_camera for list of supported parameters -->
+
+  <group ns="$(arg camera)">
+    <node pkg="nodelet" type="nodelet" name="$(arg manager)" args="manager" output="screen"/>
+
+    <include file="$(find realsense_camera)/launch/includes/nodelet.launch.xml">
+      <arg name="manager"      value="$(arg manager)" />
+      <arg name="camera"       value="$(arg camera)" />
+      <arg name="camera_type"  value="$(arg rgbd_camera_type)" />
+      <arg name="serial_no"    value="$(arg serial_no)" />
+      <arg name="usb_port_id"  value="$(arg usb_port_id)" />
+    </include>
+  </group>
+  <node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="screen" >
+    <param name="video_device" value="/dev/video3" />
+    <param name="image_width" value="$(arg hd_width)" />
+    <param name="image_height" value="$(arg hd_height)" />
+    <param name="framerate" value="$(arg fps)" />
+    <param name="pixel_format" value="yuyv" />
+    <param name="camera_frame_id" value="usb_cam" />
+    <param name="io_method" value="mmap"/>
+  </node>
+</launch>

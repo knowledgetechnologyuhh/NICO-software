@@ -10,7 +10,7 @@ def observer_client_wrapper():
     
 
     #create the observer_recorder object 
-    topics=("/camera/rgb/image_raw","/camera/depth/image_raw")
+    topics=("/usb_cam/image_raw","/camera/color/image_raw","/camera/depth/image_raw")
     d_and_rgb_osr=Depth_and_RGB_Observer_Recorder(topics)
 
     #and to some attribute and method calls
@@ -40,7 +40,7 @@ def observer_client_wrapper():
     d_and_rgb_osr.start_recording()
     import time
     time.sleep(10)
-    (f_rgb,f_depth)=d_and_rgb_osr.stop_recording()
+    (f_hd,f_rgb,f_depth)=d_and_rgb_osr.stop_recording()
     #import os
     #os.rename(f_rgb,"/tmp/rgb_remote.avi")
     #print ("RGB video in /tmp/rgb_remote.avi")
@@ -48,6 +48,7 @@ def observer_client_wrapper():
     #print ("RGB video in /tmp/depth_remote.avi")
     from sc_copy import sc_copy
     import os
+    sc_copy("wtmpc211:"+f_rgb,"/tmp/hd_"+os.path.basename(f_rgb))
     sc_copy("wtmpc211:"+f_rgb,"/tmp/rgb_"+os.path.basename(f_rgb))
     sc_copy("wtmpc211:"+f_depth,"/tmp/depth_"+os.path.basename(f_depth))
     
