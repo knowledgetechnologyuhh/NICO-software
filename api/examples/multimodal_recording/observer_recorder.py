@@ -56,22 +56,25 @@ class Observer_Recorder:
     
 class Depth_and_RGB_Observer_Recorder:
     def __init__(self,topics_to_record,fps=30,codec="X264"):
-        self.rgb_topic,self.depth_topic=topics_to_record
+        self.hd_topic,self.rgb_topic,self.depth_topic=topics_to_record
+        self.osr_hd = Observer_Recorder(self.hd_topic,fps=fps,codec=codec)
         self.osr_rgb = Observer_Recorder(self.rgb_topic,fps=fps,codec=codec)
-        self.osr_depth = Observer_Recorder(self.depth_topic,fps=fps,depth_range=40)
+        self.osr_depth = Observer_Recorder(self.depth_topic,fps=fps,depth_range=180)
         
         
     def start_recording(self):
         
+        self.osr_hd.start_recording()
         self.osr_rgb.start_recording()
         self.osr_depth.start_recording()
         return True
     
     def stop_recording(self):
         
+        file_hd=self.osr_hd.stop_recording()
         file_rgb=self.osr_rgb.stop_recording()
-        file_depth=self.osr_depth.stop_recording()    
-        return (file_rgb,file_depth)
+        file_depth=self.osr_depth.stop_recording()
+        return (file_hd,file_rgb,file_depth)
     
 if __name__ == '__main__':
     #osr=Observer_Recorder("/camera/color/image_raw")
@@ -84,13 +87,13 @@ if __name__ == '__main__':
     #osr.start_recording()
     #time.sleep(3)
     #osr.stop_recording()
-    topics=("/camera/color/image_raw","/camera/depth/image_raw")
+    topics=("/usb_cam/image_raw","/camera/color/image_raw","/camera/depth/image_raw")
     d_and_rgb_osr=Depth_and_RGB_Observer_Recorder(topics)
     d_and_rgb_osr.start_recording()
     import time
     time.sleep(10)
-    (f_rgb,f_depth)=d_and_rgb_osr.stop_recording()
-    print "Files: " + str((f_rgb,f_depth))
+    (f_hd,f_rgb,f_depth)=d_and_rgb_osr.stop_recording()
+    print "Files: " + str((f_hd,f_rgb,f_depth))
     time.sleep(1)
     #import os
     #os.rename(f_rgb,"/tmp/rgb.avi")
