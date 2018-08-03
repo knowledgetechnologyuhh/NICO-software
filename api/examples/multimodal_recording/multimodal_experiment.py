@@ -65,8 +65,8 @@ objects = ["hard pink ball", "soft blue ball", "soft red ball", "soft orange bal
            "big yellow die", "small yellow die",
            "light soft apple", "heavy soft apple", "light hard apple", "light hard apple"]
 
-simple_objects = ["pink sponge", "blue sponge","blue tissues","pink tissues"]
-objects = simple_objects
+#simple_objects = ["pink sponge", "blue sponge","blue tissues","pink tissues"]
+#objects = simple_objects
 
 import action_definitions
 actions=action_definitions.actions
@@ -74,7 +74,7 @@ actions=action_definitions.actions
 # action="pull"
 
 # data_directory
-data_directory = "/data2/20180718_multimodal_recording_pilot_beta"
+data_directory = "/data2/20180803_multimodal_recording_pilot_gamma"
 
 # definition for numbers per object
 number_of_samples_per_object = 1
@@ -286,7 +286,7 @@ def plot_data_audio(audio_file, plot_audio_file):
     plt.xlabel('Time')
     plt.ylabel('Frequency')
 
-    plt.savefig(plot_audio_file, bbox_inches='tight')
+    plt.savefig(plot_audio_file, bbox_inches='tight', dpi=86)
 
     return True
 
@@ -304,7 +304,7 @@ def plot_data_sensorimotor(sm_proprioception, sm_tactile, dfp_norm, plot_file_sm
     plt.ylabel('Position')
     if do_print_legend:
         #plt.legend(lines_pos, sm_proprioception, ncol=2, bbox_to_anchor=(1.0, 1.06))
-        plt.legend(lines_pos, sm_proprioception, ncol=1, bbox_to_anchor=(1.0, 1.06))
+        plt.legend(lines_pos, sm_proprioception, ncol=1, bbox_to_anchor=(1.44, 1.06))
     plt.ylim(-0.1, 1.1)
 
     plt.subplot(312)
@@ -319,10 +319,10 @@ def plot_data_sensorimotor(sm_proprioception, sm_tactile, dfp_norm, plot_file_sm
     plt.xlabel('Time')
     plt.ylabel('Touch')
     if do_print_legend:
-        plt.legend(lines_tactile, sm_tactile, ncol=1, bbox_to_anchor=(1.0, 1.06))
+        plt.legend(lines_tactile, sm_tactile, ncol=1, bbox_to_anchor=(1.3, 1.06))
     plt.ylim(-0.1, 1.1)
 
-    plt.savefig(plot_file_sm, bbox_inches='tight')
+    plt.savefig(plot_file_sm, bbox_inches='tight', dpi=86)
 
     return True
 
@@ -419,14 +419,18 @@ logging.info('Robot in position and ready')
 
 pulse_device = pulse_audio_recorder.get_pulse_device()
 
-#res_x = 1024
-#res_y = 768
+res_x = 1024
+res_y = 768
 #res_x = 800
 #res_y = 600
-res_x = 960 #1920
-res_y = 540 #1080
+#res_x = 960
+#res_y = 540
 #res_x = 1280
 #res_y = 720
+#res_x = 640
+#res_y = 480
+#res_x = 1920
+#res_y = 1080
 framerate = 30
 amount_of_cams = 2
 
@@ -638,18 +642,52 @@ while (get_needed_overall_numbers() > 0):
                        (40, gui_line_dist * 6), gui_font,
                        gui_fsize, (128, 128, 255), 2)
             cv.imshow('Multi-modal recording', gui)
+            print ("\n The detected problem is: \n[" + str(
+                data_check_result) + "]\n")
             cv.waitKey(1000)
         else:
+            #show the graphs within the gui:
+            shift = 0
+            x_off = 40
+            y_off = gui_line_dist * 6
+            fnp = cur_dir + "/" + fnl + fpostfix
+            fnpnorm = cur_dir + "/" + fnl + "_norm" + fpostfix
+            fnplot = cur_dir + "/" + fnl + "_norm" + ".png"
+            dfp_norm_check = normalise_data_sensorimotor(robot_config,
+                                                   sm_proprioception,
+                                                   sm_tactile, dfl)
+            plot_data_sensorimotor(sm_proprioception, sm_tactile, dfp_norm_check, fnplot)
+
+            img_sm = cv.imread(fnplot)
+            gui[y_off:y_off + img_sm.shape[0], x_off+shift:x_off+shift + img_sm.shape[1]] = img_sm
+            shift += 660
+
+            plot_data_audio(cur_dir + '/' + label + ".wav",
+                            cur_dir + '/' + label + "_audio.png")
+            img_audio = cv.imread(cur_dir + '/' + label + "_audio.png")
+            gui[y_off:y_off + img_audio.shape[0], x_off+shift:x_off+shift + img_audio.shape[1]] = img_audio
+            shift += 700
+
+            img_cam1 = cv.imread(cur_dir+'/camera1/'+os.listdir(cur_dir+'/camera1/')[4])
+            img_cam1 = cv.resize(img_cam1, (360, 240), interpolation=cv.INTER_CUBIC)
+            img_cam1 = cv.flip(img_cam1, -1)
+            gui[y_off:y_off + img_cam1.shape[0], x_off+shift:x_off+shift + img_cam1.shape[1]] = img_cam1
+
+            img_cam2 = cv.imread(cur_dir+'/camera2/'+os.listdir(cur_dir+'/camera2/')[4])
+            img_cam2 = cv.resize(img_cam2, (360, 240), interpolation=cv.INTER_CUBIC)
+            gui[y_off+260:y_off+260 + img_cam2.shape[0], x_off+shift:x_off+shift + img_cam2.shape[1]] = img_cam2
+
+            cv.imshow('Multi-modal recording', gui)
+
             cv.putText(gui,
                         "Are you confident that the recording went well?",
-                        (40, gui_line_dist * 6), gui_font,
+                        (40, gui_line_dist * 15), gui_font,
                         gui_fsize, (255, 128, 128), 2)
             cv.putText(gui,
-                        "Press LEFT for no or press RIGHT for yes!",
-                        (40, gui_line_dist * 7), gui_font,
+                        "Press LEFT/n for no or press RIGHT/y for yes!",
+                        (40, gui_line_dist * 16), gui_font,
                         gui_fsize, (255, 255, 128), 2)
             cv.imshow('Multi-modal recording', gui)
-            print "key: " + str(c)
             c = cv.waitKey(0)
             if c == 27:  # ESC
                 cv.destroyAllWindows()
@@ -677,7 +715,7 @@ while (get_needed_overall_numbers() > 0):
         if use_GUI:
             cv.putText(gui,
                        "Done. Recordings will get saved now. Thank you.",
-                       (40, gui_line_dist * 8), gui_font,
+                       (40, gui_line_dist * 17), gui_font,
                        gui_fsize, (128, 255, 128), 2)
             cv.imshow('Multi-modal recording', gui)
             c = cv.waitKey(1)
@@ -691,9 +729,9 @@ while (get_needed_overall_numbers() > 0):
             with open(fnp, 'a') as f:
                 dfp.to_csv(f, header=True)
 
-            # Write joint data to file
             dfp_norm = normalise_data_sensorimotor(robot_config, sm_proprioception,
                                                    sm_tactile, dfp)
+            # Write joint data to file
             with open(fnpnorm, 'a') as f:
                 dfp_norm.to_csv(f, header=True)
 
@@ -713,7 +751,7 @@ while (get_needed_overall_numbers() > 0):
         if use_GUI:
             cv.putText(gui,
                        "No Problem, we will repeat this later. Thank you.",
-                       (40, gui_line_dist * 8), gui_font,
+                       (40, gui_line_dist * 17), gui_font,
                        gui_fsize, (128, 128, 255), 2)
             cv.imshow('Multi-modal recording', gui)
             c = cv.waitKey(3000)
