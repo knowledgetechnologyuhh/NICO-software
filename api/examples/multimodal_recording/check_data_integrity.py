@@ -6,7 +6,7 @@ import time
 MIN_CAM_PICS = 100
 
 # Maximum diffrence in numbers of pictures between the two cameras
-MAX_NUM_DIF_CAMS = 10
+MAX_NUM_DIF_CAMS = 15
 
 # We need the frames per second here
 FPS = 30
@@ -15,7 +15,7 @@ FPS = 30
 MAX_DIFF_DUR_SOUND_VISION = 4
 
 # Maximum difference in pictures between time and exspected camera recording frames (picture numbers * FPS)
-MAX_DIFF_TIME_VISION = 30
+MAX_DIFF_TIME_VISION = 25
 
 # Maximum amount of touch sensor update errors
 MAX_UPD_TOUCH = 5
