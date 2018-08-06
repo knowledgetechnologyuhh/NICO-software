@@ -39,7 +39,7 @@ import logging
 logging.basicConfig(filename='multimodal_recording.log',level=logging.DEBUG,format='%(asctime)s %(levelname)s %(message)s')
 
 # if this flag is set, the control of the recording is done via a GUI window
-use_GUI = True
+use_GUI = False
 
 # experiment definitions (Objects and number of graspings)
 # definition of objects
@@ -65,8 +65,8 @@ objects = ["hard pink ball", "soft blue ball", "soft red ball", "soft orange bal
            "big yellow die", "small yellow die",
            "light soft apple", "heavy soft apple", "light hard apple", "light hard apple"]
 
-#simple_objects = ["pink sponge", "blue sponge","blue tissues","pink tissues"]
-#objects = simple_objects
+simple_objects = ["pink sponge", "blue sponge","blue tissues","pink tissues"]
+objects = simple_objects
 
 import action_definitions
 actions=action_definitions.actions
@@ -74,7 +74,7 @@ actions=action_definitions.actions
 # action="pull"
 
 # data_directory
-data_directory = "/data2/20180803_multimodal_recording_pilot_gamma"
+data_directory = "/data2/20180806_multimodal_recording_pilot_MK_updatedHand"
 
 # definition for numbers per object
 number_of_samples_per_object = 1
@@ -419,8 +419,8 @@ logging.info('Robot in position and ready')
 
 pulse_device = pulse_audio_recorder.get_pulse_device()
 
-res_x = 1024
-res_y = 768
+res_x = 960 #1024
+res_y = 540 #768
 #res_x = 800
 #res_y = 600
 #res_x = 960
