@@ -15,7 +15,7 @@ FPS = 30
 MAX_DIFF_DUR_SOUND_VISION = 4
 
 # Maximum difference in pictures between time and exspected camera recording frames (picture numbers * FPS)
-MAX_DIFF_TIME_VISION = 25
+MAX_DIFF_TIME_VISION = 1
 
 # Maximum amount of touch sensor update errors
 MAX_UPD_TOUCH = 5
@@ -36,7 +36,7 @@ MIN_POS = -180.0
 MAX_POS = 180.0
 
 # Maximum Difference between two position readings
-MAX_POS_DIFFERENCE = 25.0
+MAX_POS_DIFFERENCE = 40.0
 
 
 # Wait until all pictures are written on harddisk
@@ -76,7 +76,8 @@ def data_check_clean(dir_name, df_l, df_r,running_time=None):
         filter_col = [col for col in side if col.endswith('pos')]
         #print filter_col
         #raw_input()
-        filter_col=['head_y_pos', 'head_z_pos', 'r_arm_x_pos', 'r_elbow_y_pos', 'r_shoulder_y_pos', 'r_shoulder_z_pos']
+        #filter_col=['r_arm_x_pos', 'r_elbow_y_pos', 'r_shoulder_y_pos', 'r_shoulder_z_pos', 'r_wrist_x_pos', 'r_wrist_z_pos']
+        filter_col=['r_arm_x_pos', 'r_elbow_y_pos', 'r_shoulder_y_pos', 'r_shoulder_z_pos']
         max_col=side[filter_col].diff().max(axis=1)
         #print(max_col)
         max_val=max_col.max()
@@ -108,6 +109,7 @@ def data_check_clean(dir_name, df_l, df_r,running_time=None):
     #Check the frames if accurate running time was given
     if (running_time!=None):
         exspected_frames=int(round(running_time*FPS))
+        print "exspected frames: " + str(exspected_frames) + " cam1_num " + str(cam1_num) + " cam2_num " + str(cam2_num)
         if (abs(exspected_frames-cam1_num)>MAX_DIFF_TIME_VISION) or (abs(exspected_frames-cam2_num)>MAX_DIFF_TIME_VISION):
             errs.append ("difference between exspected camera picture and recorded ones too high: cam1-diff: " + str(exspected_frames-cam1_num) + " cam2-diff: " + str(exspected_frames-cam2_num))
 
@@ -120,7 +122,9 @@ def data_check_clean(dir_name, df_l, df_r,running_time=None):
     #print "Wave-length: " + str(get_wav_file_length(sf_name))
 
     wav_duration = get_wav_file_length(sf_name)
-    cam_duration = cam1_num*FPS/1000.0
+    #print("DEBUG 1 " +str(wav_duration))
+    cam_duration = (cam1_num/FPS)
+    #print("DEBUG 2 " +str(cam_duration))
 
     if wav_duration-cam_duration > MAX_DIFF_DUR_SOUND_VISION:
         #print "cam time :" + str(cam1_num*FPS/1000.0) + \
@@ -187,9 +191,9 @@ def data_check_clean(dir_name, df_l, df_r,running_time=None):
                 errs.append ("pos to high")
                 
     # if no rgb or depth video is copied over to the goal directory
-    rgb_name = glob.glob(dir_name+"/rgb_*")[0]
-    if rgb_name == "" or sf_name == None:
-        errs.append ("no external rgb video")
+    #rgb_name = glob.glob(dir_name+"/rgb_*")[0]
+    #if rgb_name == "" or sf_name == None:
+    #    errs.append ("no external rgb video")
     depth_name = glob.glob(dir_name+"/depth_*")[0]
     if depth_name == "" or sf_name == None:
         errs.append ("no external depth video")
