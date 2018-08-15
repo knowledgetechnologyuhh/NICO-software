@@ -175,6 +175,7 @@ def write_joint_data(robot, df, iso_time):
                              #"touch_y": [y],
                              #"touch_z": [z]}
                              )
+    #Erik: taken out here cause of performance reasons
     df = pd.concat([df, dfn], ignore_index=True)
 
     # df = pd.DataFrame(data={"r_arm_x":[robot.getAngle("r_arm_x")],"r_elbow_y":[robot.getAngle("r_elbow_y")],"head_z":[robot.getAngle("head_z")]})
@@ -448,15 +449,16 @@ d_and_rgb_osr = ClientWrapper(Depth_and_RGB_Observer_Recorder, 54010, server='wt
 device=VideoDevice.ID_STR_LEGGED_NICO_LEFT_CAM
 ir = leftcam_ImageRecorder(
     device, res_x, res_y, zoom=zoom_level, pan=pan, tilt=tilt,
-    framerate=framerate, writer_threads=1, pixel_format="UYVY")
+    framerate=framerate, writer_threads=2, pixel_format="UYVY")
+ir.enable_write(state=False)
 
 if amount_of_cams >= 2:
     #device2 = ImageRecorder.get_devices()[1]
     device2=VideoDevice.ID_STR_LEGGED_NICO_RIGHT_CAM
     ir2 = rightcam_ImageRecorder(
         device2, res_x, res_y, zoom=zoom_level, pan=pan, tilt=tilt,
-        framerate=framerate, writer_threads=1, pixel_format="UYVY")
-
+        framerate=framerate, writer_threads=2, pixel_format="UYVY")
+    ir2.enable_write(state=False)
 sleep(2)
 
 # Sound Recording
@@ -619,9 +621,44 @@ while (get_needed_overall_numbers() > 0):
                    gui_fsize, (255, 255, 128), 2)
         cv.imshow('Multi-modal recording', gui)
         cv.waitKey(1)
+
+    #Enable the camera writing
+    print "\nqueus: ir " +str(ir._image_writer._queue.qsize()) + "ir2: " +str(ir2._image_writer._queue.qsize())
+    ir.enable_write(state=True)
+    ir2.enable_write(state=True)
+    time.sleep(1)    
+    
     check_data_integrity.wait_for_camera_writing(cur_dir+'/camera1/')
     check_data_integrity.wait_for_camera_writing(cur_dir+'/camera2/')
     logging.info(" End of waiting for picture recording  ")
+
+    ir.enable_write(state=False)
+    ir2.enable_write(state=False)
+
+    ir._image_writer._close()
+    ir2._image_writer._close()
+    time.sleep(1)
+
+    ir=None
+    ir2=None
+
+    time.sleep(1)
+
+    # Clean this up later!!
+    device=VideoDevice.ID_STR_LEGGED_NICO_LEFT_CAM
+    ir = leftcam_ImageRecorder(
+    device, res_x, res_y, zoom=zoom_level, pan=pan, tilt=tilt,
+    framerate=framerate, writer_threads=2, pixel_format="UYVY")
+    ir.enable_write(state=False)
+
+    if amount_of_cams >= 2:
+        #device2 = ImageRecorder.get_devices()[1]
+        device2=VideoDevice.ID_STR_LEGGED_NICO_RIGHT_CAM
+        ir2 = rightcam_ImageRecorder(
+            device2, res_x, res_y, zoom=zoom_level, pan=pan, tilt=tilt,
+            framerate=framerate, writer_threads=2, pixel_format="UYVY")
+        ir2.enable_write(state=False)
+    sleep(2)
 
     logging.info("Checking data integrity")
     print "\n Checking the data integrity of this sample - please wait a moment"
