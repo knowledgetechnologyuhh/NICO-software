@@ -1,12 +1,13 @@
 import sqlite3
 import os
 import time
+import numpy as np
 
 # Minimal of exspected camera pictures in one directory
 MIN_CAM_PICS = 100
 
 # Maximum diffrence in numbers of pictures between the two cameras
-MAX_NUM_DIF_CAMS = 15
+MAX_NUM_DIF_CAMS = 5
 
 # We need the frames per second here
 FPS = 30
@@ -15,7 +16,7 @@ FPS = 30
 MAX_DIFF_DUR_SOUND_VISION = 4
 
 # Maximum difference in pictures between time and exspected camera recording frames (picture numbers * FPS)
-MAX_DIFF_TIME_VISION = 1
+MAX_DIFF_TIME_VISION = 5
 
 # Maximum amount of touch sensor update errors
 MAX_UPD_TOUCH = 5
@@ -73,7 +74,7 @@ def data_check_clean(dir_name, df_l, df_r,running_time=None):
 
     #get maximum difference between two position lines
     for side in [df_l, df_r]:
-        filter_col = [col for col in side if col.endswith('pos')]
+        #filter_col = [col for col in side if col.endswith('pos')]
         #print filter_col
         #raw_input()
         #filter_col=['r_arm_x_pos', 'r_elbow_y_pos', 'r_shoulder_y_pos', 'r_shoulder_z_pos', 'r_wrist_x_pos', 'r_wrist_z_pos']
@@ -82,8 +83,45 @@ def data_check_clean(dir_name, df_l, df_r,running_time=None):
         #print(max_col)
         max_val=max_col.max()
         if (max_val>MAX_POS_DIFFERENCE):
-            print "Max val: " + str(max_val)
-            errs.append ("Pos difference")
+            print "Max val (body): " + str(max_val)
+            errs.append ("Pos difference (body)")
+
+
+    #get maximum difference between two position line (wrist x/z) while ignoring outliers
+    for side in [df_l, df_r]:
+        local_r_wirst_z_pos = side["r_wrist_z_pos"]
+        for i in range(len(local_r_wirst_z_pos)):
+            if i > 1:
+                difference_one_two = local_r_wirst_z_pos[i-2]-local_r_wirst_z_pos[i-1]
+                difference_one_three = local_r_wirst_z_pos[i-2]-local_r_wirst_z_pos[i]
+                if difference_one_two < difference_one_three:
+                    local_r_wirst_z_pos[i-1] = np.mean([local_r_wirst_z_pos[i-2],local_r_wirst_z_pos[i-2]])
+        max_col=local_r_wirst_z_pos.diff().max()
+        #print(max_col)
+        max_val=max_col.max()
+        if (max_val>MAX_POS_DIFFERENCE):
+            print "Max val (r_wrist_z_pos): " + str(max_val)
+            errs.append ("Pos difference (wrist_z)")
+
+    for side in [df_l, df_r]:
+        local_r_wirst_x_pos = side["r_wrist_x_pos"]
+        for i in range(len(local_r_wirst_x_pos)):
+            if i > 1:
+                difference_one_two = local_r_wirst_x_pos[i-2]-local_r_wirst_x_pos[i-1]
+                difference_one_three = local_r_wirst_x_pos[i-2]-local_r_wirst_x_pos[i]
+                if difference_one_two < difference_one_three:
+                    local_r_wirst_x_pos[i-1] = np.mean([local_r_wirst_x_pos[i-2],local_r_wirst_x_pos[i-2]])
+        max_col=local_r_wirst_x_pos.diff().max()
+        #print(max_col)
+        max_val=max_col.max()
+        if (max_val>MAX_POS_DIFFERENCE):
+            print "Max val (r_wrist_x_pos): " + str(max_val)
+            errs.append ("Pos difference (wrist_x)")
+
+
+
+
+
 
     #return ""
 
