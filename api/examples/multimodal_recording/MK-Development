@@ -67,6 +67,42 @@ Results are listet here: 16 trials should be needed - occuring errors are listed
 
 only failures due to position of joints - mostly during lift/scoot trials
 
+---code snippet for smoothing hand data
+
+import numpy as np
+import random
+
+list_with_outlier = []
+length = 20
+
+#generate test data
+for i in range(length):
+    list_with_outlier.append(round(random.random(),3))
+    if random.random() < 0.1:
+        list_with_outlier[i] = round(random.random(),3)+10    
+
+print(list_with_outlier)
+
+#smooth out data
+#filter exactly one outlier between two datapoints - if the outlier is not the first or last datapoint
+
+for i in range(length):
+    if i > 1:
+        difference_one_two = list_with_outlier[i-2]-list_with_outlier[i-1]
+        difference_one_three = list_with_outlier[i-2]-list_with_outlier[i]
+        if difference_one_two < difference_one_three:
+            list_with_outlier[i-1] = np.mean([list_with_outlier[i-2],list_with_outlier[i-2]])
+        
+print("Cleaning list...")
+
+print(list_with_outlier)
+
+
+
+
+
+---
+
 
 
 
