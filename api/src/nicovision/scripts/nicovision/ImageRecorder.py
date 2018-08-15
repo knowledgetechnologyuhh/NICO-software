@@ -92,6 +92,14 @@ class ImageRecorder:
         """
         self._device.zoom(value)
 
+    def enable_write(self, state=True):
+        """
+        Sets the writing to disk state
+        :param state: Write enabled
+        :type value: bool
+        """
+        self._image_writer.enable_write(state)
+
     def pan(self, value):
         """
         Sets pan (x-axis) value if camera supports it. Requires v4l-utils.
@@ -164,7 +172,7 @@ class ImageRecorder:
             iso_time = datetime.datetime.today().isoformat()
 
             frame = self.custom_callback(
-                datetime.datetime.today().isoformat(), frame)
+                iso_time, frame)
 
             self._image_writer.write_image(self._target.format(
                 iso_time), frame)
