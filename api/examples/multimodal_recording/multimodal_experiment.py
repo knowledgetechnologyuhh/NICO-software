@@ -74,7 +74,7 @@ actions=action_definitions.actions
 # action="pull"
 
 # data_directory
-data_directory = "/data2/20180806_multimodal_recording_pilot_MK_updatedHand"
+data_directory = "/data2/20180814_multimodal_recodring_pilot_cleaned_head_joints"
 
 # definition for numbers per object
 number_of_samples_per_object = 1
@@ -122,15 +122,15 @@ fMS_hand = 1.0
 
 # Pandas structures for storing joint data
 import pandas as pd
-columns = ["r_shoulder_z_pos", "r_shoulder_y_pos", "r_arm_x_pos", "r_elbow_y_pos", "r_wrist_z_pos", "r_wrist_x_pos", "r_indexfingers_x_pos", "r_thumb_x_pos", "head_z_pos", "head_y_pos",
-           "r_shoulder_z_cur", "r_shoulder_y_cur", "r_arm_x_cur", "r_elbow_y_cur", "r_wrist_z_cur", "r_wrist_x_cur", "r_indexfingers_x_cur", "r_thumb_x_cur", "head_z_cur", "head_y_cur",
+columns = ["r_shoulder_z_pos", "r_shoulder_y_pos", "r_arm_x_pos", "r_elbow_y_pos", "r_wrist_z_pos", "r_wrist_x_pos", "r_indexfingers_x_pos", "r_thumb_x_pos",
+           "r_shoulder_z_cur", "r_shoulder_y_cur", "r_arm_x_cur", "r_elbow_y_cur", "r_wrist_z_cur", "r_wrist_x_cur", "r_indexfingers_x_cur", "r_thumb_x_cur",
            "isotime", "touch_isotime", "touch_count", "touch_x", "touch_y", "touch_z"]
 dfl = pd.DataFrame(columns=columns)
 dfr = pd.DataFrame(columns=columns)
 
 # For accessing the json structure:
 sm_proprioception = ["r_shoulder_z", "r_shoulder_y", "r_arm_x", "r_elbow_y",
-                     "r_wrist_z", "r_wrist_x", "r_indexfingers_x", "r_thumb_x", "head_z", "head_y"]
+                     "r_wrist_z", "r_wrist_x", "r_indexfingers_x", "r_thumb_x"]
 sm_tactile = ["touch_x", "touch_y", "touch_z"]
 
 #use an opencv gui (works with the presenter)
@@ -147,7 +147,7 @@ if use_GUI:
 def write_joint_data(robot, df, iso_time):
 
     # df = pd.DataFrame.append(data={"r_arm_x":[robot.getAngle("r_arm_x")],"r_elbow_y":[robot.getAngle("r_elbow_y")],"head_z":[robot.getAngle("head_z")],"isotime":[iso_time]})
-    (stime, counter, status, x, y, z, checksum) = optoforce_sensor.get_sensor_all()
+    #(stime, counter, status, x, y, z, checksum) = optoforce_sensor.get_sensor_all()
     dfn = pd.DataFrame(data={"r_shoulder_z_pos": [robot.getAngle("r_shoulder_z")],
                              "r_shoulder_y_pos": [robot.getAngle("r_shoulder_y")],
                              "r_arm_x_pos": [robot.getAngle("r_arm_x")],
@@ -156,8 +156,8 @@ def write_joint_data(robot, df, iso_time):
                              "r_wrist_x_pos": [robot.getAngle("r_wrist_x")],
                              "r_indexfingers_x_pos": [robot.getAngle("r_indexfingers_x")],
                              "r_thumb_x_pos": [robot.getAngle("r_thumb_x")],
-                             "head_z_pos": [robot.getAngle("head_z")],
-                             "head_y_pos": [robot.getAngle("head_z")],
+                             #"head_z_pos": [robot.getAngle("head_z")],
+                             #"head_y_pos": [robot.getAngle("head_z")],
                              "r_shoulder_z_cur": [robot.getCurrent("r_shoulder_z")],
                              "r_shoulder_y_cur": [robot.getCurrent("r_shoulder_y")],
                              "r_arm_x_cur": [robot.getCurrent("r_arm_x")],
@@ -166,14 +166,15 @@ def write_joint_data(robot, df, iso_time):
                              "r_wrist_x_cur": [robot.getCurrent("r_wrist_x")],
                              "r_indexfingers_x_cur": [robot.getCurrent("r_indexfingers_x")],
                              "r_thumb_x_cur": [robot.getCurrent("r_thumb_x")],
-                             "head_z_cur": [robot.getCurrent("head_z")],
-                             "head_y_cur": [robot.getCurrent("head_z")],
-                             "isotime": [iso_time],
-                             "touch_isotime": [stime],
-                             "touch_count": [counter],
-                             "touch_x": [x],
-                             "touch_y": [y],
-                             "touch_z": [z]})
+                             #"head_z_cur": [robot.getCurrent("head_z")],
+                             #"head_y_cur": [robot.getCurrent("head_z")],
+                             "isotime": [iso_time]}
+                             #"touch_isotime": [stime],
+                             #"touch_count": [counter],
+                             #"touch_x": [x],
+                             #"touch_y": [y],
+                             #"touch_z": [z]}
+                             )
     df = pd.concat([df, dfn], ignore_index=True)
 
     # df = pd.DataFrame(data={"r_arm_x":[robot.getAngle("r_arm_x")],"r_elbow_y":[robot.getAngle("r_elbow_y")],"head_z":[robot.getAngle("head_z")]})
@@ -377,7 +378,7 @@ else:
     print " ... initialising all modules now ...\n"
 
 # Optoforce_sensor
-optoforce_sensor = optoforce(ser_number=None, cache_frequency=40)
+#-optoforce_sensor = optoforce(ser_number=None, cache_frequency=40)
 
 # Put the left arm in defined position
 robot = Motion.Motion(
@@ -400,8 +401,8 @@ robot.enableForceControl("r_wrist_x", 50)
 #robot.enableForceControl("r_thumb_x", 50)
 
 # enable torque of left arm joints
-robot.enableForceControl("head_z", 20)
-robot.enableForceControl("head_y", 20)
+#robot.enableForceControl("head_z", 20)
+#robot.enableForceControl("head_y", 20)
 
 robot.enableForceControl("r_shoulder_z", 20)
 robot.enableForceControl("r_shoulder_y", 20)
@@ -419,8 +420,8 @@ logging.info('Robot in position and ready')
 
 pulse_device = pulse_audio_recorder.get_pulse_device()
 
-res_x = 960 #1024
-res_y = 540 #768
+res_x = 1920#960 #1024
+res_y = 1080#540 #768
 #res_x = 800
 #res_y = 600
 #res_x = 960
@@ -590,6 +591,7 @@ while (get_needed_overall_numbers() > 0):
 
     #get the time
     recording_time = time.time() -start
+    #print("DEBUG 1: " + str(recording_time))
 
     # Stop and finish camera recordings
     ir.stop_recording()
