@@ -122,7 +122,7 @@ print "\n Please put the robot in position. Left arm hanging down. Right arm on 
 raw_input()
 
 #Put the left arm in defined position
-#robot = Motion.Motion("../../../../json/nico_humanoid_legged_with_hands_mod.json",vrep=False)
+robot = Motion.Motion("../../../../json/nico_humanoid_upper.json",vrep=False)
 
 mover_path = "../../../../moves_and_positions/"
 mov = Mover.Mover(robot, stiff_off=False)
@@ -144,20 +144,13 @@ else:
 
 if (intro==True):
 	
-	mov.move_file_position(mover_path + "pos_left_arm_present_egg.csv",
-	#mov.move_file_position(mover_path + "pos_left_arm_greet.json",
-                                   subsetfname=mover_path + "subset_left_arm_and_head.csv",
-                                   move_speed=0.05)
+	
 
 	say ("Hello. I am the NICO robot. I am getting prepared!")
 	
 	#sleep(2)
 	
-	mov.move_file_position(mover_path + "pos_left_arm_present_egg.csv",
-                                   subsetfname=mover_path + "subset_left_arm_and_head.csv",
-                                   move_speed=0.05)
-	
-	raw_input();
+	#raw_input();
 	
 	say ("I can determine which object is in my hand, just by squeezing it a little bit.")
 	
@@ -175,7 +168,7 @@ if (intro==True):
 	while ( not stop_demo  ):                                
 
 		if not repeat:
-			robot.openHand('LHand', fractionMaxSpeed=fMS_hand)
+			robot.openHand('RHand', fractionMaxSpeed=fMS_hand)
 			#print "\n\n Please put the " + o + " on the robot fingers. Then press RETURN."
 			say ("Please put one of the objects in my hand.")						
 			
