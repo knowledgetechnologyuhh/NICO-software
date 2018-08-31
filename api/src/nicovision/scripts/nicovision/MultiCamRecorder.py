@@ -81,13 +81,15 @@ class MultiCamRecorder(object):
         :param undistortion_mode: mono or stereo undistortion
         :type undistortion_mode: str
         """
+        self._logger = logging.getLogger(__name__)
         if not devices:
             devices = autodetect_nicoeyes()
         self._deviceIds = []
         for device in devices:
             deviceId = VideoDevice.resolve_device(device)
             if deviceId == -1:
-                logging.error('Can not create device from path' + self._device)
+                self._logger.error(
+                    'Can not create device from path' + self._device)
                 sys.exit()
             self._deviceIds.append(deviceId)
 
@@ -117,17 +119,23 @@ class MultiCamRecorder(object):
         # Open cameras
         self.open()
 
-    # TODO
-    # def undistort(frame, id):
-    #     """
-    #     https://medium.com/@kennethjiang/calibrate-fisheye-lens-using-opencv-333b05afa0b0
-    #     """
-    #
-    #     return cv2.remap(frame,
-    #                      self._rectify_maps[id][0],
-    #                      self._rectify_maps[id][1],
-    #                      interpolation=cv2.INTER_LINEAR,
-    #                      borderMode=cv2.BORDER_CONSTANT)
+    def undistort(self, frame, id):
+        """
+        Undistorts the frame with the loaded calibration
+        :param frame: frame to undistort
+        :type frame: cv2 image
+        :param id: camera id
+        :type id: int
+        :return: undistorted frame
+        :rtype: cv2 image
+        """
+        if self._rectify_maps[id]:
+            frame = cv2.remap(frame,
+                              self._rectify_maps[id][0],
+                              self._rectify_maps[id][1],
+                              interpolation=cv2.INTER_LINEAR,
+                              borderMode=cv2.BORDER_CONSTANT)
+        return frame
 
     def load_callibration(self, file_path, undistortion_mode="mono"):
         """
@@ -138,21 +146,21 @@ class MultiCamRecorder(object):
         :type undistortion_mode: str
         """
         if mode == "stereo" and len(self._deviceIds != 2):
-            logging.error(("Stereo undistortion requires exactly 2 devices " +
-                           "{} devices initialized"
-                           ).format(len(self._deviceIds)))
+            self._logger.error(("Stereo undistortion requires exactly 2 " +
+                                "devices {} devices initialized"
+                                ).format(len(self._deviceIds)))
             return
         # load file
-        logging("Loading calibration file {}".format(file_path))
-        if os.isfile(file_path):
+        self._logger.info("Loading calibration file {}".format(file_path))
+        if os.path.isfile(file_path):
             with open(file_path, 'r') as file:
                 calibration = json.load(file)[undistortion_mode]
         else:
-            logging.error(
+            self._logger.error(
                 ("Calibration file {} does not exist").format(file_path))
             return
         # prepare rectify maps
-        logging.info("Preparing rectify map")
+        self._logger.debug("Preparing rectify map")
         devicenames = get_devices()
         devicenames = map(lambda i: devicenames[i], self._deviceIds)
         dim = self._width, self._height
@@ -212,7 +220,7 @@ class MultiCamRecorder(object):
                     ['v4l2-ctl -d {} -c {}={}'.format(
                         id, value_name, value)], shell=True)
         else:
-            logging.warning(
+            self._logger.warning(
                 "Invalid value '{}' - value has to be an integer".format(value)
             )
 
@@ -231,7 +239,7 @@ class MultiCamRecorder(object):
                     shell=True)
             return True
         else:
-            logging.warning(
+            self._logger.warning(
                 "Zoom value has to be an integer between 100 and 800")
             return False
 
@@ -252,7 +260,7 @@ class MultiCamRecorder(object):
                     shell=True)
             return True
         else:
-            logging.warning(
+            self._logger.warning(
                 "Pan value has to be a multiple of 3600 between -648000 and " +
                 "648000")
             return False
@@ -274,7 +282,7 @@ class MultiCamRecorder(object):
                     shell=True)
             return True
         else:
-            logging.warning(
+            self._logger.warning(
                 "Tilt value has to be a multiple of 3600 between -648000 and" +
                 " 648000")
             return False
@@ -292,7 +300,7 @@ class MultiCamRecorder(object):
         :type function: function
         """
         if not (inspect.isfunction(function) or inspect.ismethod(function)):
-            logging.warning('Trying to add non-function callback')
+            self._logger.warning('Trying to add non-function callback')
             return
         self._callback_functions += [function]
 
@@ -333,12 +341,12 @@ class MultiCamRecorder(object):
             self.open()
             self.add_callback(self._callback)
         else:
-            logging.warning(
+            self._logger.warning(
                 "Could not start recording - No ImageWriter instantiated")
 
     def stop_recording(self):
         if not self._open:
-            logging.warning('Trying to close a device which is not open')
+            self._logger.warning('Trying to close a device which is not open')
             return
         self._barrier.abort()
         self._open = False
@@ -348,6 +356,14 @@ class MultiCamRecorder(object):
         self._barrier.reset()
         if self._image_writer is not None:
             self._image_writer.close()
+
+    def enable_write(self, state=True):
+        """
+        Sets the writing to disk state
+        :param state: Write enabled
+        :type value: bool
+        """
+        self._image_writer.enable_write(state)
 
     def custom_callback(self, iso_time, frame, id):
         # Option to create a custom function, that modifies the frame before
@@ -384,6 +400,8 @@ class MultiCamRecorder(object):
                 break
             self._captures[id].grab()
             rval, frame = self._captures[id].retrieve()
+            if rval:
+                frame = undistort(frame, id)
             for function in self._callback_functions:
                 function(rval, frame, id)
             time.sleep(max(0, 1.0 / self._framerate - (time.time() - t1)))

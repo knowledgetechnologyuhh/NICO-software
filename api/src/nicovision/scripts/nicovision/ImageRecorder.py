@@ -26,7 +26,8 @@ class ImageRecorder:
 
     def __init__(self, device='', width=640, height=480, framerate=20,
                  zoom=None, pan=None, tilt=None, settings_file=None,
-                 setting="standard", writer_threads=2, pixel_format="MJPG"):
+                 setting="standard", writer_threads=2, compressed=True,
+                 pixel_format="MJPG", calibration_file=None):
         """
         Initialises the ImageRecorder with a given device.
 
@@ -59,7 +60,9 @@ class ImageRecorder:
         """
         self._device = VideoDevice.from_device(device, framerate, width,
                                                height, zoom, pan, tilt,
-                                               settings_file, setting)
+                                               settings_file, setting,
+                                               compressed, pixel_format,
+                                               calibration_file)
         if self._device is None:
             logging.error('Can not create device from path' +
                           str(self._device))
@@ -162,6 +165,7 @@ class ImageRecorder:
                                 images are written (WARNING if this is set to
                                 False wait_for_writer() needs to be called
                                 to avoid memory leaks)
+        :type wait_for_writer: bool
         """
         self._device.close()
         self._device.clean_callbacks()

@@ -68,6 +68,7 @@ class ImageWriter:
         Finishes writing process and stops all worker threads
         """
         self._logger.info("Waiting for image writing tasks to finish")
+        self.enable_write()
         self._queue.join()
         self._open = False
         self._logger.debug("Waiting for workers to return")
