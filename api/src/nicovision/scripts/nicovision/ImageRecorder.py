@@ -150,11 +150,26 @@ class ImageRecorder:
         self._target = path
         if not self._device._open:
             self._device.open()
+        if not self._image_writer._open:
+            self._image_writer.open()
         self._device.add_callback(self._callback)
 
-    def stop_recording(self):
+    def stop_recording(self, wait_for_writer=True):
+        """
+        Saves an Image to a given file
+
+        :param wait_for_writer: Whether execution should be blocked until all
+                                images are written (WARNING if this is set to
+                                False wait_for_writer() needs to be called
+                                to avoid memory leaks)
+        """
         self._device.close()
         self._device.clean_callbacks()
+        if wait_for_writer:
+            self.wait_for_writer()
+
+    def wait_for_writer(self):
+        self._image_writer.close()
 
     def custom_callback(self, iso_time, frame):
         # Option to create a custom function, that modifies the frame before
