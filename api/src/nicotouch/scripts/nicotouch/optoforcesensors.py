@@ -1,38 +1,41 @@
+import datetime
+import logging
+import sys
+import threading
+import time
+
+import numpy as np
 import serial
 import serial.tools.list_ports
+
 import _nicotouch_internal.optoforce as optoforce_driver
-import logging
-import time
-import numpy as np
-import sys
-import datetime
-import threading
+
 
 """
 Created on Thu Jun 23 15:32:38 2016
 
 sensor access by Moaaz Maamoon M. Ali
 
-adapted to NICO api Erik Strahl
+adapted to NICO api Erik Strahl and Connor Gaede
 
 """
 
 
-class optoforce:
+class optoforce():
 
     def _scan_ports(self, ser_number=None):
         """
-        Scans serial ports for OptoForce device with given serial number and returns the connection. Returns the first sensor found if no serial number is given.
+        Scans serial ports for OptoForce device with given serial number and returns the port. Returns the first sensor found if no serial number is given.
 
         :param ser_number: Serial number of the sensor (optional)
         :type ser_number: str
-        :return: Serial connection to OptoForce sensor with specified serial number (or any if ser_number is None)
-        :rtype: serial.Serial
+        :return: Port of OptoForce sensor with specified serial number (or first one found if ser_number is None)
+        :rtype: str
         """
         ports = serial.tools.list_ports.comports()
         for p in ports:
             if "OptoForce" in p.description:
-                logging.info(
+                self._logger.info(
                     "Connecting to OptoForce sensor on port {}".format(p.device))
                 try:
                     ser = serial.Serial(port=p.device,
@@ -42,35 +45,37 @@ class optoforce:
                                         bytesize=serial.EIGHTBITS
                                         )
 
-                    if ser.is_open:
-                        driver = optoforce_driver.OptoforceDriver(ser)
+                    driver = optoforce_driver.OptoforceDriver(
+                        p.device, "s-ch/3-axis", [[1, 1, 1]])
 
-                        driver.request_serial_number()
-                        while ser.is_open:
-                            try:
-                                data = driver.read()
+                    driver.request_serial_number()
+                    while driver._serial.is_open:
+                        try:
+                            data = driver.read()
 
-                                if isinstance(data, optoforce_driver.OptoforceSerialNumber):
-                                    if ser_number is None or ser_number == str(data):
-                                        logging.info("Successfully connected to OptoForce sensor {} on port {}".format(
-                                            str(data), p.device))
-                                        return ser
-                                    logging.info("OptoForce sensor on port {} skipped - serial number {} not matching {}".format(
-                                        p.device, ser_number, str(data)))
-                                    ser.close()
+                            if isinstance(data, optoforce_driver.OptoforceSerialNumber):
+                                if ser_number is None or ser_number == str(data):
+                                    self._logger.info("Successfully connected to OptoForce sensor {} on port {}".format(
+                                        str(data), p.device))
                                     del driver
+                                    self._ser_number = str(data)
+                                    return p.device
+                                self._logger.info("OptoForce sensor on port {} skipped - serial number {} not matching {}".format(
+                                    p.device, ser_number, str(data)))
+                                driver._serial.close()
+                                del driver
 
-                            except optoforce_driver.OptoforceError:
-                                pass
+                        except optoforce_driver.OptoforceError:
+                            pass
 
                 except serial.SerialException as e:
-                    logging.warning(
+                    self._logger.warning(
                         "Connection to OptoForce sensor port {} failed due to {}".format(p.device, e))
 
         if ser_number is None:
-            logging.fatal("No OptoForce sensor found")
+            self._logger.fatal("No OptoForce sensor found")
         else:
-            logging.fatal(
+            self._logger.fatal(
                 "No matching OptoForce sensor found for serial number {}".format(ser_number))
         return None
 
@@ -98,7 +103,7 @@ class optoforce:
         else:
             seq = self.get_sensor_array()
         seq = self.get_sensor_array()
-        x = seq[8]+seq[9]
+        x = seq[8] + seq[9]
         y = seq[10] + seq[11]
         z = seq[12] + seq[13]
         return (x, y, z)
@@ -131,10 +136,10 @@ class optoforce:
 
     def get_sensor_values(self):
         x, y, z = self.get_sensor_values_raw()
-        quot = self.dev_counts*self.dev_nom_capacity*1.0
-        xn = x/quot
-        yn = y/quot
-        zn = z/quot
+        quot = self.dev_counts / self.dev_nom_capacity * 1.0
+        xn = x / quot
+        yn = y / quot
+        zn = z / quot
         return (xn, yn, zn)
 
     def get_sensor_all(self):
@@ -180,55 +185,65 @@ class optoforce:
         return seq
 
     def get_sensor_string(self):
-            seq = self.get_sensor_array()
-            joined_seq = ''.join(str(v)
-                                 for v in seq)  # Make a string from array
-            return joined_seq
+        seq = self.get_sensor_array()
+        joined_seq = ''.join(str(v)
+                             for v in seq)  # Make a string from array
+        return joined_seq
 
     def _worker_thread(self):
-            while True:
+        while True:
                 # we need better accurate frequency
                 # so substract the running time from the delay
-                time_before = time.time()
-                self.cached_sensor_array = self.get_sensor_array()
-                run_time = time.time() - time_before
-                time.sleep((1.0/self.cache_frequency)-run_time)
+            time_before = time.time()
+            self.cached_sensor_array = self.get_sensor_array()
+            run_time = time.time() - time_before
+            time.sleep((1.0 / self.cache_frequency) - run_time)
 
     # Can be run cached in memory or non cached
     # non cahced will get live data from the USB-Serial
     # and will take some time
     # Start the cached mode by giving a cache frequency
     def __init__(self, ser_number=None, cache_frequency=None):
-            logging.getLogger().setLevel(logging.INFO)
+        self._logger = logging.getLogger(__name__)
 
-            self.ser = self._scan_ports(ser_number)
+        self.ser = serial.Serial(port=self._scan_ports(ser_number),
+                                 baudrate=1000000,
+                                 parity=serial.PARITY_NONE,
+                                 stopbits=serial.STOPBITS_ONE,
+                                 bytesize=serial.EIGHTBITS
+                                 )
 
-            # Capacitys and Counts (measured at optoforce) for our sensors
-            self.dev_nom_capacity = 10
-            self.dev_counts = None
-            self.last_reading_time = None
+        # Capacitys and Counts (measured at optoforce) for our sensors
+        self.dev_nom_capacity = 10
+        self.dev_counts = None
+        self.last_reading_time = None
 
-            if (ser_number == "DSE0A125"):
-                self.dev_counts = 4014
+        if (self._ser_number == "DSE0A125"):
+            self.dev_counts = 4014
+        elif (self._ser_number == "DSE0A093"):
+            self.dev_counts = 4263
+        else:
+            self._logger.warning(
+                (
+                    "Missing 'Counts' entry from sensitivity report for {} -" +
+                    " conversion to Newton won't be possible"
+                ).format(self._ser_number))
 
-            if (ser_number == "DSE0A093"):
-                self.dev_counts = 4263
+        self.cache_frequency = cache_frequency
 
-            self.cache_frequency = cache_frequency
+        self.cached_sensor_array = None
 
-            self.cached_sensor_array = None
+        # Run in cached mode, Start the worker thread to get the data
+        if self.cache_frequency:
+            worker = threading.Thread(target=self._worker_thread)
+            worker.daemon = True
+            worker.start()
 
-            # Run in cached mode, Start the worker thread to get the data
-            if self.cache_frequency != None:
-                worker = threading.Thread(target=self._worker_thread)
-                worker.daemon = True
-                worker.start()
-            
-            time.sleep(0.2)
+        time.sleep(0.2)
 
         # if self.ser.isOpen():
         #    print 'Sensor detected and port opened successfully'
-        #writtenMessage = bytearray([170, 0, 50, 3, 10, 4, 255, 1, 236])
+        # writtenMessage = bytearray([170, 0, 50, 3, 10, 4, 255, 1, 236])
 
 
 if __name__ == "__main__":
@@ -289,7 +304,7 @@ if __name__ == "__main__":
 
         elif command == "csv":
             (stime, counter, status, x, y, z, checksum) = optsens.get_sensor_all()
-            print(str(stime)+","+str(counter) + "," + str(status) + "," +
+            print(str(stime) + "," + str(counter) + "," + str(status) + "," +
                   str(x) + "," + str(y) + "," + str(z) + "," + str(checksum))
-        
+
         time.sleep(0.03)
