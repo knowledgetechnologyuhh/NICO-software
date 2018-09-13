@@ -4,10 +4,10 @@ import time
 import numpy as np
 
 # Minimal of exspected camera pictures in one directory
-MIN_CAM_PICS = 100
+MIN_CAM_PICS = 100 # 100
 
 # Maximum diffrence in numbers of pictures between the two cameras
-MAX_NUM_DIF_CAMS = 5
+MAX_NUM_DIF_CAMS = 5 #5
 
 # We need the frames per second here
 FPS = 30
@@ -38,7 +38,7 @@ MAX_POS = 180.0
 
 # Maximum Difference between two position readings
 MAX_POS_DIFFERENCE = 40.0
-
+MAX_POS_DIFFERENCE_WRIST = 100.0
 
 # Wait until all pictures are written on harddisk
 def get_number_of_filenames(dir_name):
@@ -97,9 +97,9 @@ def data_check_clean(dir_name, df_l, df_r,running_time=None):
                 if difference_one_two < difference_one_three:
                     local_r_wirst_z_pos[i-1] = np.mean([local_r_wirst_z_pos[i-2],local_r_wirst_z_pos[i-2]])
         max_col=local_r_wirst_z_pos.diff().max()
-        #print(max_col)
-        max_val=max_col.max()
-        if (max_val>MAX_POS_DIFFERENCE):
+        print(max_col)
+        max_val=max_col #max_val=max_col.max()
+        if (max_val>MAX_POS_DIFFERENCE_WRIST):
             print "Max val (r_wrist_z_pos): " + str(max_val)
             errs.append ("Pos difference (wrist_z)")
 
@@ -113,8 +113,8 @@ def data_check_clean(dir_name, df_l, df_r,running_time=None):
                     local_r_wirst_x_pos[i-1] = np.mean([local_r_wirst_x_pos[i-2],local_r_wirst_x_pos[i-2]])
         max_col=local_r_wirst_x_pos.diff().max()
         #print(max_col)
-        max_val=max_col.max()
-        if (max_val>MAX_POS_DIFFERENCE):
+        max_val=max_col
+        if (max_val>MAX_POS_DIFFERENCE_WRIST):
             print "Max val (r_wrist_x_pos): " + str(max_val)
             errs.append ("Pos difference (wrist_x)")
 
