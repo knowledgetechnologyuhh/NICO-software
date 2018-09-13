@@ -4,6 +4,7 @@
 # replace it with python style properties
 
 import inspect
+import json
 import logging
 import os
 import subprocess
@@ -111,7 +112,8 @@ class VideoDevice:
     @staticmethod
     def from_device(device, framerate=20, width=640, height=480, zoom=None,
                     pan=None, tilt=None, settings_file=None,
-                    setting="standard"):
+                    setting="standard", compressed=True, pixel_format="MJPG",
+                    calibration_file=None):
         """
         Convenience method for creating a VideoDevice from a device
 
@@ -125,11 +127,12 @@ class VideoDevice:
             logging.error('Can not create VideoDevice from ID %s' % id)
             return None
         return VideoDevice(id, framerate, width, height, zoom, pan, tilt,
-                           settings_file, setting)
+                           settings_file, setting, compressed, pixel_format,
+                           calibration_file)
 
     def __init__(self, id, framerate=20, width=640, height=480, zoom=None,
                  pan=None, tilt=None, settings_file=None, setting="standard",
-                 compressed=True, pixel_format="MJPG"):
+                 compressed=True, pixel_format="MJPG", calibration_file=None):
         """
         Initialises the VideoDevice. The device starts open and has to be
         opened.
@@ -145,6 +148,7 @@ class VideoDevice:
         :param pixel_format: pixel format like 'UYVY' (econ-camera) or 'YUYV'
         (logitech) or 'MJPG' (both compressed)
         """
+        self._logger = logging.getLogger(__name__)
         self._deviceId = id
         self._open = True
         self._callback = []
@@ -160,6 +164,9 @@ class VideoDevice:
             self.pan(pan)
         if tilt is not None:
             self.tilt(tilt)
+        self._rectify_map = None
+        if calibration_file:
+            self.load_callibration(calibration_file)
 
         # Open camera
         self._capture = cv2.VideoCapture(id)
@@ -235,6 +242,49 @@ class VideoDevice:
         for value_name, value in settings[setting].iteritems():
             self.camera_value(value_name, value)
 
+    def load_callibration(self, file_path):
+        """
+        Loads a calibration json file and prepares undistortion for all cameras
+        :param file_path: the calibration file
+        :type file_path: str
+        """
+        # load file
+        self._logger.info("Loading calibration file {}".format(file_path))
+        if os.path.isfile(file_path):
+            with open(file_path, 'r') as file:
+                calibration = json.load(file)["mono"]
+        else:
+            self._logger.error(
+                ("Calibration file {} does not exist").format(file_path))
+            return
+        # prepare rectify maps
+        self._logger.debug("Preparing rectify map")
+        devicenames = VideoDevice.get_all_devices()
+        devicename = devicenames[self._deviceId]
+        dim = self._width, self._height
+
+        if (devicename in calibration and str(dim) in calibration[devicename]):
+            K, D = map(lambda a: np.array(a), itemgetter(
+                "K", "D")(calibration[devicename][str(dim)]))
+            self._rectify_map = cv2.fisheye.initUndistortRectifyMap(
+                K, D, np.eye(3), K, dim, cv2.CV_16SC2)
+
+    def undistort(self, frame):
+        """
+        Undistorts the frame with the loaded calibration
+        :param frame: frame to undistort
+        :type frame: cv2 image
+        :return: undistorted frame
+        :rtype: cv2 image
+        """
+        if self._rectify_map:
+            frame = cv2.remap(frame,
+                              self._rectify_map[0],
+                              self._rectify_map[1],
+                              interpolation=cv2.INTER_LINEAR,
+                              borderMode=cv2.BORDER_CONSTANT)
+        return frame
+
     def camera_value(self, value_name, value):
         """
         Sets the a camera value over the v4l-utils. Run 'v4l2-ctl -l' for full
@@ -249,7 +299,7 @@ class VideoDevice:
                 ['v4l2-ctl -d {} -c {}={}'.format(
                     self._deviceId, value_name, value)], shell=True)
         else:
-            logging.warning(
+            self._logger.warning(
                 "Invalid value '{}' - value has to be an integer".format(value)
             )
 
@@ -262,11 +312,11 @@ class VideoDevice:
         if type(value) is int and 100 <= value <= 800:
             call_str = 'v4l2-ctl -d {} -c zoom_absolute={}'.format(
                 self._deviceId, value)
-            logging.debug(
+            self._logger.debug(
                 "Zoom value call with " + call_str)
             subprocess.call([call_str], shell=True)
         else:
-            logging.warning(
+            self._logger.warning(
                 "Zoom value has to be an integer between 100 and 800")
 
     def pan(self, value):
@@ -282,7 +332,7 @@ class VideoDevice:
                     self._deviceId, value)],
                 shell=True)
         else:
-            logging.warning(
+            self._logger.warning(
                 "Pan value has to be a multiple of 3600 between -648000 and " +
                 "648000")
 
@@ -299,7 +349,7 @@ class VideoDevice:
                     self._deviceId, value)],
                 shell=True)
         else:
-            logging.warning(
+            self._logger.warning(
                 "Tilt value has to be a multiple of 3600 between -648000 and" +
                 " 648000")
 
@@ -355,7 +405,7 @@ class VideoDevice:
         Opens the device and starts the eventloop
         """
         if self._open:
-            logging.warning('Device is already open')
+            self._logger.warning('Device is already open')
             return
 
         # Open camera
@@ -375,7 +425,7 @@ class VideoDevice:
         Stopps the eventloop and closes the device
         """
         if not self._open:
-            logging.warning('Trying to close a device which is not open')
+            self._logger.warning('Trying to close a device which is not open')
             return
         self._running = False
         self._open = False
@@ -404,7 +454,7 @@ class VideoDevice:
         :type function: function
         """
         if not (inspect.isfunction(function) or inspect.ismethod(function)):
-            logging.warning('Trying to add non-function callback')
+            self._logger.warning('Trying to add non-function callback')
             return
         self._callback += [function]
 
@@ -423,6 +473,8 @@ class VideoDevice:
         while self._running:
             t1 = time.time()
             rval, frame = self._capture.read()
+            if rval:
+                frame = self.undistort(frame)
             for function in self._callback:
                 function(rval, frame)
             time.sleep(max(0, 1.0 / self._framerate - (time.time() - t1)))

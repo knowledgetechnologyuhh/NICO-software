@@ -23,7 +23,6 @@ import datetime
 import sys
 import cv2 as cv
 from nicoaudio import pulse_audio_recorder
-from subprocess import call
 import sqlite3
 import random
 from subprocess import call
@@ -781,6 +780,13 @@ while (get_needed_overall_numbers() > 0):
         # Plot audio data:
         plot_data_audio(cur_dir + '/' + label + ".wav",
                         cur_dir + '/' + label + "_audio.svg")
+
+        # Convert NICO vision images to video
+        # in case you want to silence output use:
+        # with open(os.devnull, "w") as f:
+        #     subprocess.call(["sh", "convertVision.sh", cur_dir], stdout=f)
+        call(["sh", "convertVision.sh", cur_dir, str(res_x), str(res_y)])
+
 
         # commit the database changes
         connection.commit()
