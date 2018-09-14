@@ -1,3 +1,4 @@
+import datetime
 import logging
 import threading
 import time
@@ -27,7 +28,6 @@ def _cache_thread(object, frequency):
     """
     while object is not None:
         time_before = time.time()
-        logging.debug("Cache update")
         object().update_cache()
         run_time = time.time() - time_before
         time.sleep(max((1.0 / frequency) - run_time, 0))
@@ -133,6 +133,7 @@ class OptoforceMultichannel(object):
 
         self._cached_data = None
         self._cached_mode = False
+        self._mutex = threading.Semaphore()
 
         # Run in cached mode, Start the worker thread to get the data
         if cache_frequency:
@@ -150,32 +151,46 @@ class OptoforceMultichannel(object):
             self._driver.flush()
             data = self._driver.read()
             if isinstance(data, optoforce_driver.OptoforceData):
+                self._mutex.acquire()
+                self._last_update = datetime.datetime.now().isoformat()
                 self._cached_data = data
+                self._mutex.release()
                 break
 
     def get_sensor_values_raw(self):
         """
-        Returns latest sensor readings for each channel
-        :return: raw x,y,z values for each channel
+        Returns latest raw sensor readings for each channel
+        :return: "time", "count", "status" and raw x,y,z "forces" for each
+        channel (see global OptoforceMultichannel.keys for channel keys)
         :rtype: dict
         """
+        ret = {}
         if not self._cached_mode:
             self.update_cache()
 
-        return dict(zip(self._keys, self._cached_data.force))
+        self._mutex.acquire()
+        ret["forces"] = dict(zip(self._keys, self._cached_data.force))
+        ret["time"] = self._last_update
+        ret["count"] = self._cached_data.count
+        ret["status"] = self._cached_data.status
+        self._mutex.release()
+
+        return ret
 
     def get_sensor_values(self):
         """
-        Returns latest sensor readings for each channel in newton
-        :return: x,y,z values for each channel in newton
+        Returns latest newton sensor readings for each channel
+        :return: "time", "count", "status" and newton x,y,z "forces" for each
+        channel (see global OptoforceMultichannel.keys for channel keys)
         :rtype: dict
         """
         raw = self.get_sensor_values_raw()
         # convert forces for each sensor
-        newton = {}
         for key in self._keys:
             # elementwise division
-            newton[key] = map(lambda val, scale: val / scale,
-                              raw[key],
-                              self._scale[self._keys.index(key)])
-        return newton
+            raw["forces"][key] = map(lambda val, scale: val / scale,
+                                     raw["forces"][key],
+                                     self._scale[self._keys.index(key)])
+        return raw
+
+        return ret
