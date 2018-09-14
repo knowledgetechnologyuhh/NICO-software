@@ -25,9 +25,10 @@ logging.basicConfig(level=logging.DEBUG)
 if not os.path.isdir(dirname(abspath(__file__)) + '/recorded_images'):
     os.mkdir(dirname(abspath(__file__)) + '/recorded_images')
 
-res_x = 1920
-res_y = 1080
+res_x = 4096
+res_y = 2160
 framerate = 30
+pformat = "MJPG"
 amount_of_cams = 2
 zoom_level = 150
 pan = 0
@@ -50,7 +51,7 @@ for recording in range(recordings):
 
     ir = ImageRecorder.ImageRecorder(
         devices[0], res_x, res_y, zoom=zoom_level, pan=pan, tilt=tilt,
-        framerate=framerate, writer_threads=2, pixel_format="UYVY",
+        framerate=framerate, writer_threads=2, pixel_format=pformat,
         calibration_file=calibration_file)
     # disable writing during recording to save CPU if necessary
     ir.enable_write(state=False)
@@ -58,7 +59,7 @@ for recording in range(recordings):
     if amount_of_cams >= 2:
         ir2 = ImageRecorder.ImageRecorder(
             devices[1], res_x, res_y, zoom=zoom_level, pan=pan, tilt=tilt,
-            framerate=framerate, writer_threads=2, pixel_format="UYVY",
+            framerate=framerate, writer_threads=2, pixel_format=pformat,
             calibration_file=calibration_file)
         # disable writing during recording to save CPU if necessary
         ir2.enable_write(state=False)
