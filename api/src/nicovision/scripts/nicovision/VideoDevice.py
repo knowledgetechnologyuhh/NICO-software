@@ -170,13 +170,25 @@ class VideoDevice:
 
         # Open camera
         self._capture = cv2.VideoCapture(id)
-        self._capture.set(cv2.CAP_PROP_FRAME_WIDTH, self._width)
-        self._capture.set(cv2.CAP_PROP_FRAME_HEIGHT, self._height)
-        self._capture.set(cv2.CAP_PROP_FPS, self._framerate)
 
         fourcc = cv2.VideoWriter_fourcc(*pixel_format)
         # fourcc = cv2.VideoWriter_fourcc(*'UYVY')
         self._capture.set(cv2.CAP_PROP_FOURCC, fourcc)
+
+        self._capture.set(cv2.CAP_PROP_FRAME_WIDTH, self._width)
+        self._capture.set(cv2.CAP_PROP_FRAME_HEIGHT, self._height)
+        self._capture.set(cv2.CAP_PROP_FPS, self._framerate)
+
+        actual_w = self._capture.get(cv2.CAP_PROP_FRAME_WIDTH)
+        actual_h = self._capture.get(cv2.CAP_PROP_FRAME_HEIGHT)
+
+        if self._width != actual_w or self._height != actual_h:
+            self._logger.debug("cv2 resolution: {}x{}".format(actual_w,
+                                                              actual_h))
+            self._logger.error(
+                "Failed to set resolution to {}x{}".format(self._width,
+                                                           self._height))
+            raise ValueError
 
         # Start thread
         self._thread = threading.Thread(target=self._eventloop)
@@ -268,6 +280,11 @@ class VideoDevice:
                 "K", "D")(calibration[devicename][str(dim)]))
             self._rectify_map = cv2.fisheye.initUndistortRectifyMap(
                 K, D, np.eye(3), K, dim, cv2.CV_16SC2)
+        else:
+            self._logger.error((
+                               "There is no calibration for {} with "
+                               + "dimensions {} in {}"
+                               ).format(devicename, dim, file_path))
 
     def undistort(self, frame):
         """
