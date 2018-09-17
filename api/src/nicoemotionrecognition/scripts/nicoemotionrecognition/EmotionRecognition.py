@@ -64,8 +64,8 @@ class EmotionRecognition:
         self._mirrorEmotion = mirrorEmotion
         self._faceTracking = faceTracking
         self._trackingCounter = 0
-        self._device = VideoDevice.fromDevice(self._deviceName)
-        self._device.addCallback(self._callback)
+        self._device = VideoDevice.from_device(self._deviceName)
+        self._device.add_callback(self._callback)
         self._device.open()
         self._showGUI = showGUI
         self._running = True
