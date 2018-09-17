@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License along
 # with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# modifications by Connor Gaede
+
 import array
 import binascii
 import logging
@@ -27,6 +29,7 @@ import serial
 
 class OptoforceData:
     def __init__(self):
+        self.count = None
         self.status = None
         self.force = []
 
@@ -272,6 +275,8 @@ class OptoforceDriver(object):
         data_headers = [(170, 7, 8, 10), (170, 7, 8, 16), (170, 7, 8, 28)]
         if header in data_headers:
             data = OptoforceData()
+            offset = 4
+            data.count = struct.unpack_from('>H', frame, offset)[0]
             offset = 6
             data.status = struct.unpack_from('>H', frame, offset)[0]
 
@@ -285,8 +290,8 @@ class OptoforceDriver(object):
                         message = ("Problem unpacking frame "
                                    + self._frame_to_string(frame)
                                    + " at offset " + str(offset) + ".")
-                        raise OptoforceError(message + " Please "
-                                             + "check that you set the right numbers "
+                        raise OptoforceError(message + " Please check that "
+                                             + "you set the right numbers "
                                              + "of channels and axes.")
 
                     val = float(val) / self._scale[s][a]
