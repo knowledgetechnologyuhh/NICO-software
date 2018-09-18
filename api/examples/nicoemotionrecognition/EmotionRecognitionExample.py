@@ -1,3 +1,5 @@
+# -*- coding: utf-8
+
 import time
 from nicoemotionrecognition import EmotionRecognition
 from nicomotion import Motion
@@ -8,7 +10,7 @@ robot = Motion.Motion(dirname(abspath(__file__))+"/../../../json/nico_humanoid_u
 face = faceExpression()
 #torso NICO
 
-emotionRecogniton = EmotionRecognition.EmotionRecognition(device='usb-046d_080a_6C686AA1-video-index0', robot=robot, face=face)
+emotionRecogniton = EmotionRecognition.EmotionRecognition(device='usb-046d_080a_6C686AA1-video-index0', robot=robot, face=face,voiceEnabled=True,german=True)
 #legged NICO
 
 #emotionRecogniton = EmotionRecognition.EmotionRecognition(device='usb-046d_080a_17E79161-video-index0', robot=robot, face=face,faceDetectionDelta=10, voiceEnabled=True)
