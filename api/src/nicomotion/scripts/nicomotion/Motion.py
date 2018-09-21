@@ -4,8 +4,10 @@ import logging
 import pprint
 import re
 
+import pypot.dynamixel.error as pypot_error
 import pypot.robot
 import pypot.vrep
+from nicomotion._nicomotion_internal.MotionError import MotionErrorHandler
 from pypot.vrep.remoteApiBindings import vrep as remote_api
 
 import _nicomotion_internal.hand
@@ -38,6 +40,8 @@ class Motion:
         self._vrep = vrep
         self._vrepIO = None
 
+        pypot_error.BaseErrorHandler = MotionErrorHandler
+
         with open(motorConfig, 'r') as config_file:
             config = json.load(config_file)
 
@@ -45,7 +49,6 @@ class Motion:
 
         if vrep:
             logging.info('Using VREP')
-            # TODO Remove the filtering of l_wrist_x once the new model is updated
             to_remove = ['l_virtualhand_x', 'r_virtualhand_x']
             for motor in to_remove:
                 config['motors'].pop(motor)
