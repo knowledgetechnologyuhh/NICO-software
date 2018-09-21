@@ -1,31 +1,62 @@
-from nicomotion import Motion
-import time
-from os.path import dirname, abspath
+import logging
 import sys
+import time
+from os.path import abspath, dirname
+
+import pypot.dynamixel.error
+from nicomotion import Motion
+
+logger = logging.getLogger(__name__)
+
 
 if __name__ == '__main__':
 
-    robot = Motion.Motion(dirname(abspath(__file__))+"/../../../json/rh7d_hands.json",vrep=False)
-    hand = "RHand"
+    logging.basicConfig(level=logging.ERROR)
 
-    poses = {
-    "thumbsUp": robot.thumbsUp,
-    "pointAt":robot.pointAt,
-    "okSign":robot.okSign,
-    "pinchToIndex":robot.pinchToIndex,
-    "keyGrip":robot.keyGrip,
-    "pencilGrip":robot.pencilGrip,
-    "closeHand":robot.closeHand,
-    "openHand":robot.openHand}
+    poses = (
+        "thumbsUp",
+        "pointAt",
+        "okSign",
+        "pinchToIndex",
+        "keyGrip",
+        "pencilGrip",
+        "closeHand",
+        "openHand")
 
+    if len(sys.argv) < 2 or sys.argv[1] not in ("left", "right"):
+        message = ("Please specify which hand to use as first argument " +
+                   "(left or right) and add at least one pose argument. " +
+                   "Multiple poses will be executed in sequence.\n" +
+                   "The known poses are: \n{}".format(', '.join(poses)))
+        sys.exit(message)
 
-    if len(sys.argv) < 2:
-        print("Please add at least one pose as argument. Multiple arguments will be executed in sequence.\n Known poses are: \n{}".format(', '.join(poses.keys())))
+    hand = sys.argv[1][0].upper() + "Hand"
 
-    for pose in sys.argv[1:]:
-        if pose not in poses.keys():
-            print("Unknown pose {}, try one of the following: {}".format(pose, ', '.join(poses.keys())))
-            break
-        else:
-            poses[pose](hand)
+    arm = sys.argv[1][0]
+
+    if len(sys.argv) < 3:
+        message = ("Please add at least one pose as argument. Multiple " +
+                   "arguments will be executed in sequence.\nKnown poses " +
+                   "are: \n{}".format(', '.join(poses)))
+        sys.exit(message)
+
+    for pose in sys.argv[2:]:
+        if pose not in poses:
+            sys.exit("Unknown pose {}, try one of the following: {}".format(
+                pose, ', '.join(poses)))
+
+    robot = Motion.Motion(dirname(abspath(__file__)) +
+                          "/../../../json/nico_humanoid_upper_rh7d.json",
+                          vrep=False)
+
+    robot.setAngle(arm + "_shoulder_y", -20, .03)
+    robot.setAngle(arm + "_elbow_y", 80, .03)
+    for pose in sys.argv[2:]:
+        getattr(robot, pose)(hand)
         time.sleep(5.0)
+
+    robot.setAngle(arm + "_shoulder_y", 0, .03)
+    robot.setAngle(arm + "_elbow_y", 80, .03)
+    robot.openHand(hand)
+    time.sleep(3)
+    robot.disableTorqueAll()
