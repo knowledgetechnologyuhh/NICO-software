@@ -21,7 +21,7 @@ class MotionErrorHandler(pypot.dynamixel.error.BaseErrorHandler):
         logger.error(msg)
 
     def handle_overload_error(self, instruction_packet):
-        msg = ("Overload error after sending {} - please unplug NICO's" +
+        msg = ("Overload error after sending {} - please unplug NICO's " +
                "power cable and then replug it"
                ).format(
             instruction_packet)
