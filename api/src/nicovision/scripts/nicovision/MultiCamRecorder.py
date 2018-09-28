@@ -334,6 +334,12 @@ class MultiCamRecorder(object):
                 self._threads[id].start()
 
     def start_recording(self, path="camera{}/picture-{}.png"):
+        """
+        Starts continuous image recording.
+        :param path: path of the image. First {} is replaced with camera id,
+                     the second one with a timestamp.
+        :type path: str
+        """
         if ImageWriter is not None:
             if not self._image_writer._open:
                 self._image_writer.open()
@@ -345,6 +351,9 @@ class MultiCamRecorder(object):
                 "Could not start recording - No ImageWriter instantiated")
 
     def stop_recording(self):
+        """
+        Stops the recording and closes the cameras
+        """
         if not self._open:
             self._logger.warning('Trying to close a device which is not open')
             return
@@ -386,6 +395,46 @@ class MultiCamRecorder(object):
             self._image_writer.write_image(self._target.format(id, iso_time),
                                            frame)
 
+    def _singleImageCallback(self, rval, frame, id):
+        """
+        Internal callback for taking a single image
+
+        :param rval: rval
+        :param frame: frame
+        """
+        if rval and self._once[id]:
+            iso_time = datetime.datetime.today().isoformat()
+
+            frame = self.custom_callback(
+                datetime.datetime.today().isoformat(), frame, id)
+
+            self._image_writer.write_image(self._target.format(id, iso_time),
+                                           frame)
+            self._once[id] = False
+
+    def takeSingleImage(self, path="camera{}/picture-{}.png"):
+        """
+        Takes a single image with each camera. For performance reasons this
+        does not close the camera. Please call stop_recording() once if you
+        don't take any more images or want to delete the object.
+        :param path: path of the image. First {} is replaced with camera id,
+                     the second one with a timestamp.
+        :type path: str
+        """
+        if ImageWriter is not None:
+            self._once = [True] * len(self._deviceIds)
+            self._target = path
+            if not self._image_writer._open:
+                self._image_writer.open()
+            self.open()
+            self.add_callback(self._singleImageCallback)
+            while reduce(lambda x, y: x and y, self._once):
+                continue
+            self.clean_callbacks()
+        else:
+            self._logger.warning(
+                "Could not start recording - No ImageWriter instantiated")
+
     def _eventloop(self, id):
         """
         Internal event loop
@@ -401,7 +450,7 @@ class MultiCamRecorder(object):
             self._captures[id].grab()
             rval, frame = self._captures[id].retrieve()
             if rval:
-                frame = undistort(frame, id)
+                frame = self.undistort(frame, id)
             for function in self._callback_functions:
                 function(rval, frame, id)
             time.sleep(max(0, 1.0 / self._framerate - (time.time() - t1)))

@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 if __name__ == '__main__':
 
-    logging.basicConfig(level=logging.ERROR)
+    logging.basicConfig(level=logging.WARNING)
 
     poses = (
         "thumbsUp",
@@ -46,17 +46,20 @@ if __name__ == '__main__':
                 pose, ', '.join(poses)))
 
     robot = Motion.Motion(dirname(abspath(__file__)) +
-                          "/../../../json/nico_humanoid_upper_rh7d.json",
+                          "/../../../../json/nico_humanoid_upper_rh7d.json",
                           vrep=False)
 
-    robot.setAngle(arm + "_shoulder_y", -20, .03)
-    robot.setAngle(arm + "_elbow_y", 80, .03)
+    prefix = 1. if arm == "l" else -1.
+
+    robot.setAngle(arm + "_shoulder_z", prefix * 0., .03)
+    robot.setAngle(arm + "_shoulder_y", prefix * -20., .03)
+    robot.setAngle(arm + "_elbow_y", prefix * 80., .03)
     for pose in sys.argv[2:]:
-        getattr(robot, pose)(hand)
+        robot.setHandPose(hand, pose)
         time.sleep(5.0)
 
-    robot.setAngle(arm + "_shoulder_y", 0, .03)
-    robot.setAngle(arm + "_elbow_y", 80, .03)
+    robot.setAngle(arm + "_shoulder_y", prefix * 0, .03)
+    robot.setAngle(arm + "_elbow_y", prefix * 80, .03)
     robot.openHand(hand)
     time.sleep(3)
     robot.disableTorqueAll()
