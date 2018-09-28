@@ -2,6 +2,8 @@ import logging
 import threading
 import time
 
+logger = logging.getLogger(__name__)
+
 MAX_CUR = 150
 CURRENT_PORTS = {"wrist_z": "present_current_port_1",
                  "wrist_y": "present_current_port_2",
@@ -10,6 +12,43 @@ CURRENT_PORTS = {"wrist_z": "present_current_port_1",
                  "thumb_x": "present_current_port_5",
                  "indexfinger_x": "present_current_port_6",
                  "middlefingers_x": "present_current_port_7"}
+
+POSES = {"pointAt": {"indexfinger_x": (-170., 1.),
+                     "middlefingers_x": (150., 1.),
+                     "thumb_x": (60., 0.12),
+                     "thumb_z": (150., 1.)},
+         "openHand": {"indexfinger_x": (-170., 1.),
+                      "middlefingers_x": (-170., 1.),
+                      "thumb_x": (-170., 1.),
+                      "thumb_z": (-170., 1.)},
+         "closeHand": {"indexfinger_x": (150., .9),
+                       "middlefingers_x": (150., 1.),
+                       "thumb_x": (60., .12),
+                       "thumb_z": (150., 1.)},
+         "thumbsUp": {"indexfinger_x": (150., 1.),
+                      "middlefingers_x": (150., 1.),
+                      "thumb_x": (-170., 1.),
+                      "thumb_z": (-170., 1.)},
+         "okSign": {"indexfinger_x": (-25., 1.),
+                    "middlefingers_x": (-170., 1.),
+                    "thumb_x": (-25., 1.),
+                    "thumb_z": (45., 1.)},
+         "pinchToIndex": {"indexfinger_x": (-25., 1.),
+                          "middlefingers_x": (150., 1.),
+                          "thumb_x": (-25., 1.),
+                          "thumb_z": (45., 1.)},
+         "keyGrip": {"indexfinger_x": (30., 1.),
+                     "middlefingers_x": (150., 1.),
+                     "thumb_x": (30., 1.),
+                     "thumb_z": (-170., 1.)},
+         "pencilGrip": {"indexfinger_x": (90., .12),
+                        "middlefingers_x": (150., 1.),
+                        "thumb_x": (60., .12),
+                        "thumb_z": (150., 1.)}
+         }
+
+
+# "pencilGrip",
 
 
 def _HAND_compliant(robot):
@@ -70,24 +109,24 @@ def _setGoalPositionWithCurrentLimit(robot, jointname, goal_position,
                 success = True
                 try:
                     if getattr(board, CURRENT_PORTS[jointname[2:]]) > MAX_CUR:
-                        logging.warning(
+                        logger.warning(
                             "Reached maximum current - Stopping movement of {}"
                             .format(jointname))
                         return
                     break
                 except AttributeError as e:
                     if retries == 9:
-                        logging.warning(
+                        logger.warning(
                             "Current check failed after 10 retries")
                         success = False
                         raise
-                    logging.warning(
+                    logger.warning(
                         "Current check failed - retry {}".format(retries + 1))
             if not success:
                 break
             joint.goal_position = pos
             time.sleep(.01)
-        time.sleep(1)
+        time.sleep(2)
         joint.compliant = True
 
 
@@ -142,7 +181,7 @@ def getPresentCurrent(robot, jointname):
         if board is not None:
             return getattr(board, CURRENT_PORTS[jointname[2:]])
 
-    logging.warning("{} is not a handjoint".format(jointname))
+    logger.warning("{} is not a handjoint".format(jointname))
     return 0
 
 
@@ -168,12 +207,13 @@ def setAngle(robot, jointname, goal_position, fractionMaxSpeed):
         motor.goal_speed = 1000.0 * fractionMaxSpeed
         motor.goal_position = goal_position
     else:
-        logging.warning("{} is not a handjoint".format(jointname))
+        logger.warning("{} is not a handjoint".format(jointname))
 
 
-def openHand(robot, handName, fractionMaxSpeed=1.0):
+def executePose(robot, handName, poseName, fractionMaxSpeed):
     """
-    Opens the specified hand. handName can be 'RHand' or 'LHand'
+    Executes given pose. () handName can be 'RHand'
+    or 'LHand'
 
     :param robot: Robot object
     :type robot: pypot.robot
@@ -184,24 +224,33 @@ def openHand(robot, handName, fractionMaxSpeed=1.0):
     :return: None
     """
     if robot is None:
-        logging.critical('No robot provided')
+        logger.critical('No robot provided')
         return
 
     if handName == 'RHand':
-        for motor in ["r_thumb_x", "r_indexfinger_x", "r_middlefingers_x",
-                      "r_thumb_z"]:
-            threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                             robot, motor, -180, fractionMaxSpeed]).start()
-        threading.Timer(2.0, _HAND_compliant, [robot]).start()
+        prefix = "r_"
     elif handName == 'LHand':
-        for motor in ["l_thumb_x", "l_indexfinger_x", "l_middlefingers_x",
-                      "l_thumb_z"]:
-            threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                             robot, motor, -180, fractionMaxSpeed]).start()
-        threading.Timer(2.0, _HAND_compliant, [robot]).start()
+        prefix = "l_"
     else:
-        logging.warning('Unknown hand handle: %s' % handName)
+        logger.warning('Unknown hand handle: %s' % handName)
         return
+
+    if poseName not in POSES.keys():
+        logger.warning((
+            "Unknown pose {} - known poses are {}"
+        ).format(poseName, POSES.keys()))
+        return
+
+    pose = dict(
+        zip(map(lambda motor: prefix + motor, POSES[poseName].keys()),
+            POSES[poseName].values()))
+    for motor in pose.keys():
+        angle, speed = pose[motor]
+        if hasattr(robot, motor):
+            threading.Thread(target=_setGoalPositionWithCurrentLimit,
+                             args=[robot, motor, angle,
+                                   speed * fractionMaxSpeed]).start()
+
 
 # def openHandVREP(robot, handName, fractionMaxSpeed=1.0, percentage=1.0):
 #     """
@@ -220,11 +269,11 @@ def openHand(robot, handName, fractionMaxSpeed=1.0):
 #     :return: None
 #     """
 #     if robot is None:
-#         logging.critical('No robot provided')
+#         logger.critical('No robot provided')
 #         return
 #
 #     if not (0.0 < percentage <= 1.0):
-#         logging.critical('percentage (%f) out of bounds' % percentage)
+#         logger.critical('percentage (%f) out of bounds' % percentage)
 #         return
 #
 #     if handName == 'RHand':
@@ -242,272 +291,8 @@ def openHand(robot, handName, fractionMaxSpeed=1.0):
 #         robot.l_thumb_x.goal_speed = 1000.0 * fractionMaxSpeed
 #         robot.l_thumb_x.goal_position = 0.0 * percentage
 #     else:
-#         logging.warning('Unknown hand handle: %s' % handName)
+#         logger.warning('Unknown hand handle: %s' % handName)
 #         return
-
-
-def thumbsUp(robot, handName, fractionMaxSpeed=1.0):
-    """
-    Gives a thumbs up with the specified hand. handName can be 'RHand' or
-    'LHand'
-
-    :param robot: Robot object
-    :type robot: pypot.robot
-    :param handName: Name of the hand (RHand, LHand)
-    :type handName: str
-    :param fractionMaxSpeed: Speed at which hand should open. Default: 1.0
-    :type fractionMaxSpeed: float
-    :return: None
-    """
-    if robot is None:
-        logging.critical('No robot provided')
-        return
-
-    if handName == 'RHand':
-        for motor in ["r_indexfinger_x", "r_middlefingers_x"]:
-            threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                             robot, motor, 180, fractionMaxSpeed]).start()
-        for motor in ["r_thumb_z", "r_thumb_x"]:
-            threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                             robot, motor, -180, fractionMaxSpeed]).start()
-    elif handName == 'LHand':
-        for motor in ["l_indexfinger_x", "l_middlefingers_x"]:
-            threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                             robot, motor, 180, fractionMaxSpeed]).start()
-        for motor in ["l_thumb_z", "l_thumb_x"]:
-            threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                             robot, motor, -180, fractionMaxSpeed]).start()
-    else:
-        logging.warning('Unknown hand handle: %s' % handName)
-        return
-
-
-def pointAt(robot, handName, fractionMaxSpeed=1.0):
-    """
-    Sticks the indexfinger out to point at something. handName can be 'RHand'
-    or 'LHand'
-
-    :param robot: Robot object
-    :type robot: pypot.robot
-    :param handName: Name of the hand (RHand, LHand)
-    :type handName: str
-    :param fractionMaxSpeed: Speed at which hand should open. Default: 1.0
-    :type fractionMaxSpeed: float
-    :return: None
-    """
-    if robot is None:
-        logging.critical('No robot provided')
-        return
-
-    if handName == 'RHand':
-        threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                         robot, "r_indexfinger_x", -180, fractionMaxSpeed]
-                         ).start()
-        for motor in ["r_middlefingers_x", "r_thumb_z"]:
-            threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                             robot, motor, 180, fractionMaxSpeed]).start()
-        threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                         robot, "r_thumb_x", 90, .9 * fractionMaxSpeed]
-                         ).start()
-    elif handName == 'LHand':
-        threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                         robot, "l_indexfinger_x", -180, fractionMaxSpeed]
-                         ).start()
-        for motor in ["l_middlefingers_x", "l_thumb_z"]:
-            threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                             robot, motor, 180, fractionMaxSpeed]).start()
-        threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                         robot, "l_thumb_x", 90, .9 * fractionMaxSpeed]
-                         ).start()
-    else:
-        logging.warning('Unknown hand handle: %s' % handName)
-        return
-
-
-def okSign(robot, handName, fractionMaxSpeed=1.0):
-    """
-    Performs the 'OK' hand signal that divers use. handName can be 'RHand' or
-    'LHand'
-
-    :param robot: Robot object
-    :type robot: pypot.robot
-    :param handName: Name of the hand (RHand, LHand)
-    :type handName: str
-    :param fractionMaxSpeed: Speed at which hand should open. Default: 1.0
-    :type fractionMaxSpeed: float
-    :return: None
-    """
-    if robot is None:
-        logging.critical('No robot provided')
-        return
-
-    if handName == 'RHand':
-        for motor in ["r_indexfinger_x", "r_thumb_x"]:
-            threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                             robot, motor, -50, fractionMaxSpeed]).start()
-        threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                         robot, "r_thumb_z", 140, fractionMaxSpeed]).start()
-        threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                         robot, "r_middlefingers_x", -180, fractionMaxSpeed]
-                         ).start()
-    elif handName == 'LHand':
-        for motor in ["l_indexfinger_x", "l_thumb_x"]:
-            threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                             robot, motor, -50, fractionMaxSpeed]).start()
-        threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                         robot, "l_thumb_z", 140, fractionMaxSpeed]).start()
-        threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                         robot, "l_middlefingers_x", -180, fractionMaxSpeed]
-                         ).start()
-    else:
-        logging.warning('Unknown hand handle: %s' % handName)
-        return
-
-
-def pinchToIndex(robot, handName, fractionMaxSpeed=1.0):
-    """
-    Pinches thumb and index finger together. handName can be 'RHand' or 'LHand'
-
-    :param robot: Robot object
-    :type robot: pypot.robot
-    :param handName: Name of the hand (RHand, LHand)
-    :type handName: str
-    :param fractionMaxSpeed: Speed at which hand should open. Default: 1.0
-    :type fractionMaxSpeed: float
-    :return: None
-    """
-    if robot is None:
-        logging.critical('No robot provided')
-        return
-
-    if handName == 'RHand':
-        for motor in ["r_indexfinger_x", "r_thumb_x"]:
-            threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                             robot, motor, -50, fractionMaxSpeed]).start()
-        threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                         robot, "r_thumb_z", 140, fractionMaxSpeed]).start()
-        threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                         robot, "r_middlefingers_x", 180, fractionMaxSpeed]
-                         ).start()
-    elif handName == 'LHand':
-        for motor in ["l_indexfinger_x", "l_thumb_x"]:
-            threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                             robot, motor, -50, fractionMaxSpeed]).start()
-        threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                         robot, "l_thumb_z", 140, fractionMaxSpeed]).start()
-        threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                         robot, "l_middlefingers_x", 180, fractionMaxSpeed]
-                         ).start()
-    else:
-        logging.warning('Unknown hand handle: %s' % handName)
-        return
-
-
-def keyGrip(robot, handName, fractionMaxSpeed=1.0):
-    """
-    Performs a grip that can hold a key card. handName can be 'RHand' or
-    'LHand'
-
-    :param robot: Robot object6
-    :type robot: pypot.robot
-    :param handName: Name of the hand (RHand, LHand)
-    :type handName: str
-    :param fractionMaxSpeed: Speed at which hand should open. Default: 1.0
-    :type fractionMaxSpeed: float
-    :return: None
-    """
-    if robot is None:
-        logging.critical('No robot provided')
-        return
-
-    if handName == 'RHand':
-        for motor in ["r_indexfinger_x", "r_thumb_x"]:
-            threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                             robot, motor, 30, fractionMaxSpeed]).start()
-        threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                         robot, "r_thumb_z", -180, fractionMaxSpeed]).start()
-        threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                         robot, "r_middlefingers_x", 180, fractionMaxSpeed]
-                         ).start()
-    elif handName == 'LHand':
-        for motor in ["l_indexfinger_x", "l_thumb_x"]:
-            threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                             robot, motor, 30, fractionMaxSpeed]).start()
-        threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                         robot, "l_thumb_z", -180, fractionMaxSpeed]).start()
-        threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                         robot, "l_middlefingers_x", 180, fractionMaxSpeed]
-                         ).start()
-    else:
-        logging.warning('Unknown hand handle: %s' % handName)
-        return
-
-
-def pencilGrip(robot, handName, fractionMaxSpeed=1.0):
-    """
-    Performs a grip able to hold a (thick) pencil. handName can be 'RHand' or
-    'LHand'
-
-    :param robot: Robot object
-    :type robot: pypot.robot
-    :param handName: Name of the hand (RHand, LHand)
-    :type handName: str
-    :param fractionMaxSpeed: Speed at which hand should open. Default: 1.0
-    :type fractionMaxSpeed: float
-    :return: None
-    """
-    if robot is None:
-        logging.critical('No robot provided')
-        return
-
-    motorSettings = {"middlefingers_x": (180, 1), "thumb_z": (
-        180, 1), "indexfinger_x": (90, .1), "thumb_x": (90, .2)}
-    if handName == 'RHand':
-        for motor, (pos, speed) in motorSettings.iteritems():
-            threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                             robot, "r_{}".format(motor), pos, speed
-                             * fractionMaxSpeed]).start()
-    elif handName == 'LHand':
-        for motor, (pos, speed) in motorSettings.iteritems():
-            threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                             robot, "l_{}".format(motor), pos, speed
-                             * fractionMaxSpeed]).start()
-    else:
-        logging.warning('Unknown hand handle: %s' % handName)
-        return
-
-
-def closeHand(robot, handName, fractionMaxSpeed=1.0):
-    """
-    Closes the specified hand. handName can be 'RHand' or 'LHand'
-
-    :param robot: Robot object
-    :type robot: pypot.robot
-    :param handName: Name of the hand (RHand, LHand)
-    :type handName: str
-    :param fractionMaxSpeed: Speed at which hand should close. Default: 1.0
-    :type fractionMaxSpeed: float
-    :return: None
-    """
-    if robot is None:
-        logging.critical('No robot provided')
-        return
-
-    motorSettings = {"middlefingers_x": (180, 1), "thumb_z": (
-        180, 1), "indexfinger_x": (180, 1), "thumb_x": (90, .2)}
-    if handName == 'RHand':
-        for motor, (pos, speed) in motorSettings.iteritems():
-            threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                             robot, "r_{}".format(motor), pos, speed
-                             * fractionMaxSpeed]).start()
-    elif handName == 'LHand':
-        for motor, (pos, speed) in motorSettings.iteritems():
-            threading.Thread(target=_setGoalPositionWithCurrentLimit, args=[
-                             robot, "l_{}".format(motor), pos, speed
-                             * fractionMaxSpeed]).start()
-    else:
-        logging.warning('Unknown hand handle: %s' % handName)
-        return
 
 
 # def closeHandVREP(robot, handName, fractionMaxSpeed=1.0, percentage=1.0):
@@ -527,11 +312,11 @@ def closeHand(robot, handName, fractionMaxSpeed=1.0):
 #     :return: None
 #     """
 #     if robot is None:
-#         logging.critical('No robot provided')
+#         logger.critical('No robot provided')
 #         return
 #
 #     if not (0.0 < percentage <= 1.0):
-#         logging.critical('percentage (%f) out of bounds' % percentage)
+#         logger.critical('percentage (%f) out of bounds' % percentage)
 #         return
 #
 #     if handName == 'RHand':
@@ -549,5 +334,5 @@ def closeHand(robot, handName, fractionMaxSpeed=1.0):
 #         robot.l_thumb_x.goal_speed = 1000.0 * fractionMaxSpeed
 #         robot.l_thumb_x.goal_position = -30.0 * percentage
 #     else:
-#         logging.warning('Unknown hand handle: %s' % handName)
+#         logger.warning('Unknown hand handle: %s' % handName)
 #         return
