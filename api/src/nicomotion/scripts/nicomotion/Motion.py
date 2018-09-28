@@ -205,131 +205,39 @@ class Motion:
             logging.warning('A real robot has no VREP controller')
             return None
 
-    def thumbsUp(self, handName, fractionMaxSpeed=1.0):
+    def setHandPose(self, handName, poseName, fractionMaxSpeed=1.0):
         """
-        Gives a thumbs up with the specified hand. handName can be 'RHand' or 'LHand'
+        Executes pose with the specified hand. This only works with the RH7D
+        4-finger hand. Make sure to open the hand beforehand.
+
+        Known poses are: ("thumbsUp", "pointAt", "okSign",
+        "pinchToIndex", "keyGrip", "pencilGrip", "closeHand", "openHand").
+
+        handName can be 'RHand' or 'LHand'
 
         :param handName: Name of the hand (RHand, LHand)
         :type handName: str
-        :param fractionMaxSpeed: Speed at which hand should open. Default: 1.0
+        :param poseName: Name of the pose ("thumbsUp", "pointAt", "okSign",
+        "pinchToIndex", "keyGrip", "pencilGrip", "closeHand", "openHand")
+        :type poseName: str
+        :param fractionMaxSpeed: Speed at which hand move. Default: 1.0
         :type fractionMaxSpeed: float
         """
         if self._vrep:
-            logging.warning("'Thumbs up' pose is not supported for vrep")
+            logging.warning(
+                "'{}' pose is not supported for vrep".format(poseName))
         else:
             if self._handModel == "RH7D":
-                _nicomotion_internal.RH7D_hand.thumbsUp(self._robot, handName,
-                                                        min(fractionMaxSpeed,
-                                                            self._maximumSpeed))
+                speed = min(fractionMaxSpeed, self._maximumSpeed)
+                _nicomotion_internal.RH7D_hand.executePose(self._robot,
+                                                           handName,
+                                                           poseName,
+                                                           speed
+                                                           )
             else:
                 logging.warning(
-                    "'Thumbs up' pose is not supported for hand model %s",
-                    self._handModel)
-
-    def okSign(self, handName, fractionMaxSpeed=1.0):
-        """
-        Performs the 'OK' hand signal that divers use. handName can be 'RHand' or 'LHand'
-
-        :param handName: Name of the hand (RHand, LHand)
-        :type handName: str
-        :param fractionMaxSpeed: Speed at which hand should open. Default: 1.0
-        :type fractionMaxSpeed: float
-        """
-        if self._vrep:
-            logging.warning("'OK' pose is not supported for vrep")
-        else:
-            if self._handModel == "RH7D":
-                _nicomotion_internal.RH7D_hand.okSign(self._robot, handName,
-                                                      min(fractionMaxSpeed,
-                                                          self._maximumSpeed))
-            else:
-                logging.warning("'OK' pose is not supported for hand model %s",
-                                self._handModel)
-
-    def pinchToIndex(self, handName, fractionMaxSpeed=1.0):
-        """
-        Pinches thumb and index finger together. handName can be 'RHand' or 'LHand'
-
-        :param handName: Name of the hand (RHand, LHand)
-        :type handName: str
-        :param fractionMaxSpeed: Speed at which hand should open. Default: 1.0
-        :type fractionMaxSpeed: float
-        """
-        if self._vrep:
-            logging.warning("'pinch to index' pose is not supported for vrep")
-        else:
-            if self._handModel == "RH7D":
-                _nicomotion_internal.RH7D_hand.pinchToIndex(self._robot,
-                                                            handName, min(
-                                                                fractionMaxSpeed, self._maximumSpeed))
-            else:
-                logging.warning(
-                    "'pinch to index' pose is not supported for hand model %s",
-                    self._handModel)
-
-    def pencilGrip(self, handName, fractionMaxSpeed=1.0):
-        """
-        Performs a grip able to hold a (thick) pencil. handName can be 'RHand' or 'LHand'
-
-        :param handName: Name of the hand (RHand, LHand)
-        :type handName: str
-        :param fractionMaxSpeed: Speed at which hand should open. Default: 1.0
-        :type fractionMaxSpeed: float
-        """
-        if self._vrep:
-            logging.warning("'pencil grip' pose is not supported for vrep")
-        else:
-            if self._handModel == "RH7D":
-                _nicomotion_internal.RH7D_hand.pencilGrip(self._robot,
-                                                          handName,
-                                                          min(fractionMaxSpeed,
-                                                              self._maximumSpeed))
-            else:
-                logging.warning(
-                    "'pencil grip' pose is not supported for hand model %s",
-                    self._handModel)
-
-    def keyGrip(self, handName, fractionMaxSpeed=1.0):
-        """
-        Performs a grip able to hold a key card. handName can be 'RHand' or 'LHand'
-
-        :param handName: Name of the hand (RHand, LHand)
-        :type handName: str
-        :param fractionMaxSpeed: Speed at which hand should open. Default: 1.0
-        :type fractionMaxSpeed: float
-        """
-        if self._vrep:
-            logging.warning("'key grip' pose is not supported for vrep")
-        else:
-            if self._handModel == "RH7D":
-                _nicomotion_internal.RH7D_hand.keyGrip(self._robot, handName,
-                                                       min(fractionMaxSpeed,
-                                                           self._maximumSpeed))
-            else:
-                logging.warning(
-                    "'key grip' pose is not supported for hand model %s",
-                    self._handModel)
-
-    def pointAt(self, handName, fractionMaxSpeed=1.0, percentage=1.0):
-        """
-        Sticks the indexfinger out to point at something. handName can be 'RHand' or 'LHand'
-
-        :param handName: Name of the hand (RHand, LHand)
-        :type handName: str
-        :param fractionMaxSpeed: Speed at which hand should open. Default: 1.0
-        :type fractionMaxSpeed: float
-        """
-        if self._vrep:
-            logging.warning("'Point at' pose is not supported for vrep")
-        else:
-            if self._handModel == "RH7D":
-                _nicomotion_internal.RH7D_hand.pointAt(self._robot, handName,
-                                                       min(fractionMaxSpeed,
-                                                           self._maximumSpeed))
-            else:
-                logging.warning(
-                    "'Point at' pose is not supported for hand model %s",
-                    self._handModel)
+                    "'{}' pose is not supported for hand model {}".format(
+                        poseName, self._handModel))
 
     def openHand(self, handName, fractionMaxSpeed=1.0, percentage=1.0):
         """
@@ -357,9 +265,7 @@ class Motion:
                 if (percentage < 1.0):
                     logging.warning(
                         "Open hand for RH7D doesn't support percentage parameter")
-                _nicomotion_internal.RH7D_hand.openHand(self._robot, handName,
-                                                        min(fractionMaxSpeed,
-                                                            self._maximumSpeed))
+                self.setHandPose(handName, "openHand", fractionMaxSpeed)
 
     def closeHand(self, handName, fractionMaxSpeed=1.0, percentage=1.0):
         """
@@ -387,9 +293,7 @@ class Motion:
                 if percentage != 1.0:
                     logging.warning(
                         "Close hand for RH7D doesn't support percentage parameter")
-                _nicomotion_internal.RH7D_hand.closeHand(self._robot, handName,
-                                                         min(fractionMaxSpeed,
-                                                             self._maximumSpeed))
+                self.setHandPose(handName, "closeHand", fractionMaxSpeed)
 
     def enableForceControlAll(self, goalForce=500):
         """
