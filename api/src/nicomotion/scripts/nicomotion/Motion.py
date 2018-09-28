@@ -681,9 +681,31 @@ class Motion:
             logging.warning('No joint "%s" found' % jointName)
             return 0.0
 
+    def getSpeed(self, jointName):
+        """
+        Returns the current speed of a motor
+
+        :param jointName: Name of the joint
+        :type jointName: str
+        :return: Speed of the joint
+        :rtype: float
+        """
+        if hasattr(self._robot, jointName):
+            motor = getattr(self._robot, jointName)
+            if hasattr(motor, 'present_speed'):
+                return motor.present_speed
+            else:
+                logging.warning(
+                    'Joint %s has no present speed' % jointName)
+                return 0.0
+        else:
+            logging.warning('No joint "%s" found' % jointName)
+            return 0.0
+
     def setMaximumSpeed(self, maximumSpeed):
         """
-        Sets the maximum allowed speed (in fraction of maximum possible speed). When giving a higher speed to any other
+        Sets the maximum allowed speed (in fraction of maximum possible speed).
+        When giving a higher speed to any other
         functions the movement won't go over the value set here
 
         :param maximumSpeed: Maximum allowed speed (0 <= maximumSpeed <= 1.0)
