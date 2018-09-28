@@ -20,14 +20,14 @@ PATH_LEGGED_NICO_LEFT_CAM = VIDEO_DEVICE_PATH + ID_STR_LEGGED_NICO_LEFT_CAM
 PATH_LEGGED_NICO_RIGHT_CAM = VIDEO_DEVICE_PATH + ID_STR_LEGGED_NICO_RIGHT_CAM
 
 NICO_EYES = {
-    'left': {
-        'old': "usb-046d_080a_2DE7B460-video-index0",
-        'new': "usb-e-con_systems_See3CAM_CU135_09229807-video-index0"
-    },
-    'right': {
-        'old': 'usb-046d_080a_17E79161-video-index0',
-        'new': "usb-e-con_systems_See3CAM_CU135_36249807-video-index0"
-    }
+    'left':
+        ("usb-046d_080a_2DE7B460-video-index0",
+         "usb-046d_080a_6C686AA1-video-index0",
+         "usb-e-con_systems_See3CAM_CU135_09229807-video-index0"),
+    'right':
+        ('usb-046d_080a_17E79161-video-index0',
+         'usb-046d_080a_78918AA0-video-index0',
+         "usb-e-con_systems_See3CAM_CU135_36249807-video-index0")
 }
 
 
@@ -70,11 +70,11 @@ class VideoDevice:
         """
         left, right = None, None
         devices = VideoDevice.get_all_devices()
-        for _, device in NICO_EYES['left'].iteritems():
+        for device in NICO_EYES['left']:
             if device in devices:
                 left = device
                 break
-        for _, device in NICO_EYES['right'].iteritems():
+        for device in NICO_EYES['right']:
             if device in devices:
                 right = device
                 break
