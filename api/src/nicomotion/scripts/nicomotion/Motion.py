@@ -3,6 +3,7 @@ import json
 import logging
 import pprint
 import re
+import time
 
 import pypot.dynamixel.error as pypot_error
 import pypot.robot
@@ -20,7 +21,8 @@ class Motion:
     """
 
     def __init__(self, motorConfig='config.json', vrep=False,
-                 vrepHost='127.0.0.1', vrepPort=19997, vrepScene=None):
+                 vrepHost='127.0.0.1', vrepPort=19997, vrepScene=None,
+                 ignoreMissing=False):
         """
         Motion is an interface to control the movement of the NICO robot.
 
@@ -34,11 +36,14 @@ class Motion:
         :type vrepPort: int
         :param vrepScene: Scene to load. Set to None to use current scene
         :type vrepScene: str
+        :param ignoreMissing: If missing motors should be removed
+        :type ignoreMissing: bool
         """
         self._robot = None
         self._maximumSpeed = 1.0
         self._vrep = vrep
         self._vrepIO = None
+        self._logger = logging.getLogger(__name__)
 
         pypot_error.BaseErrorHandler = MotionErrorHandler
 
@@ -48,7 +53,7 @@ class Motion:
         self._config = config
 
         if vrep:
-            logging.info('Using VREP')
+            self._logger.info('Using VREP')
             to_remove = ['l_virtualhand_x', 'r_virtualhand_x']
             for motor in to_remove:
                 config['motors'].pop(motor)
@@ -60,29 +65,44 @@ class Motion:
                                                vrepScene)
             self._vrepIO = self._robot._controllers[0].io
         else:
-            logging.info('Using robot')
-            try:
-                self._robot = pypot.robot.from_config(config)
-            except IndexError as e:
-                regex = re.compile('.*\[.*\].*\[(?P<ids>.*)\].*')
-                match = regex.match(e.message)
-                string = match.group('ids')
-                for id in string.split(','):
-                    id = int(id)
-                    for motor in config['motors'].keys():
-                        if config['motors'][motor]['id'] == id:
-                            logging.warning(
-                                'Removing motor %s (%i)' % (motor, id))
-                            config['motors'].pop(motor)
-                            for group in config['motorgroups'].keys():
-                                config['motorgroups'][group] = [x for x in
-                                                                config[
-                                                                    'motorgroups'][
-                                                                    group] if
-                                                                x != motor]
-                logging.warning('New config created:')
-                logging.warning(pprint.pformat(config))
-                self._robot = pypot.robot.from_config(config)
+            self._logger.info('Using robot')
+            retries = 0
+            success = False
+            while not success:
+                try:
+                    self._robot = pypot.robot.from_config(config)
+                    success = True
+                except IndexError as e:
+                    if ignoreMissing and retries < 3:
+                        # removes missing ids if enabled and tries to
+                        # reinitialize pypot up to 3 times
+                        regex = re.compile('.*\[.*\].*\[(?P<ids>.*)\].*')
+                        match = regex.match(e.message)
+                        string = match.group('ids')
+                        for id in string.split(','):
+                            id = int(id)
+                            for motor in config['motors'].keys():
+                                if config['motors'][motor]['id'] == id:
+                                    self._logger.warning(
+                                        'Removing motor %s (%i)' % (motor, id))
+                                    config['motors'].pop(motor)
+                                    for group in config['motorgroups'].keys():
+                                        config['motorgroups'][group] = [
+                                            x for x in config['motorgroups'][
+                                                group] if x != motor]
+                        self._logger.warning('New config created:')
+                        self._logger.warning(pprint.pformat(config))
+                        retries += 1
+                    else:
+                        raise e
+                except RuntimeError as e:
+                    # Workaround for every other init failing
+                    # FIXME Find source for RuntimeError on every other init
+                    if retries == 3:
+                        raise e
+                    retries += 1
+                    time.sleep(1)
+
         if hasattr(self._robot, "r_middlefingers_x") or hasattr(self._robot,
                                                                 "l_middlefingers_x"):
             self._handModel = "RH7D"
@@ -127,7 +147,8 @@ class Motion:
                 remote_api.simxSynchronous(self._vrepIO.client_id, False)
                 self._vrepIO.start_simulation()
         else:
-            logging.warning('startSimulation() has no effect on a real robot')
+            self._logger.warning(
+                'startSimulation() has no effect on a real robot')
 
     def setSimulationDeltatime(self, dt):
         """
@@ -141,7 +162,7 @@ class Motion:
                                          remote_api.sim_floatparam_simulation_time_step,
                                          dt)
         else:
-            logging.warning(
+            self._logger.warning(
                 'nextSimulationStep() has no effect on a real robot')
 
     def nextSimulationStep(self):
@@ -151,7 +172,7 @@ class Motion:
         if self._vrep:
             remote_api.simxSynchronousTrigger(self._vrepIO.client_id)
         else:
-            logging.warning(
+            self._logger.warning(
                 'nextSimulationStep() has no effect on a real robot')
 
     def stopSimulation(self):
@@ -161,7 +182,8 @@ class Motion:
         if self._vrep:
             self._vrepIO.stop_simulation()
         else:
-            logging.warning('stopSimulation() has no effect on a real robot')
+            self._logger.warning(
+                'stopSimulation() has no effect on a real robot')
 
     def resetSimulation(self):
         """
@@ -170,7 +192,8 @@ class Motion:
         if self._vrep:
             self._vrepIO.restart_simulation()
         else:
-            logging.warning('resetSimulation() has no effect on a real robot')
+            self._logger.warning(
+                'resetSimulation() has no effect on a real robot')
 
     def callVREPRemoteApi(self, func_name, *args, **kwargs):
         """ Calls any remote API func in a thread_safe way.
@@ -188,7 +211,7 @@ class Motion:
         if self._vrep:
             return self._vrepIO.call_remote_api(func_name, *args, **kwargs)
         else:
-            logging.warning(
+            self._logger.warning(
                 'callVREPRemoteApi() has no effect on a real robot')
             return None
 
@@ -202,7 +225,7 @@ class Motion:
         if self._vrep:
             return self._vrepIO
         else:
-            logging.warning('A real robot has no VREP controller')
+            self._logger.warning('A real robot has no VREP controller')
             return None
 
     def setHandPose(self, handName, poseName, fractionMaxSpeed=1.0):
@@ -224,7 +247,7 @@ class Motion:
         :type fractionMaxSpeed: float
         """
         if self._vrep:
-            logging.warning(
+            self._logger.warning(
                 "'{}' pose is not supported for vrep".format(poseName))
         else:
             if self._handModel == "RH7D":
@@ -235,7 +258,7 @@ class Motion:
                                                            speed
                                                            )
             else:
-                logging.warning(
+                self._logger.warning(
                     "'{}' pose is not supported for hand model {}".format(
                         poseName, self._handModel))
 
@@ -263,7 +286,7 @@ class Motion:
                                                    percentage)
             else:
                 if (percentage < 1.0):
-                    logging.warning(
+                    self._logger.warning(
                         "Open hand for RH7D doesn't support percentage parameter")
                 self.setHandPose(handName, "openHand", fractionMaxSpeed)
 
@@ -291,7 +314,7 @@ class Motion:
                                                     percentage)
             else:
                 if percentage != 1.0:
-                    logging.warning(
+                    self._logger.warning(
                         "Close hand for RH7D doesn't support percentage parameter")
                 self.setHandPose(handName, "closeHand", fractionMaxSpeed)
 
@@ -330,9 +353,10 @@ class Motion:
                 motor.force_control_enable = True
                 motor.goal_force = goalForce
             else:
-                logging.warning('Joint %s has no force control' % jointName)
+                self._logger.warning(
+                    'Joint %s has no force control' % jointName)
         else:
-            logging.warning('No joint "%s" found' % jointName)
+            self._logger.warning('No joint "%s" found' % jointName)
             return
 
     def disableForceControl(self, jointName):
@@ -347,9 +371,10 @@ class Motion:
             if hasattr(motor, 'force_control_enable'):
                 motor.force_control_enable = False
             else:
-                logging.warning('Joint %s has no force control' % jointName)
+                self._logger.warning(
+                    'Joint %s has no force control' % jointName)
         else:
-            logging.warning('No joint "%s" found' % jointName)
+            self._logger.warning('No joint "%s" found' % jointName)
             return
 
     def toSafePosition(self):
@@ -387,7 +412,7 @@ class Motion:
                                                 self._maximumSpeed)
                 motor.goal_position = angle
         else:
-            logging.warning('No joint "%s" found' % jointName)
+            self._logger.warning('No joint "%s" found' % jointName)
             return
 
     def changeAngle(self, jointName, change, fractionMaxSpeed):
@@ -414,7 +439,7 @@ class Motion:
                                                 self._maximumSpeed)
                 motor.goal_position = change + motor.present_position
         else:
-            logging.warning('No joint "%s" found' % jointName)
+            self._logger.warning('No joint "%s" found' % jointName)
             return
 
     def getAngle(self, jointName):
@@ -430,7 +455,7 @@ class Motion:
             motor = getattr(self._robot, jointName)
             return motor.present_position
         else:
-            logging.warning('No joint "%s" found' % jointName)
+            self._logger.warning('No joint "%s" found' % jointName)
             return 0.0
 
     def getJointNames(self):
@@ -470,7 +495,7 @@ class Motion:
             motor = getattr(self._robot, jointName)
             return motor.upper_limit
         else:
-            logging.warning('No joint "%s" found' % jointName)
+            self._logger.warning('No joint "%s" found' % jointName)
             return 0.0
 
     def setAngleUpperLimit(self, jointName, angle):
@@ -486,7 +511,7 @@ class Motion:
             motor = getattr(self._robot, jointName)
             motor.upper_limit = angle
         else:
-            logging.warning('No joint "%s" found' % jointName)
+            self._logger.warning('No joint "%s" found' % jointName)
 
     def getAngleLowerLimit(self, jointName):
         """
@@ -501,7 +526,7 @@ class Motion:
             motor = getattr(self._robot, jointName)
             return motor.lower_limit
         else:
-            logging.warning('No joint "%s" found' % jointName)
+            self._logger.warning('No joint "%s" found' % jointName)
             return 0.0
 
     def setAngleLowerLimit(self, jointName, angle):
@@ -517,7 +542,7 @@ class Motion:
             motor = getattr(self._robot, jointName)
             motor.lower_limit = angle
         else:
-            logging.warning('No joint "%s" found' % jointName)
+            self._logger.warning('No joint "%s" found' % jointName)
 
     def getTorqueLimit(self, jointName):
         """
@@ -532,7 +557,7 @@ class Motion:
             motor = getattr(self._robot, jointName)
             return motor.torque_limit
         else:
-            logging.warning('No joint "%s" found' % jointName)
+            self._logger.warning('No joint "%s" found' % jointName)
             return 0.0
 
     def getTemperature(self, jointName):
@@ -549,11 +574,11 @@ class Motion:
             if hasattr(motor, 'present_temperature'):
                 return motor.present_temperature
             else:
-                logging.warning(
+                self._logger.warning(
                     'Joint %s has no present temperature' % jointName)
                 return 0.0
         else:
-            logging.warning('No joint "%s" found' % jointName)
+            self._logger.warning('No joint "%s" found' % jointName)
             return 0.0
 
     def getCurrent(self, jointName):
@@ -578,11 +603,11 @@ class Motion:
                 if hasattr(motor, 'present_current'):
                     return motor.present_current
                 else:
-                    logging.warning(
+                    self._logger.warning(
                         'Joint %s has no present current' % jointName)
                     return 0.0
         else:
-            logging.warning('No joint "%s" found' % jointName)
+            self._logger.warning('No joint "%s" found' % jointName)
             return 0.0
 
     def getSpeed(self, jointName):
@@ -599,11 +624,11 @@ class Motion:
             if hasattr(motor, 'present_speed'):
                 return motor.present_speed
             else:
-                logging.warning(
+                self._logger.warning(
                     'Joint %s has no present speed' % jointName)
                 return 0.0
         else:
-            logging.warning('No joint "%s" found' % jointName)
+            self._logger.warning('No joint "%s" found' % jointName)
             return 0.0
 
     def setMaximumSpeed(self, maximumSpeed):
@@ -615,7 +640,7 @@ class Motion:
         :param maximumSpeed: Maximum allowed speed (0 <= maximumSpeed <= 1.0)
         """
         if not 0.0 <= maximumSpeed <= 1.0:
-            logging.warning(
+            self._logger.warning(
                 'New maximum speed out of bounds (%d)' % maximumSpeed)
             return
         self._maximumSpeed = maximumSpeed
@@ -630,7 +655,8 @@ class Motion:
         :type stiffness: float
         """
         if not 0.0 <= stiffness <= 1.0:
-            logging.warning('New stiffness out of bounds (%d)' % maximumSpeed)
+            self._logger.warning(
+                'New stiffness out of bounds (%d)' % maximumSpeed)
             return
 
         if hasattr(self._robot, jointName):
@@ -638,12 +664,13 @@ class Motion:
             if hasattr(motor, 'torque_limit'):
                 motor.torque_limit = 100.0 * stiffness
             else:
-                logging.warning('Joint %s has no torque limit' % jointName)
+                self._logger.warning(
+                    'Joint %s has no torque limit' % jointName)
 
             if (stiffness < 0.001):
                 self.disableTorque(jointName)
         else:
-            logging.warning('No joint "%s" found' % jointName)
+            self._logger.warning('No joint "%s" found' % jointName)
             return
 
     def getStiffness(self, jointName):
@@ -662,10 +689,11 @@ class Motion:
             elif hasattr(motor, 'torque_limit'):
                 return motor.torque_limit / 100.0
             else:
-                logging.warning('Joint %s has no torque limit' % jointName)
+                self._logger.warning(
+                    'Joint %s has no torque limit' % jointName)
                 return 1.0
         else:
-            logging.warning('No joint "%s" found' % jointName)
+            self._logger.warning('No joint "%s" found' % jointName)
             return 0.0
 
     def setPID(self, jointName, p, i, d):
@@ -687,9 +715,9 @@ class Motion:
             if hasattr(motor, 'pid'):
                 motor.pid = (p, i, d)
             else:
-                logging.warning('Joint %s has no pid' % jointName)
+                self._logger.warning('Joint %s has no pid' % jointName)
         else:
-            logging.warning('No joint "%s" found' % jointName)
+            self._logger.warning('No joint "%s" found' % jointName)
             return
 
     def getPID(self, jointName):
@@ -707,10 +735,10 @@ class Motion:
             if hasattr(motor, 'pid'):
                 return motor.pid
             else:
-                logging.warning('Joint %s has no pid' % jointName)
+                self._logger.warning('Joint %s has no pid' % jointName)
                 return (0.0, 0.0, 0.0)
         else:
-            logging.warning('No joint "%s" found' % jointName)
+            self._logger.warning('No joint "%s" found' % jointName)
             return (0.0, 0.0, 0.0)
 
     def enableTorqueAll(self):
@@ -738,7 +766,7 @@ class Motion:
             motor = getattr(self._robot, jointName)
             motor.compliant = False
         else:
-            logging.warning('No joint "%s" found' % jointName)
+            self._logger.warning('No joint "%s" found' % jointName)
 
     def disableTorque(self, jointName):
         """
@@ -751,7 +779,7 @@ class Motion:
             motor = getattr(self._robot, jointName)
             motor.compliant = True
         else:
-            logging.warning('No joint "%s" found' % jointName)
+            self._logger.warning('No joint "%s" found' % jointName)
 
     def getPose(self, objectName, relativeToObject=None):
         """
@@ -771,13 +799,13 @@ class Motion:
         Cleans up the current connection to the robot. After this you can no longer control the robot
         """
         if self._robot is None:
-            logging.warning('Cleanup called - but robot is not initialised')
+            self._logger.warning(
+                'Cleanup called - but robot is not initialised')
             return
 
-        logging.info('Closing robot connection')
+        self._logger.info('Closing robot connection')
         self._robot.close()
         self._robot = None
-        logging.shutdown()
 
     def __del__(self):
         """
