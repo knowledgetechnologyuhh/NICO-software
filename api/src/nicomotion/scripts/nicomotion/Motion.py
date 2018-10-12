@@ -99,8 +99,14 @@ class Motion:
                     # Workaround for every other init failing
                     # FIXME Find source for RuntimeError on every other init
                     if retries == 3:
+                        self._logger.error(
+                            (
+                                "Initialization failed after {} retries"
+                            ).format(retries))
                         raise e
                     retries += 1
+                    self._logger.warning(
+                        "Retrying initialization after an error occured")
                     time.sleep(1)
 
         if hasattr(self._robot, "r_middlefingers_x") or hasattr(self._robot,

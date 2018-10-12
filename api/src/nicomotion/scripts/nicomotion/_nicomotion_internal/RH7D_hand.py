@@ -17,18 +17,18 @@ POSES = {"pointAt": {"indexfinger_x": (-170., 1.),
                      "middlefingers_x": (150., 1.),
                      "thumb_x": (60., 0.12),
                      "thumb_z": (150., 1.)},
-         "openHand": {"indexfinger_x": (-170., 1.),
-                      "middlefingers_x": (-170., 1.),
-                      "thumb_x": (-170., 1.),
-                      "thumb_z": (-170., 1.)},
+         "openHand": {"indexfinger_x": (-150., 1.),
+                      "middlefingers_x": (-150., 1.),
+                      "thumb_x": (-150., 1.),
+                      "thumb_z": (-150., 1.)},
          "closeHand": {"indexfinger_x": (150., .9),
-                       "middlefingers_x": (150., 1.),
+                       "middlefingers_x": (150., .9),
                        "thumb_x": (60., .12),
                        "thumb_z": (150., 1.)},
          "thumbsUp": {"indexfinger_x": (150., 1.),
                       "middlefingers_x": (150., 1.),
-                      "thumb_x": (-170., 1.),
-                      "thumb_z": (-170., 1.)},
+                      "thumb_x": (-150., 1.),
+                      "thumb_z": (-150., 1.)},
          "okSign": {"indexfinger_x": (-25., 1.),
                     "middlefingers_x": (-170., 1.),
                     "thumb_x": (-25., 1.),
@@ -202,7 +202,7 @@ def setAngle(robot, jointname, goal_position, fractionMaxSpeed):
                          robot, jointname, goal_position, fractionMaxSpeed]
                          ).start()
     elif "wrist" in jointname:
-        motor = getattr(robot, jointName)
+        motor = getattr(robot, jointname)
         motor.compliant = False
         motor.goal_speed = 1000.0 * fractionMaxSpeed
         motor.goal_position = goal_position
