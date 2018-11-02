@@ -72,6 +72,7 @@ class ImageRecorder:
     def load_settings(self, file_path, setting="standard"):
         """
         Loads a settings json file and applies the given setting to all cameras
+
         :param file_path: the settings file
         :type file_path: str
         :param setting: name of the setting that should be applied
@@ -82,6 +83,7 @@ class ImageRecorder:
     def camera_value(self, value_name, value):
         """
         Sets zoom value if camera supports it. Requires v4l-utils.
+
         :param value: zoom value between 100 and 800
         :type value: int
         """
@@ -90,6 +92,7 @@ class ImageRecorder:
     def zoom(self, value):
         """
         Sets zoom value if camera supports it. Requires v4l-utils.
+
         :param value: zoom value between 100 and 800
         :type value: int
         """
@@ -98,6 +101,7 @@ class ImageRecorder:
     def enable_write(self, state=True):
         """
         Sets the writing to disk state
+
         :param state: Write enabled
         :type value: bool
         """
@@ -106,6 +110,7 @@ class ImageRecorder:
     def pan(self, value):
         """
         Sets pan (x-axis) value if camera supports it. Requires v4l-utils.
+
         :param value: pan value between -648000 and 648000, step 3600
         :type value: int
         """
@@ -114,6 +119,7 @@ class ImageRecorder:
     def tilt(self, value):
         """
         Sets tilt (y-axis) value if camera supports it. Requires v4l-utils.
+
         :param value: tilt value between -648000 and 648000, step 3600
         :type value: int
         """

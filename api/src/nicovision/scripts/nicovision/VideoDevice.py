@@ -146,10 +146,10 @@ class VideoDevice:
         :param id: device id
         :type id: int
         :param uncompressed: using compressed or uncompressed stream of the
-        camera
+                             camera
         :type uncompressed: boolean
         :param pixel_format: pixel format like 'UYVY' (econ-camera) or 'YUYV'
-        (logitech) or 'MJPG' (both compressed)
+                             (logitech) or 'MJPG' (both compressed)
         """
         self._logger = logging.getLogger(__name__)
         self._deviceId = id
@@ -247,6 +247,7 @@ class VideoDevice:
     def load_settings(self, file_path, setting="standard"):
         """
         Loads a settings json file and applies the given setting to all cameras
+
         :param file_path: the settings file
         :type file_path: str
         :param setting: name of the setting that should be applied
@@ -260,6 +261,7 @@ class VideoDevice:
     def load_callibration(self, file_path):
         """
         Loads a calibration json file and prepares undistortion for all cameras
+
         :param file_path: the calibration file
         :type file_path: str
         """
@@ -292,6 +294,7 @@ class VideoDevice:
     def undistort(self, frame):
         """
         Undistorts the frame with the loaded calibration
+
         :param frame: frame to undistort
         :type frame: cv2 image
         :return: undistorted frame
@@ -309,8 +312,9 @@ class VideoDevice:
         """
         Sets the a camera value over the v4l-utils. Run 'v4l2-ctl -l' for full
         list of controlls and values. Requires v4l-utils.
+
         :param value_name: name of the value to set
-        :type value_name str
+        :type value_name: str
         :param value: value to set
         :type value: int
         """
@@ -326,6 +330,7 @@ class VideoDevice:
     def zoom(self, value):
         """
         Sets zoom value if camera supports it. Requires v4l-utils.
+
         :param value: zoom value between 100 and 800
         :type value: int
         """
@@ -342,6 +347,7 @@ class VideoDevice:
     def pan(self, value):
         """
         Sets pan (x-axis) value if camera supports it. Requires v4l-utils.
+
         :param value: pan value between -648000 and 648000, step 3600
         :type value: int
         """
@@ -359,6 +365,7 @@ class VideoDevice:
     def tilt(self, value):
         """
         Sets tilt (y-axis) value if camera supports it. Requires v4l-utils.
+
         :param value: tilt value between -648000 and 648000, step 3600
         :type value: int
         """

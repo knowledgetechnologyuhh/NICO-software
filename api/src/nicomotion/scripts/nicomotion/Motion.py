@@ -247,7 +247,8 @@ class Motion:
         :param handName: Name of the hand (RHand, LHand)
         :type handName: str
         :param poseName: Name of the pose ("thumbsUp", "pointAt", "okSign",
-        "pinchToIndex", "keyGrip", "pencilGrip", "closeHand", "openHand")
+                         "pinchToIndex", "keyGrip", "pencilGrip", "closeHand",
+                         "openHand")
         :type poseName: str
         :param fractionMaxSpeed: Speed at which hand move. Default: 1.0
         :type fractionMaxSpeed: float
