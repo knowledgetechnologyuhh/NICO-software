@@ -17,7 +17,9 @@ class NicoRosFaceExpression:
         :type devicename: str
         """
         # init face
-        self.face = faceExpression(devicename)
+	#Erik: Adapted to automatic device detection
+        #self.face = faceExpression(devicename)
+	self.face = faceExpression()
 
         # init ROS
         rospy.init_node('faceexpression', anonymous=True)
@@ -66,12 +68,14 @@ class NicoRosFaceExpression:
         self.face.sendFaceExpression(message.param1)
 
 if __name__ == '__main__':
-    import argparse
+    #import argparse
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--device', nargs='?', default='/dev/ttyACM0',
-    help="serial device the sensor is connected with (e.g. /dev/ttyACM0)")
+    #parser = argparse.ArgumentParser()
+    #parser.add_argument('--device', nargs='?', default='/dev/ttyACM0',
+    #help="serial device the sensor is connected with (e.g. /dev/ttyACM0)")
+    #parser.add_argument('--device', nargs='?', default='auto_detection_of_device',
+    #help="serial device the sensor is connected with (e.g. /dev/ttyACM0)")	
 
-    args = parser.parse_args()
+    #args = parser.parse_args()
 
     NicoRosFaceExpression()
