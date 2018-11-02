@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 from nicomotion.Motion import Motion
-from nicomoveit import moveitWrapper
+
+## ERIK: removed moveit, cause import error
+#from nicomoveit import moveitWrapper
 import logging
 import argparse
 import sys
@@ -419,7 +421,8 @@ class NicoRosMotion():
                 else:
                     value = self.robot.getAngle(joint)
                 message.name += [joint]
-                value = moveitWrapper.nicoToRosAngle(joint, value, self.jsonConfig, self.vrep)
+		#ERIK : Taken out, cause of moveit problems                
+		#value = moveitWrapper.nicoToRosAngle(joint, value, self.jsonConfig, self.vrep)
                 rospy.loginfo(joint+' '+str(value))
                 message.position += [value]
                 #message.effort += [self.robot.getLoad(joint)]
