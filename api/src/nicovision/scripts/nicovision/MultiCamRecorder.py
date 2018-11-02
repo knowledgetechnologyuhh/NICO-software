@@ -122,6 +122,7 @@ class MultiCamRecorder(object):
     def undistort(self, frame, id):
         """
         Undistorts the frame with the loaded calibration
+
         :param frame: frame to undistort
         :type frame: cv2 image
         :param id: camera id
@@ -140,6 +141,7 @@ class MultiCamRecorder(object):
     def load_callibration(self, file_path, undistortion_mode="mono"):
         """
         Loads a calibration json file and prepares undistortion for all cameras
+
         :param file_path: the calibration file
         :type file_path: str
         :param undistortion_mode: mono or stereo undistortion
@@ -195,6 +197,7 @@ class MultiCamRecorder(object):
     def load_settings(self, file_path, setting="standard"):
         """
         Loads a settings json file and applies the given setting to all cameras
+
         :param file_path: the settings file
         :type file_path: str
         :param setting: name of the setting that should be applied
@@ -209,8 +212,9 @@ class MultiCamRecorder(object):
         """
         Sets the a camera value over the v4l-utils. Run 'v4l2-ctl -l' for full
         list of controlls and values. Requires v4l-utils.
+
         :param value_name: name of the value to set
-        :type value_name str
+        :type value_name: str
         :param value: value to set
         :type value: int
         """
@@ -227,6 +231,7 @@ class MultiCamRecorder(object):
     def zoom(self, value):
         """
         Sets zoom value of all cameras that support it. Requires v4l-utils.
+
         :param value: zoom value between 100 and 800
         :type value: int
         :return: success
@@ -247,6 +252,7 @@ class MultiCamRecorder(object):
         """
         Sets pan (x-axis) value of all cameras that support it. Requires
         v4l-utils.
+
         :param value: pan value between -648000 and 648000, step 3600
         :type value: int
         :return: success
@@ -269,6 +275,7 @@ class MultiCamRecorder(object):
         """
         Sets tilt (y-axis) value of all cameras that support it. Requires
         v4l-utils.
+
         :param value: tilt value between -648000 and 648000, step 3600
         :type value: int
         :return: success
@@ -336,6 +343,7 @@ class MultiCamRecorder(object):
     def start_recording(self, path="camera{}/picture-{}.png"):
         """
         Starts continuous image recording.
+
         :param path: path of the image. First {} is replaced with camera id,
                      the second one with a timestamp.
         :type path: str
@@ -369,6 +377,7 @@ class MultiCamRecorder(object):
     def enable_write(self, state=True):
         """
         Sets the writing to disk state
+
         :param state: Write enabled
         :type value: bool
         """
@@ -417,6 +426,7 @@ class MultiCamRecorder(object):
         Takes a single image with each camera. For performance reasons this
         does not close the camera. Please call stop_recording() once if you
         don't take any more images or want to delete the object.
+
         :param path: path of the image. First {} is replaced with camera id,
                      the second one with a timestamp.
         :type path: str

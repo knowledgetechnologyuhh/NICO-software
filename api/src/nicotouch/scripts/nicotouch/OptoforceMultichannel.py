@@ -160,8 +160,10 @@ class OptoforceMultichannel(object):
     def get_sensor_values_raw(self):
         """
         Returns latest raw sensor readings for each channel
+
         :return: "time", "count", "status" and raw x,y,z "forces" for each
-        channel (see global OptoforceMultichannel.keys for channel keys)
+                 channel (see global OptoforceMultichannel.keys for channel
+                 keys)
         :rtype: dict
         """
         ret = {}
@@ -180,8 +182,10 @@ class OptoforceMultichannel(object):
     def get_sensor_values(self):
         """
         Returns latest newton sensor readings for each channel
+
         :return: "time", "count", "status" and newton x,y,z "forces" for each
-        channel (see global OptoforceMultichannel.keys for channel keys)
+                 channel (see global OptoforceMultichannel.keys for channel
+                 keys)
         :rtype: dict
         """
         raw = self.get_sensor_values_raw()

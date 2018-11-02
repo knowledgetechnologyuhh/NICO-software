@@ -7,7 +7,7 @@ To start the interface run:
 
 .. code-block:: bash
 
-   rosrun nicoros Optoforce.py --serial='DSE0A125' --device='/dev/ttyACM0'
+   rosrun nicoros Optoforce.py --serial='DSE0A125'
 
 Exposed topics
 ==============

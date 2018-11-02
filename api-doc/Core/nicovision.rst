@@ -26,6 +26,17 @@ The ImageRecorder class enables the capturing of single images from a camera.
     :show-inheritance:
     :private-members:
 
+MultiCamRecorder
+#############
+
+The MultiCamRecorder class enables synchronized capturing of single images from multiple cameras at once.
+
+.. automodule:: nicovision.MultiCamRecorder
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :private-members:
+
 Helper classes
 ##############
 
