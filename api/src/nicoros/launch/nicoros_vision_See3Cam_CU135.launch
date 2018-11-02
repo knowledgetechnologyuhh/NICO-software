@@ -13,7 +13,7 @@
   <arg name="tilt" default="0"/>
   -->
   <!-- File path relative to NICO-software directory-->
-  <arg name="settings-file" default="json/nico_vision_See3Cam_CU135_settings.json"/>
+  <arg name="settings-file" default="json/nico_vision_See3CAM_CU135_settings.json"/>
   <arg name="setting" default="standard"/>
   <arg name="rostopic-prefix" default="/nico/vision"/>
   <arg name="rostopic-left" default="/left"/>
