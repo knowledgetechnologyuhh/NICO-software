@@ -23,11 +23,14 @@ NICO_EYES = {
     'left':
         ("usb-046d_080a_2DE7B460-video-index0",
          "usb-046d_080a_6C686AA1-video-index0",
-         "usb-e-con_systems_See3CAM_CU135_09229807-video-index0"),
+         "usb-e-con_systems_See3CAM_CU135_09229807-video-index0",
+         'usb-e-con_systems_See3CAM_CU135_2B08CD07-video-index0'
+         ),
     'right':
         ('usb-046d_080a_17E79161-video-index0',
          'usb-046d_080a_78918AA0-video-index0',
-         "usb-e-con_systems_See3CAM_CU135_36249807-video-index0")
+         "usb-e-con_systems_See3CAM_CU135_36249807-video-index0",
+         'usb-e-con_systems_See3CAM_CU135_2606CD07-video-index0')
 }
 
 

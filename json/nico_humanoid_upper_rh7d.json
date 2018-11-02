@@ -1,7 +1,7 @@
 {
   "controllers": {
     "all_controller": {
-      "sync_read": true,
+      "sync_read": false,
       "attached_motors": [
         "head",
         "arms",
@@ -75,8 +75,7 @@
       "angle_limit": [-89,
         79
       ],
-      "orientation": "direct",
-      "broken": true
+      "orientation": "direct"
     },
     "r_shoulder_y": {
       "offset": 0.0,
