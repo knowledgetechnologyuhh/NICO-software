@@ -7,6 +7,7 @@ import subprocess
 import sys
 import threading
 import time
+from operator import itemgetter
 
 import cv2
 
@@ -147,7 +148,9 @@ class MultiCamRecorder(object):
         :param undistortion_mode: mono or stereo undistortion
         :type undistortion_mode: str
         """
-        if mode == "stereo" and len(self._deviceIds != 2):
+        import numpy as np
+
+        if undistortion_mode == "stereo" and len(self._deviceIds) != 2:
             self._logger.error(("Stereo undistortion requires exactly 2 " +
                                 "devices {} devices initialized"
                                 ).format(len(self._deviceIds)))
@@ -178,12 +181,17 @@ class MultiCamRecorder(object):
                                                         "P_left", "P_right",
                                                         "Q")(calibration[
                                                             str(devicenames)][
-                                                            str(DIM)]))
+                                                            str(dim)]))
                 self._rectify_maps[0] = cv2.fisheye.initUndistortRectifyMap(
                     K_left, D_left, R_left, P_left, dim, cv2.CV_16SC2)
                 self._rectify_maps[1] = cv2.fisheye.initUndistortRectifyMap(
                     K_right, D_right, R_right, P_right, dim, cv2.CV_16SC2)
-
+            else:
+                self._logger.error(("No stereo calibration for devices {} " +
+                                    "with dimensions {} found - images will " +
+                                    "not be undistorted"
+                                    ).format(" and ".join(devicenames),
+                                             "x".join(map(str, dim))))
         else:
             for i in range(len(devicenames)):
                 if (str(devicenames[i]) in calibration and
@@ -193,6 +201,13 @@ class MultiCamRecorder(object):
                     self._rectify_maps[i] = \
                         cv2.fisheye.initUndistortRectifyMap(
                         K, D, np.eye(3), K, dim, cv2.CV_16SC2)
+                else:
+                    self._logger.error(("No calibration for device {} with " +
+                                        "dimensions {} found - images will " +
+                                        "not be undistorted"
+                                        ).format(devicenames[i],
+                                                 "x".join(map(str, dim)))
+                                       )
 
     def load_settings(self, file_path, setting="standard"):
         """
