@@ -22,33 +22,76 @@ def takespread(sequence, num):
 
 
 class CameraCalibrator():
-    """docstring for CameraCalibrator."""
+    """CameraCalibrator allows to calibrate the cameras with a chessboard
+    pattern"""
 
-    def __init__(self, devices=[], width=640, height=480, framerate=20,
+    def __init__(self, devices=[], cam_width=640, cam_height=480,
+                 window_width_per_cam=640, window_height=480, framerate=20,
                  zoom=None, pan=None, tilt=None, settings_file=None,
                  setting="standard", pixel_format="MJPG"):
-        self._dim = width, height
-        self._recorder = MultiCamRecorder.MultiCamRecorder(devices, width,
-                                                           height, framerate,
+        """
+        Initialises the CameraCalibrator with given devices.
+
+        The devices must be contained in :meth:`get_devices`
+
+        :param devices: Device names (autodetected if empty list)
+        :type device: list(str)
+        :param cam_width: Width of camera image(s)
+        :type cam_width: float
+        :param cam_height: Height of camera image(s)
+        :type cam_height: float
+        :param window_width_per_cam: Adjusted width of the displayed image(s)
+        :type window_width_per_cam: float
+        :param window_height: Adjusted height of the displayed image(s)
+        :type window_height: float
+        :param framerate: number of frames per second
+        :type framerate: int
+        :param value: zoom value between 100 and 800 (overwrites settings)
+        :type value: int
+        :param value: pan value between -648000 and 648000, step 3600
+        (overwrites settings)
+        :type value: int
+        :param value: tilt value between -648000 and 648000, step 3600
+        (overwrites settings)
+        :type value: int
+        :param setttings_file: the settings file
+        :type settings_file: str
+        :param setting: name of the setting that should be applied
+        :type setting: str
+        :param writer_threads: Number of worker threads for image writer
+        :type writer_threads: int
+        :param pixel_format: fourcc codec
+        :type pixel_format: string
+        """
+        self._dim = cam_width, cam_height
+        self._recorder = MultiCamRecorder.MultiCamRecorder(devices, cam_width,
+                                                           cam_height,
+                                                           framerate,
                                                            zoom, pan, tilt,
                                                            settings_file,
                                                            setting, 0,
                                                            pixel_format)
         self._deviceIds = self._recorder._deviceIds
         self._current_frames = [
-            np.zeros((height, width, 3), np.uint8)] * len(self._deviceIds)
+            np.zeros((cam_height, cam_width, 3),
+                     np.uint8)] * len(self._deviceIds)
         self._stop_event = threading.Event()
         self._display = threading.Thread(
-            target=self._display_thread, args=(self._stop_event,))
+            target=self._display_thread, args=(self._stop_event,
+                                               window_width_per_cam,
+                                               window_height))
         self._display.daemon = True
         self._display.start()
 
     def __del__(self):
         cv2.destroyAllWindows()
 
-    def _display_thread(self, stop_event):
+    def _display_thread(self, stop_event, window_width_per_cam, window_height):
         while not stop_event.is_set():
-            cv2.imshow("cameras", cv2.hconcat(self._current_frames))
+            resized_frames = [cv2.resize(
+                frame, (window_width_per_cam, window_height))
+                for frame in self._current_frames]
+            cv2.imshow("cameras", cv2.hconcat(resized_frames))
             cv2.waitKey(1)
 
     def _callback(self, rval, frame, id):
@@ -202,7 +245,30 @@ class CameraCalibrator():
                                cv2.fisheye.CALIB_CHECK_COND +
                                cv2.fisheye.CALIB_FIX_SKEW)):
         """
+        Records images for given duration to calibrate cameras.
+
+        Calibration related code was partially taken from:
         https://medium.com/@kennethjiang/calibrate-fisheye-lens-using-opencv-333b05afa0b0
+
+        :param chessboard: Dimensions of the chessboard pattern (inner corners)
+        :type chessboard: tuple(int)
+        :param duration: Duration of the recording
+        :type duration: int
+        :param number_of_samples: Subset of images used for calibration
+                                  (to reduce computing time)
+        :type number_of_samples: int
+        :param stereo: Whether cameras should be calibrated individually or as
+                       stereo cameras
+        :type overwrite: bool
+        :param calibration_file: json file path to save calibration parameters
+        :type calibration_file: str
+        :param overwrite: Whether preexisting parameters in the file should be
+                          overwritten
+        :type overwrite: bool
+        :param term_criteria: cv2 term_criteria for calibration
+        :type term_criteria: list
+        :param calibration_flags: cv2 calibration_flags
+        :type calibration_flags: list
         """
 
         self._chessboard = chessboard
@@ -289,9 +355,10 @@ class CameraCalibrator():
 
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.INFO)
-    calibrator = CameraCalibrator(width=640, height=480, framerate=10)
+    calibrator = CameraCalibrator(
+        cam_width=1920, cam_height=1080, framerate=10)
     # to reduce complexity of calibration, 100 (number_of_samples) evenly
     # distributed samples will be taken from the total amount of recorded
     # frames
     calibrator.start_calibration(
-        stereo=False, duration=60, number_of_samples=100)
+        stereo=True, duration=120, number_of_samples=100)
