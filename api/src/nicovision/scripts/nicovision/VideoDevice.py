@@ -280,16 +280,20 @@ class VideoDevice:
         devicename = devicenames[self._deviceId]
         dim = self._width, self._height
 
-        if (devicename in calibration and str(dim) in calibration[devicename]):
+        if (devicename in calibration and str(dim) in calibration[devicename]
+                and str(self.get_zoom()) not in calibration[devicename]
+                [str(dim)]):
             K, D = map(lambda a: np.array(a), itemgetter(
-                "K", "D")(calibration[devicename][str(dim)]))
+                "K", "D")(calibration[devicename][str(dim)][
+                    str(self.get_zoom())]))
             self._rectify_map = cv2.fisheye.initUndistortRectifyMap(
                 K, D, np.eye(3), K, dim, cv2.CV_16SC2)
         else:
             self._logger.error((
                                "There is no calibration for {} with "
-                               + "dimensions {} in {}"
-                               ).format(devicename, dim, file_path))
+                               + "dimensions {} and zoom {} in {}"
+                               ).format(devicename, dim, self.get_zoom(),
+                                        file_path))
 
     def undistort(self, frame):
         """
@@ -343,6 +347,18 @@ class VideoDevice:
         else:
             self._logger.warning(
                 "Zoom value has to be an integer between 100 and 800")
+
+    def get_zoom(self):
+        """
+        Returns zoom value if camera supports it. Requires v4l-utils.
+
+        :return: value of zoom_absolute
+        :rtype: int
+        """
+        call_str = 'v4l2-ctl -d {} -C zoom_absolute'.format(
+            self._deviceId, value)
+        output = subprocess.check_output([call_str], shell=True)
+        return int(output.split()[1])
 
     def pan(self, value):
         """
