@@ -67,7 +67,7 @@ if [ "" == "$MOVEIT_indigo" ] && [ "" == "$MOVEIT_kinetic" ]; then
   echo "MoveIt! is not installed"
 else
   if [ -f $WORKDIR/src/nicomoveit/kinematics/package_.xml ]; then
-    mv $WORKDIR/src/nicomoveit/kinematics/package_.xml $WORKDIR/src/nicomoveit/kinematics/package.xml
+    cp $WORKDIR/src/nicomoveit/kinematics/package_.xml $WORKDIR/src/nicomoveit/kinematics/package.xml
   fi
   echo "MoveIt! is installed"
   echo "To use MoveIt! with visualization run: roslaunch nicoros nicoros_moveit_visual.launch"
