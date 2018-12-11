@@ -171,7 +171,9 @@ class MultiCamRecorder(object):
         dim = self._width, self._height
         if undistortion_mode == "stereo":
             if (str(devicenames) in calibration and
-                    str(dim) in calibration[str(devicenames)]):
+                    str(dim) in calibration[str(devicenames)] and
+                    str(self.get_zoom()) in calibration[str(devicenames)][
+                    str(dim)]):
                 K_left, D_left, K_right, D_right, R, T, R_left, R_right, \
                     P_left, P_right, Q = map(lambda a: np.array(a),
                                              itemgetter("K_left", "D_left",
@@ -181,32 +183,43 @@ class MultiCamRecorder(object):
                                                         "P_left", "P_right",
                                                         "Q")(calibration[
                                                             str(devicenames)][
-                                                            str(dim)]))
+                                                            str(dim)][
+                                                            str(self.get_zoom()
+                                                                )]))
+                K_new_left = cv2.fisheye.estimateNewCameraMatrixForUndistortRectify(
+                    K_left, D_left, dim, R_left, P_left, balance=0.)
+                K_new_right = cv2.fisheye.estimateNewCameraMatrixForUndistortRectify(
+                    K_right, D_right, dim, R_right, P_right, balance=0.)
                 self._rectify_maps[0] = cv2.fisheye.initUndistortRectifyMap(
-                    K_left, D_left, R_left, P_left, dim, cv2.CV_16SC2)
+                    K_left, D_left, R_left, K_new_left, dim, cv2.CV_16SC2)
                 self._rectify_maps[1] = cv2.fisheye.initUndistortRectifyMap(
-                    K_right, D_right, R_right, P_right, dim, cv2.CV_16SC2)
+                    K_right, D_right, R_right, K_new_right, dim, cv2.CV_16SC2)
             else:
                 self._logger.error(("No stereo calibration for devices {} " +
-                                    "with dimensions {} found - images will " +
-                                    "not be undistorted"
+                                    "with dimensions {} and zoom {} found - " +
+                                    "images will not be undistorted"
                                     ).format(" and ".join(devicenames),
-                                             "x".join(map(str, dim))))
+                                             "x".join(map(str, dim)),
+                                             str(self.get_zoom())))
         else:
             for i in range(len(devicenames)):
                 if (str(devicenames[i]) in calibration and
-                        str(dim) in calibration[str(devicenames[i])]):
+                        str(dim) in calibration[str(devicenames[i])] and
+                        str(self.get_zoom()[i]) in calibration[
+                        str(devicenames[i])][str(dim)]):
                     K, D = map(lambda a: np.array(a), itemgetter(
-                        "K", "D")(calibration[devicenames[i]][str(dim)]))
+                        "K", "D")(calibration[devicenames[i]][str(dim)][
+                            str(self.get_zoom[i])]))
                     self._rectify_maps[i] = \
                         cv2.fisheye.initUndistortRectifyMap(
                         K, D, np.eye(3), K, dim, cv2.CV_16SC2)
                 else:
                     self._logger.error(("No calibration for device {} with " +
-                                        "dimensions {} found - images will " +
-                                        "not be undistorted"
+                                        "dimensions {} and zoom {} found - " +
+                                        "images will not be undistorted"
                                         ).format(devicenames[i],
-                                                 "x".join(map(str, dim)))
+                                                 "x".join(map(str, dim)),
+                                                 self.get_zoom()[i])
                                        )
 
     def load_settings(self, file_path, setting="standard"):
@@ -262,6 +275,18 @@ class MultiCamRecorder(object):
             self._logger.warning(
                 "Zoom value has to be an integer between 100 and 800")
             return False
+
+    def get_zoom(self):
+        """
+        Returns zoom value of all cameras that support it. Requires v4l-utils.
+
+        :return: value of zoom_absolute
+        :rtype: int
+        """
+        call_str = 'v4l2-ctl -d {} -C zoom_absolute'
+        outputs = [subprocess.check_output([call_str.format(id)], shell=True)
+                   for id in self._deviceIds]
+        return [int(out.split()[1]) for out in outputs]
 
     def pan(self, value):
         """

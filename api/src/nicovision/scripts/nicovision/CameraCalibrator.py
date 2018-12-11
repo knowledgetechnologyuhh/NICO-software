@@ -63,6 +63,8 @@ class CameraCalibrator():
         :param pixel_format: fourcc codec
         :type pixel_format: string
         """
+        self._logger = logging.getLogger(__name__)
+
         self._dim = cam_width, cam_height
         self._recorder = MultiCamRecorder.MultiCamRecorder(devices, cam_width,
                                                            cam_height,
@@ -93,6 +95,7 @@ class CameraCalibrator():
                 for frame in self._current_frames]
             cv2.imshow("cameras", cv2.hconcat(resized_frames))
             cv2.waitKey(1)
+        cv2.destroyWindow("cameras")
 
     def _callback(self, rval, frame, id):
         if (rval):
@@ -129,11 +132,11 @@ class CameraCalibrator():
         :type id: int
         """
         if self._imgpoints[id] is None or not self._imgpoints[id]:
-            logging.warning("Unable to calibrate device " +
-                            self._deviceIds[id] + " - no imagepoints recorded")
+            self._logger.warning("Unable to calibrate device " +
+                                 self._deviceIds[id] + " - no imagepoints recorded")
             return None
 
-        logging.info("Calibrating device {}".format(self._deviceIds[id]))
+        self._logger.info("Calibrating device {}".format(self._deviceIds[id]))
 
         # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
         objp = np.zeros(
@@ -170,14 +173,14 @@ class CameraCalibrator():
         stereo cameras
         """
         if len(self._imgpoints) != 2:
-            logging.error("Stereo calibration requires exactly 2 devices")
+            self._logger.error("Stereo calibration requires exactly 2 devices")
             return None
         if None in self._imgpoints or [] in self._imgpoints:
-            logging.warning("Unable to calibrate stereo device " +
-                            "- no imagepoints recorded")
+            self._logger.warning("Unable to calibrate stereo device " +
+                                 "- no imagepoints recorded")
             return None
 
-        logging.info("Calibrating stereo camera")
+        self._logger.info("Calibrating stereo camera")
         N_OK = len(self._imgpoints[0])
         K_left = np.zeros((3, 3))
         D_left = np.zeros((4, 1))
@@ -219,12 +222,13 @@ class CameraCalibrator():
                 R,
                 T,
                 self._calibration_flags,
-                (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 1e-6)
+                (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 12, 0)
+                # 30, 1e-6)
             )
-
         R_left, R_right, P_left, P_right, Q = cv2.fisheye.stereoRectify(
             K_left, D_left, K_right, D_right, self._dim, R, T,
-            cv2.CALIB_ZERO_DISPARITY)
+            cv2.CALIB_ZERO_DISPARITY
+        )
 
         return dict((("K_left", K_left), ("D_left", D_left),
                      ("K_right", K_right), ("D_right", D_right),
@@ -249,6 +253,8 @@ class CameraCalibrator():
 
         Calibration related code was partially taken from:
         https://medium.com/@kennethjiang/calibrate-fisheye-lens-using-opencv-333b05afa0b0
+        and
+        https://github.com/sourishg/fisheye-stereo-calibration/blob/master/calibrate.cpp (stereo term_criteria and fov_scale)
 
         :param chessboard: Dimensions of the chessboard pattern (inner corners)
         :type chessboard: tuple(int)
@@ -270,7 +276,6 @@ class CameraCalibrator():
         :param calibration_flags: cv2 calibration_flags
         :type calibration_flags: list
         """
-
         self._chessboard = chessboard
         self._criteria = term_criteria
         self._calibration_flags = calibration_flags
@@ -280,6 +285,7 @@ class CameraCalibrator():
         self._chess_detection_barrier = Barrier.Barrier(len(self._deviceIds))
         devicenames = MultiCamRecorder.get_devices()
         devicenames = map(lambda i: devicenames[i], self._deviceIds)
+        zoom = self._device.get_zoom()
         # load preexisting calibrations from file
         if isfile(calibration_file):
             with open(calibration_file, 'r') as existing_file:
@@ -287,38 +293,47 @@ class CameraCalibrator():
                 if (stereo and str(devicenames) not in existing_calibration[
                         "stereo"]):
                     existing_calibration["stereo"][str(devicenames)] = {}
+                elif (stereo and str(self._dim) in
+                      existing_calibration["stereo"][str(devicenames)]):
+                    existing_calibration["stereo"][str(
+                        devicenames)][str(self._dim)] = {}
                 elif not stereo:
                     for name in devicenames:
                         if name not in existing_calibration["mono"]:
                             existing_calibration["mono"][name] = {}
+                        else if str(self._dim) not in existing_calibration[
+                                "mono"][name]:
+                            existing_calibration["mono"][name][
+                                str(self._dim)] = {}
         else:
-            existing_calibration = {"stereo": {str(devicenames): {}},
-                                    "mono": dict(zip(devicenames,
-                                                     [{}] * len(devicenames)))}
+            existing_calibration = {
+                "stereo": {str(devicenames): {str(self._dim): {}}},
+                "mono": dict(zip(devicenames, [{str(self._dim): {}}
+                                               for _ in devicenames]))}
         # abort if calibration for device and dim already exists and overwrite
         # not enabled
         if not overwrite:
-            if (stereo and str(self._dim) in existing_calibration["stereo"]
-                    [str(devicenames)]):
-                logging.warning(("Calibration aborted - Overwrite not " +
-                                 "enabled and setting for devices {} and " +
-                                 "dimension {} already exists in {}"
-                                 ).format(devicenames, self._dim,
-                                          calibration_file))
+            if (stereo and str(zoom) in existing_calibration["stereo"]
+                    [str(devicenames)][str(self._dim)]):
+                self._logger.warning(("Calibration aborted - Overwrite not " +
+                                      "enabled and setting for devices {} and " +
+                                      "dimension {} already exists in {}"
+                                      ).format(devicenames, self._dim,
+                                               calibration_file))
                 return
             elif not stereo:
                 for i in range(len(self._deviceIds)):
-                    if (str(self._dim) in existing_calibration["mono"]
-                            [str(devicenames[i])]):
-                        logging.warning(("Calibration aborted - Overwrite " +
-                                         "not enabled and setting for " +
-                                         "device {} and dimension {} " +
-                                         "already exists in {}"
-                                         ).format(devicenames[i], self._dim,
-                                                  calibration_file))
+                    if (str(zoom[i]) in existing_calibration["mono"]
+                            [str(devicenames[i])][str(self._dim)]):
+                        self._logger.warning(("Calibration aborted - Overwrite " +
+                                              "not enabled and setting for " +
+                                              "device {} and dimension {} " +
+                                              "already exists in {}"
+                                              ).format(devicenames[i], self._dim,
+                                                       calibration_file))
                         return
         # start recording
-        logging.info("Start recording images for calibration")
+        self._logger.info("Start recording images for calibration")
         self._recorder.add_callback(self._callback)
         self._recorder._open = True
         time.sleep(duration)
@@ -327,8 +342,7 @@ class CameraCalibrator():
         self._stop_event.set()
         self._display.join()
         time.sleep(1)
-        cv2.destroyAllWindows()
-        logging.info("Recording finished - preparing for calibration")
+        self._logger.info("Recording finished - preparing for calibration")
         # reduce recorded image points to number of samples
         new_length = min(number_of_samples, len(
             self._imgpoints[0]), len(self._imgpoints[1]))
@@ -339,26 +353,29 @@ class CameraCalibrator():
             calib_params = self._calibrate_stereo()
             if calib_params:
                 existing_calibration["stereo"][str(devicenames)][str(
-                    self._dim)] = calib_params
+                    self._dim)][str(zoom)] = calib_params
         else:
             for i in range(len(self._deviceIds)):
                 calib_params = self._calibrate_mono(i)
                 if calib_params:
                     existing_calibration["mono"][devicenames[i]][str(
-                        self._dim)] = calib_params
+                        self._dim)][str(zoom[i])] = calib_params
         # save results
-        logging.info("Calibration finished - saving results")
-        logging.debug("Saving calibration {}".format(existing_calibration))
+        self._logger.info("Calibration finished - saving results")
+        self._logger.debug(
+            "Saving calibration {}".format(existing_calibration))
         with open(calibration_file, 'w') as outfile:
             json.dump(existing_calibration, outfile, cls=NumpyEncoder)
 
 
 if __name__ == '__main__':
-    logging.getLogger().setLevel(logging.INFO)
+    logging.basicConfig(level=logging.INFO)
     calibrator = CameraCalibrator(
-        cam_width=1920, cam_height=1080, framerate=10)
+        cam_width=1920, cam_height=1080, framerate=10,
+        window_width_per_cam=768, window_height=432, zoom=200)
     # to reduce complexity of calibration, 100 (number_of_samples) evenly
     # distributed samples will be taken from the total amount of recorded
     # frames
     calibrator.start_calibration(
-        stereo=True, duration=120, number_of_samples=100)
+        chessboard=(6, 7),
+        stereo=True, duration=90, number_of_samples=90, overwrite=True,)
