@@ -459,7 +459,7 @@ class NicoRosMotion():
                     joint, value, self.jsonConfig, self.vrep)
                 rospy.loginfo(joint + ' ' + str(value))
                 message.position += [value]
-                message.effort += [self.robot.getLoad(joint)]
+                # message.effort += [self.robot.getLoad(joint)]
 
             # to avoid a warning about missing joint values a joint value of 0.0 is published for the joints with unknown joint value
             joints_without_motor = ['l_indexfinger_1st_x', 'l_indexfinger_2nd_x', 'l_ringfingers_x', 'l_ringfinger_1st_x', 'l_ringfinger_2nd_x', 'l_thumb_1st_x',
