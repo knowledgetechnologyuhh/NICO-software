@@ -137,6 +137,7 @@ elif expression == 'fear':
         #     robot.setAngle(arm + "_arm_x", prefix * 15., .03)
         #     robot.setHandPose(arm.upper() + "Hand", "pointAt")
 
-time.sleep(8.)
+time.sleep(6.)
 face.sendFaceExpression("neutral")
 initial_position(robot)
+time.sleep(2.)

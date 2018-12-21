@@ -121,18 +121,19 @@ class OptoforceDriver(object):
         @param starting_index initial value for the topic's suffix; if not set,
             will default to 0, meaning the topic name will be "/optoforce_0"
 
-        @raise serial.SerialException in case the device can not be found or can
-            not be configured
+        @raise serial.SerialException in case the device can not be found or
+        cannot be configured
         """
         self._logger = logging.getLogger(__name__)
         self._logger.addHandler(logging.NullHandler())
 
         self._serial = serial.Serial(port, 1000000, timeout=None)
-        self._sensor_type = self._get_from_dict(self._daq_type_map, sensor_type,
-                                                "sensor type")
+        self._sensor_type = self._get_from_dict(self._daq_type_map,
+                                                sensor_type, "sensor type")
         self._starting_index = starting_index
 
-        # Set the values for _nb_sensors and _nb_axis based on the sensor at use
+        # Set the values for _nb_sensors and _nb_axis based on the sensor at
+        # use
         if self._sensor_type == self._OPTOFORCE_TYPE_31:
             self._nb_sensors = 1
             self._nb_axis = 3
@@ -147,13 +148,17 @@ class OptoforceDriver(object):
         self._scale = scale
 
         if len(self._scale) != self._nb_sensors:
-            raise ValueError("Number of sensors [%i] and scaling factor vectors "
-                             "[%i] given doesn't match." % (self._nb_sensors, len(self._scale)))
+            raise ValueError(
+                "Number of sensors [%i] and scaling factor vectors "
+                "[%i] given doesn't match." % (self._nb_sensors,
+                                               len(self._scale)))
 
         for x in range(self._nb_sensors):
             if len(self._scale[x]) != self._nb_axis:
-                raise ValueError("Number of axis [%i] and scaling factors "
-                                 "[%i] given doesn't match." % (self._nb_axis, len(self._scale[x])))
+                raise ValueError(
+                    "Number of axis [%i] and scaling factors "
+                    "[%i] given doesn't match." % (self._nb_axis,
+                                                   len(self._scale[x])))
 
     def flush(self):
         self._serial.flushInput()
@@ -177,7 +182,7 @@ class OptoforceDriver(object):
         speed = self._get_from_dict(
             self._speed_values, speed, "speed (frequency)")
         filter = self._get_from_dict(self._filter_values, filter, "filter")
-        zero = self._zeroing_values[zero == True]
+        zero = self._zeroing_values[zero is True]
 
         config_length = 9
 
@@ -259,7 +264,8 @@ class OptoforceDriver(object):
     def _decode(self, frame):
         """
         Decodes a sensor frame
-        It assumes that we get an entire frame and nothing else from serial.read.
+        It assumes that we get an entire frame and nothing else from
+        serial.read.
 
         @param frame - byte frame from the sensor
         """

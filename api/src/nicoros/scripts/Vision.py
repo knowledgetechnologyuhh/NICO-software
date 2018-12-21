@@ -52,15 +52,16 @@ class NicoRosVision():
         :param config: Configuration dict
         :type config: dict
         """
+        self._logger = logging.getLogger(__name__)
         self._device = None
         self._stream_running = False
         self._config = config
         if config is None:
             self._config = NicoRosVision.getConfig()
         self._bridge = cv_bridge.CvBridge()
-        logging.info('-- Init NicoRosVision --')
+        self._logger.info('-- Init NicoRosVision --')
         rospy.init_node('nicorosvision', anonymous=True)
-        logging.debug('Init ROS publishers')
+        self._logger.debug('Init ROS publishers')
         self._publishers = []
         if self._config['mode'] in ("stereo", "left"):
             self._publishers.append(rospy.Publisher(
@@ -73,7 +74,7 @@ class NicoRosVision():
                 self._config['rostopic_right'],
                 sensor_msgs.msg.Image, queue_size=1))
 
-        logging.debug('Init ROS services')
+        self._logger.debug('Init ROS services')
         rospy.Service(
             '%s/setZoom' % config['rostopic_prefix'], nicomsg.srv.SetIntValue,
             self._ROSPY_setZoom)
@@ -83,7 +84,7 @@ class NicoRosVision():
         rospy.Service(
             '%s/setTilt' % config['rostopic_prefix'], nicomsg.srv.SetIntValue,
             self._ROSPY_setTilt)
-        logging.info('-- All done --')
+        self._logger.info('-- All done --')
 
     def _ROSPY_setZoom(self, message):
         """
@@ -95,7 +96,7 @@ class NicoRosVision():
         :rtype: bool
         """
         if self._device is None:
-            logging.warning("No video device initialized")
+            self._logger.warning("No video device initialized")
             return False
         return self._device.zoom(message.value)
 
@@ -109,7 +110,7 @@ class NicoRosVision():
         :rtype: bool
         """
         if self._device is None:
-            logging.warning("No video device initialized")
+            self._logger.warning("No video device initialized")
             return False
         return self._device.pan(message.value)
 
@@ -123,7 +124,7 @@ class NicoRosVision():
         :rtype: bool
         """
         if self._device is None:
-            logging.warning("No video device initialized")
+            self._logger.warning("No video device initialized")
             return False
         return self._device.tilt(message.value)
 
@@ -132,7 +133,7 @@ class NicoRosVision():
         Starts the stream
         """
         if self._stream_running:
-            logging.warning('Stream already running')
+            self._logger.warning('Stream already running')
             return
 
         nico_eyes = MultiCamRecorder.autodetect_nicoeyes()
@@ -160,7 +161,7 @@ class NicoRosVision():
                                               writer_threads=0,
                                               pixel_format="UYVY")
         if self._device is None:
-            logging.error(
+            self._logger.error(
                 'Can not initialise device - is the device name correct ' +
                 'and not ambiguous?')
             return
@@ -172,7 +173,7 @@ class NicoRosVision():
         Stops the stream
         """
         if not self._stream_running:
-            logging.warning('Stream not running')
+            self._logger.warning('Stream not running')
             return
         self._device.stop_recording()
         self._stream_running = False

@@ -11,7 +11,9 @@ logger = logging.getLogger(__name__)
 
 if __name__ == '__main__':
 
-    logging.basicConfig(level=logging.WARNING)
+    logging.basicConfig(
+        level=logging.WARNING,
+        format='%(asctime)s - %(levelname)s - %(name)s: %(message)s')
 
     poses = (
         "thumbsUp",

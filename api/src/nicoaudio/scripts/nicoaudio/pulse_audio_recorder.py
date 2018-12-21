@@ -1,43 +1,55 @@
 # Authors:
 # Manfred Eppe
 # adapted to NICO-API
-# Erik 
+# Erik, Connor
 
 #  Compatibility imports
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-import alsaaudio, time, audioop, wave, numpy
-import struct
-import pyaudio
-import os
-import copy
-from thread import start_new_thread
+from __future__ import absolute_import, division, print_function
 
+import audioop
+import copy
+import logging
+import os
+import struct
 # from threading import Thread
 import threading
+import time
+import wave
+from thread import start_new_thread
+
+import alsaaudio
+import numpy
+import pyaudio
+
+logger = logging.getLogger(__name__)
+
 
 def ensure_dir(directory):
     # directory = os.path.dirname(file_path)
-    try:
+    if not os.path.isdir(directory):
         os.makedirs(directory)
-    except:
-        print("Warning!!! could not create directory {}".format(directory))
-        pass
+    else:
+        logger.info(
+            ("Skipped creating directory {} as it already exists"
+             ).format(directory))
+
 
 def get_pulse_device():
-	#print("The following sound devices are available.")
-	p = pyaudio.PyAudio()
-	info = p.get_host_api_info_by_index(0)
-	numdevices = info.get('deviceCount')
-	audio_device = 0
-	for i in range(0, numdevices):
-		if (p.get_device_info_by_host_api_device_index(0, i).get('maxInputChannels')) > 0:
-			device_name = p.get_device_info_by_host_api_device_index(0, i).get('name')
-			#print("Input Device id ", i, " - ", device_name)
-			if device_name.find("pulse") != -1:
-				audio_device = i
-	return(audio_device)
+    # print("The following sound devices are available.")
+    p = pyaudio.PyAudio()
+    info = p.get_host_api_info_by_index(0)
+    numdevices = info.get('deviceCount')
+    audio_device = 0
+    for i in range(0, numdevices):
+        if (p.get_device_info_by_host_api_device_index(0, i).get(
+                'maxInputChannels')) > 0:
+            device_name = p.get_device_info_by_host_api_device_index(
+                0, i).get('name')
+            # print("Input Device id ", i, " - ", device_name)
+            if device_name.find("pulse") != -1:
+                audio_device = i
+    return(audio_device)
+
 
 def threaded(f, daemon=False):
     import Queue
@@ -55,7 +67,7 @@ def threaded(f, daemon=False):
 
         q = Queue.Queue()
 
-        t = threading.Thread(target=wrapped_f, args=(q,)+args, kwargs=kwargs)
+        t = threading.Thread(target=wrapped_f, args=(q,) + args, kwargs=kwargs)
         t.daemon = daemon
         t.start()
         t.result_queue = q
@@ -63,38 +75,41 @@ def threaded(f, daemon=False):
 
     return wrap
 
+
 class AudioRecorder:
 
     def __init__(self, audio_channels, samplerate, datadir, audio_device):
         self.audio_channels = audio_channels
         self.samplerate = samplerate
-        self.datadir=datadir
-        self.audio_device=audio_device
-        print("Selected sound device: {}.".format(self.audio_device))
+        self.datadir = datadir
+        self.audio_device = audio_device
+        logger.info("Selected sound device: {}.".format(self.audio_device))
         self.class_indexes = {}
         self.class_sample_filenames = {}
         ensure_dir(self.datadir)
-        class_folders = [d for d in os.listdir(self.datadir) if d.find(" - ") >= 0]
+        class_folders = [d for d in os.listdir(
+            self.datadir) if d.find(" - ") >= 0]
         for d in class_folders:
             classname = d.split("- ")[1]
             class_idx = int(d.split(" -")[0])
             self.class_indexes[classname] = class_idx
-            class_files = [f for f in os.listdir(self.datadir+"/"+d) if f.find(".wav") >= 0]
+            class_files = [f for f in os.listdir(
+                self.datadir + "/" + d) if f.find(".wav") >= 0]
             self.class_sample_filenames[classname] = class_files
         self.rec_to_stop = []
         self.rec_running = {}
 
     @threaded
-    def start_recording(self, label, rec_id=0, fname="test.wav",dir_name="./data_shake/"):
-        
-        #print("Starting to record {} as id {}.".format(label, rec_id))
+    def start_recording(self, label, rec_id=0, fname="test.wav",
+                        dir_name="./data_shake/"):
+
+        # print("Starting to record {} as id {}.".format(label, rec_id))
         self.rec_running[rec_id] = label
         frames = self.rec_from_mic(n_sec=24 * 60 * 60, rec_id=rec_id)
         self.rec_to_stop.remove(rec_id)
         del self.rec_running[rec_id]
- 
-               
-        f_path_name=dir_name+fname
+
+        f_path_name = dir_name + fname
         wfile = wave.open(f_path_name, 'wb')
         wfile.setnchannels(self.audio_channels)
         wfile.setframerate(self.samplerate)
@@ -103,15 +118,13 @@ class AudioRecorder:
         wfile.writeframes(b''.join(frames))
         wfile.close()
 
-
     def stop_recording(self, rec_id):
         self.rec_to_stop.append(rec_id)
-    
 
     def rec_from_mic(self, n_sec=20, rec_id=0):
         p = pyaudio.PyAudio()
         chunksize = 1024
-        #print("* recording rec_id = {}".format(rec_id))
+        # print("* recording rec_id = {}".format(rec_id))
         frames = []
         stream = p.open(format=pyaudio.paInt16,
                         channels=self.audio_channels,
@@ -132,19 +145,19 @@ class AudioRecorder:
         stream.stop_stream()
         stream.close()
         p.terminate()
-        #print("* done recording")
+        # print("* done recording")
         return frames
 
 
-
 if __name__ == '__main__':
-	
-    audio_device= get_pulse_device()
-     
+
+    audio_device = get_pulse_device()
+
     dev_idx = audio_device
-    directory="./."
- 
-    ar = AudioRecorder(audio_channels=2, samplerate=48000, datadir=directory, audio_device=dev_idx)
+    directory = "./."
+
+    ar = AudioRecorder(audio_channels=2, samplerate=48000,
+                       datadir=directory, audio_device=dev_idx)
 
     while True:
         print("Enter label for recording or \"0\" to exit")
@@ -152,15 +165,7 @@ if __name__ == '__main__':
         if label == "0":
             break
         rec_id = 0
-        ar.start_recording(label,fname=label+".wav", dir_name=directory)
+        ar.start_recording(label, fname=label + ".wav", dir_name=directory)
         print("Press Enter to stop recording")
         raw_input()
         ar.stop_recording(0)
-
-
-
-
-
-
-
-

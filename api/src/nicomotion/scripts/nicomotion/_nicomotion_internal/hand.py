@@ -9,10 +9,13 @@ CURRENT_PORTS = {"wrist_z": "present_current_port_1",
                  "thumb_x": "present_current_port_3",
                  "indexfingers_x": "present_current_port_4"}
 
+logger = logging.getLogger(__name__)
+
 
 def _HAND_compliant(robot):
     """
-    Removes the compliant from the hand. This function is used as a callback for the timer
+    Removes the compliant from the hand. This function is used as a callback
+    for the timer
 
     :param robot: The robot
     :type robot: pypot.robot
@@ -31,21 +34,23 @@ def _HAND_compliant(robot):
 
 
 def _closeHandWithCurrentLimit(board, thumb, indexfingers, percentage):
-    for it, pos in enumerate(range(int(indexfingers.present_position), int(130. * percentage), 5)):
+    for it, pos in enumerate(range(int(indexfingers.present_position),
+                                   int(130. * percentage), 5)):
         for retries in range(10):
             success = True
             try:
-                if board.present_current_port_4 > MAX_CUR_FINGER or board.present_current_port_3 > MAX_CUR_THUMB:
-                    logging.warning(
-                        "Reached maximum current - Hand won't be closed any further")
+                if (board.present_current_port_4 > MAX_CUR_FINGER
+                        or board.present_current_port_3 > MAX_CUR_THUMB):
+                    logger.warning("Reached maximum current - Hand won't " +
+                                   "be closed any further")
                     return
                 break
             except AttributeError as e:
                 if retries == 9:
-                    logging.error("Current check failed after 10 retries")
+                    logger.error("Current check failed after 10 retries")
                     success = False
                     raise
-                logging.error(
+                logger.error(
                     "Current check failed - retry {}".format(retries + 1))
         if not success:
             break
@@ -126,11 +131,11 @@ def openHand(robot, handName, fractionMaxSpeed=1.0, percentage=1.0):
     :return: None
     """
     if robot is None:
-        logging.critical('No robot provided')
+        logger.critical('No robot provided')
         return
 
     if not (0.0 < percentage <= 1.0):
-        logging.critical('percentage (%f) out of bounds' % percentage)
+        logger.critical('percentage (%f) out of bounds' % percentage)
         return
 
     if handName == 'RHand':
@@ -150,7 +155,7 @@ def openHand(robot, handName, fractionMaxSpeed=1.0, percentage=1.0):
         robot.l_thumb_x.goal_position = -170.0 * percentage
         threading.Timer(1.0, _HAND_compliant, [robot]).start()
     else:
-        logging.warning('Unknown hand handle: %s' % handName)
+        logger.warning('Unknown hand handle: %s' % handName)
         return
 
 
@@ -171,11 +176,11 @@ def openHandVREP(robot, handName, fractionMaxSpeed=1.0, percentage=1.0):
     :return: None
     """
     if robot is None:
-        logging.critical('No robot provided')
+        logger.critical('No robot provided')
         return
 
     if not (0.0 < percentage <= 1.0):
-        logging.critical('percentage (%f) out of bounds' % percentage)
+        logger.critical('percentage (%f) out of bounds' % percentage)
         return
 
     if handName == 'RHand':
@@ -193,7 +198,7 @@ def openHandVREP(robot, handName, fractionMaxSpeed=1.0, percentage=1.0):
         robot.l_thumb_x.goal_speed = 1000.0 * fractionMaxSpeed
         robot.l_thumb_x.goal_position = 0.0 * percentage
     else:
-        logging.warning('Unknown hand handle: %s' % handName)
+        logger.warning('Unknown hand handle: %s' % handName)
         return
 
 
@@ -212,11 +217,11 @@ def closeHand(robot, handName, fractionMaxSpeed=1.0, percentage=1.0):
     :return: None
     """
     if robot is None:
-        logging.critical('No robot provided')
+        logger.critical('No robot provided')
         return
 
     if not (0.0 < percentage <= 1.0):
-        logging.critical('percentage (%f) out of bounds' % percentage)
+        logger.critical('percentage (%f) out of bounds' % percentage)
         return
 
     if handName == 'RHand':
@@ -225,7 +230,8 @@ def closeHand(robot, handName, fractionMaxSpeed=1.0, percentage=1.0):
         robot.r_thumb_x.compliant = False
         robot.r_thumb_x.goal_speed = 1000.0 * fractionMaxSpeed
         threading.Thread(target=_closeHandWithCurrentLimit, args=[
-                         robot.r_virtualhand_x, robot.r_thumb_x, robot.r_indexfingers_x, percentage]).start()
+                         robot.r_virtualhand_x, robot.r_thumb_x,
+                         robot.r_indexfingers_x, percentage]).start()
 
     elif handName == 'LHand':
         robot.l_indexfingers_x.compliant = False
@@ -233,9 +239,10 @@ def closeHand(robot, handName, fractionMaxSpeed=1.0, percentage=1.0):
         robot.l_thumb_x.compliant = False
         robot.l_thumb_x.goal_speed = 1000.0 * fractionMaxSpeed
         threading.Thread(target=_closeHandWithCurrentLimit, args=[
-                         robot.l_virtualhand_x, robot.l_thumb_x, robot.l_indexfingers_x, percentage]).start()
+                         robot.l_virtualhand_x, robot.l_thumb_x,
+                         robot.l_indexfingers_x, percentage]).start()
     else:
-        logging.warning('Unknown hand handle: %s' % handName)
+        logger.warning('Unknown hand handle: %s' % handName)
         return
 
 
@@ -256,11 +263,11 @@ def closeHandVREP(robot, handName, fractionMaxSpeed=1.0, percentage=1.0):
     :return: None
     """
     if robot is None:
-        logging.critical('No robot provided')
+        logger.critical('No robot provided')
         return
 
     if not (0.0 < percentage <= 1.0):
-        logging.critical('percentage (%f) out of bounds' % percentage)
+        logger.critical('percentage (%f) out of bounds' % percentage)
         return
 
     if handName == 'RHand':
@@ -278,5 +285,5 @@ def closeHandVREP(robot, handName, fractionMaxSpeed=1.0, percentage=1.0):
         robot.l_thumb_x.goal_speed = 1000.0 * fractionMaxSpeed
         robot.l_thumb_x.goal_position = -30.0 * percentage
     else:
-        logging.warning('Unknown hand handle: %s' % handName)
+        logger.warning('Unknown hand handle: %s' % handName)
         return

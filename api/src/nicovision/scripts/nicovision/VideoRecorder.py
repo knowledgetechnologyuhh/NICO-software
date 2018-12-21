@@ -63,6 +63,7 @@ class VideoRecorder:
         :param videoformat: Used video format
         :type videoformat: VideoCodec
         """
+        self._logger = logging.getLogger(__name__)
         self._device = VideoDevice.from_device(device, framerate, width,
                                                height, zoom, pan, tilt,
                                                settings_file, setting)
@@ -211,20 +212,21 @@ class VideoRecorder:
         :type overwrite: bool
         """
         if self._running:
-            logging.warning('Trying to start recording while already running')
+            self._logger.warning(
+                'Trying to start recording while already running')
             return
         if folder[-1] is not '/':
             folder += '/'
         if not file.endswith(('.avi', '.AVI')):
-            logging.debug('Attaching ".avi" as file extension')
+            self._logger.debug('Attaching ".avi" as file extension')
             file += '.avi'
         if not os.path.isdir(folder):
             if overwrite:
                 os.makedirs(folder)
             else:
-                logging.error('Folder %s not existing' % folder)
+                self._logger.error('Folder %s not existing' % folder)
         if not overwrite and os.path.exists(folder + file):
-            logging.error('File %s already exists' % folder + file)
+            self._logger.error('File %s already exists' % folder + file)
             return
 
         # Resolve codec
@@ -236,8 +238,8 @@ class VideoRecorder:
                 VideoCodec.DIVX: cv2.VideoWriter_fourcc('D', 'I', 'V', 'X'),
                 VideoCodec.XVID: cv2.VideoWriter_fourcc('X', 'V', 'I', 'D'),
             }[self._format]
-        except:
-            logging.error('Unknown codec')
+        except KeyError:
+            self._logger.error('Unknown codec')
             return
 
         # Setup video capturing
@@ -255,7 +257,7 @@ class VideoRecorder:
         Stops the current recording
         """
         if not self._running:
-            logging.warning(
+            self._logger.warning(
                 'Trying to stop recording while no recording is running')
             return
         self._device.close()

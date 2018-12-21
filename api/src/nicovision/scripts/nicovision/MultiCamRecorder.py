@@ -186,10 +186,12 @@ class MultiCamRecorder(object):
                                                             str(dim)][
                                                             str(self.get_zoom()
                                                                 )]))
-                K_new_left = cv2.fisheye.estimateNewCameraMatrixForUndistortRectify(
-                    K_left, D_left, dim, R_left, P_left, balance=0.)
-                K_new_right = cv2.fisheye.estimateNewCameraMatrixForUndistortRectify(
-                    K_right, D_right, dim, R_right, P_right, balance=0.)
+                K_new_left = \
+                    cv2.fisheye.estimateNewCameraMatrixForUndistortRectify(
+                        K_left, D_left, dim, R_left, P_left, balance=0.)
+                K_new_right = \
+                    cv2.fisheye.estimateNewCameraMatrixForUndistortRectify(
+                        K_right, D_right, dim, R_right, P_right, balance=0.)
                 self._rectify_maps[0] = cv2.fisheye.initUndistortRectifyMap(
                     K_left, D_left, R_left, K_new_left, dim, cv2.CV_16SC2)
                 self._rectify_maps[1] = cv2.fisheye.initUndistortRectifyMap(

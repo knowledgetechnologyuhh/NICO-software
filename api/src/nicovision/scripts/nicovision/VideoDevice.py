@@ -14,8 +14,10 @@ import time
 import cv2
 
 VIDEO_DEVICE_PATH = "/dev/v4l/by-id/"
-ID_STR_LEGGED_NICO_LEFT_CAM = "usb-e-con_systems_See3CAM_CU135_09229807-video-index0"
-ID_STR_LEGGED_NICO_RIGHT_CAM = "usb-e-con_systems_See3CAM_CU135_36249807-video-index0"
+ID_STR_LEGGED_NICO_LEFT_CAM = \
+    "usb-e-con_systems_See3CAM_CU135_09229807-video-index0"
+ID_STR_LEGGED_NICO_RIGHT_CAM = \
+    "usb-e-con_systems_See3CAM_CU135_36249807-video-index0"
 PATH_LEGGED_NICO_LEFT_CAM = VIDEO_DEVICE_PATH + ID_STR_LEGGED_NICO_LEFT_CAM
 PATH_LEGGED_NICO_RIGHT_CAM = VIDEO_DEVICE_PATH + ID_STR_LEGGED_NICO_RIGHT_CAM
 
@@ -54,8 +56,9 @@ class VideoDevice:
         :return: Paths of video devices
         :rtype: list
         """
+        logger = logging.getLogger(__name__)
         if not os.path.isdir(VideoDevice._VIDEO_DEVICE_PATH):
-            logging.error('Video device path does not exists!')
+            logger.error('Video device path does not exists!')
             return []
         paths = []
         for file in os.listdir(VideoDevice._VIDEO_DEVICE_PATH):
@@ -93,8 +96,9 @@ class VideoDevice:
         :return: device id (-1 = error)
         :rtype: int
         """
+        logger = logging.getLogger(__name__)
         if not os.path.isdir(VideoDevice._VIDEO_DEVICE_PATH):
-            logging.error('Video device device does not exists!')
+            logger.error('Video device device does not exists!')
             return -1
 
         candidates = []
@@ -103,13 +107,13 @@ class VideoDevice:
                 candidates += [file]
 
         if len(candidates) is 0:
-            logging.error('No candidates found')
+            logger.error('No candidates found')
             return -1
         elif len(candidates) is 1:
             return int(os.readlink(
                 VideoDevice._VIDEO_DEVICE_PATH + candidates[0])[-1:])
         else:
-            logging.error('Multiple candidates found: {}'.format(candidates))
+            logger.error('Multiple candidates found: {}'.format(candidates))
             return -1
 
     @staticmethod
@@ -125,9 +129,10 @@ class VideoDevice:
         :return: VideoDevice or None if path is not valid / ambiguous
         :rtype: VideoDevice or None
         """
+        logger = logging.getLogger(__name__)
         id = VideoDevice.resolve_device(device)
         if id is -1:
-            logging.error('Can not create VideoDevice from ID %s' % id)
+            logger.error('Can not create VideoDevice from ID %s' % id)
             return None
         return VideoDevice(id, framerate, width, height, zoom, pan, tilt,
                            settings_file, setting, compressed, pixel_format,

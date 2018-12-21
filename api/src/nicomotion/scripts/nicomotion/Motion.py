@@ -17,7 +17,8 @@ import _nicomotion_internal.RH7D_hand
 
 class Motion:
     """
-    The Motion class provides a high level interface to various movement related functions of the NICO robot
+    The Motion class provides a high level interface to various movement
+    related functions of the NICO robot
     """
 
     def __init__(self, motorConfig='config.json', vrep=False,
@@ -76,7 +77,7 @@ class Motion:
                     if ignoreMissing and retries < 3:
                         # removes missing ids if enabled and tries to
                         # reinitialize pypot up to 3 times
-                        regex = re.compile('.*\[.*\].*\[(?P<ids>.*)\].*')
+                        regex = re.compile(r'.*\[.*\].*\[(?P<ids>.*)\].*')
                         match = regex.match(e.message)
                         string = match.group('ids')
                         for id in string.split(','):
@@ -109,8 +110,8 @@ class Motion:
                         "Retrying initialization after an error occured")
                     time.sleep(1)
 
-        if hasattr(self._robot, "r_middlefingers_x") or hasattr(self._robot,
-                                                                "l_middlefingers_x"):
+        if (hasattr(self._robot, "r_middlefingers_x")
+                or hasattr(self._robot, "l_middlefingers_x")):
             self._handModel = "RH7D"
         else:
             self._handModel = "RH4D"
@@ -139,8 +140,8 @@ class Motion:
 
     def startSimulation(self, synchronize=False):
         """
-        Starts the V-REP Simulation. If 'synchronize' is set True the simulation steps
-        will not advance until nextSimulationStep() is called.
+        Starts the V-REP Simulation. If 'synchronize' is set True the
+        simulation steps will not advance until nextSimulationStep() is called.
 
         :param synchronize: Enables control over simulation time steps
         :type synchronize: bool
@@ -158,22 +159,25 @@ class Motion:
 
     def setSimulationDeltatime(self, dt):
         """
-        Sets the timeframe which one simulation step represents. Only works while the simulation is stopped and dt is set to custom in V-REP.
+        Sets the timeframe which one simulation step represents. Only works
+        while the simulation is stopped and dt is set to custom in V-REP.
 
         :param dt: timeframe of one simulation step
         :type dt: int
         """
         if self._vrep:
-            self._vrepIO.call_remote_api('simxSetFloatingParameter',
-                                         remote_api.sim_floatparam_simulation_time_step,
-                                         dt)
+            self._vrepIO.call_remote_api(
+                'simxSetFloatingParameter',
+                remote_api.sim_floatparam_simulation_time_step,
+                dt)
         else:
             self._logger.warning(
                 'nextSimulationStep() has no effect on a real robot')
 
     def nextSimulationStep(self):
         """
-        Advances the V-REP simulation by one step if synchronize was set on startSimulation().
+        Advances the V-REP simulation by one step if synchronize was set on
+        startSimulation().
         """
         if self._vrep:
             remote_api.simxSynchronousTrigger(self._vrepIO.client_id)
@@ -210,9 +214,14 @@ class Motion:
 
         :return: api response
 
-        .. note:: You can add an extra keyword to specify if you want to use the streaming or sending mode. The oneshot_wait mode is used by default (see `here <http://www.coppeliarobotics.com/helpFiles/en/remoteApiConstants.htm#operationModes>`_ for details about possible modes).
+        .. note:: You can add an extra keyword to specify if you want to use
+                  the streaming or sending mode. The oneshot_wait mode is used
+                  by default (see `here <
+                  http://www.coppeliarobotics.com/helpFiles/en/remoteApiConstants.htm#operationModes>`_
+                  for details about possible modes).
 
-        .. warning:: You should not pass the clientId and the operationMode as arguments. They will be automatically added.
+        .. warning:: You should not pass the clientId and the operationMode as
+                     arguments. They will be automatically added.
         """
         if self._vrep:
             return self._vrepIO.call_remote_api(func_name, *args, **kwargs)
@@ -223,7 +232,8 @@ class Motion:
 
     def getVrepIO(self):
         """
-        Gives access to pypots vrep IO (see https://poppy-project.github.io/pypot/pypot.vrep.html#pypot.vrep.io.VrepIO)
+        Gives access to pypots vrep IO (see
+        https://poppy-project.github.io/pypot/pypot.vrep.html#pypot.vrep.io.VrepIO)
 
         :return: Pypot vrep IO
         :rtype: pypot.vrep.io
@@ -293,8 +303,8 @@ class Motion:
                                                    percentage)
             else:
                 if (percentage < 1.0):
-                    self._logger.warning(
-                        "Open hand for RH7D doesn't support percentage parameter")
+                    self._logger.warning("Open hand for RH7D doesn't " +
+                                         "support percentage parameter")
                 self.setHandPose(handName, "openHand", fractionMaxSpeed)
 
     def closeHand(self, handName, fractionMaxSpeed=1.0, percentage=1.0):
@@ -322,7 +332,8 @@ class Motion:
             else:
                 if percentage != 1.0:
                     self._logger.warning(
-                        "Close hand for RH7D doesn't support percentage parameter")
+                        "Close hand for RH7D doesn't support percentage " +
+                        "parameter")
                 self.setHandPose(handName, "closeHand", fractionMaxSpeed)
 
     def enableForceControlAll(self, goalForce=500):
@@ -388,7 +399,8 @@ class Motion:
         """
         Moves the robot to its initial state of this session.
         In this state it should be safe to disable the force control.
-        To receive a collision free motion trajectories use the corresponding moveitWrapper function instead.
+        To receive a collision free motion trajectories use the corresponding
+        moveitWrapper function instead.
         """
         for motor in self.safeState:
             self.setAngle(motor, self.safeState[motor], 0.1)
@@ -435,10 +447,11 @@ class Motion:
         """
         if hasattr(self._robot, jointName):
             motor = getattr(self._robot, jointName)
-            if self._handModel == "RH7D" and _nicomotion_internal.RH7D_hand.isHandMotor(
-                    jointName):
+            if (self._handModel == "RH7D"
+                    and _nicomotion_internal.RH7D_hand.isHandMotor(jointName)):
                 _nicomotion_internal.RH7D_hand.setAngle(jointName,
-                                                        change + motor.present_position,
+                                                        change +
+                                                        motor.present_position,
                                                         fractionMaxSpeed)
             else:
                 motor.compliant = False
@@ -598,13 +611,14 @@ class Motion:
         :rtype: float
         """
         if hasattr(self._robot, jointName):
-            if self._handModel == "RH4D" and _nicomotion_internal.hand.isHandMotor(
-                    jointName):
+            if(self._handModel == "RH4D"
+               and _nicomotion_internal.hand.isHandMotor(jointName)):
                 return _nicomotion_internal.hand.getPresentCurrent(self._robot,
                                                                    jointName)
-            elif self._handModel == "RH7D" and _nicomotion_internal.RH7D_hand.isHandMotor(
-                    jointName):
-                return _nicomotion_internal.RH7D_hand.getPresentCurrent(self._robot, jointname)
+            elif (self._handModel == "RH7D"
+                  and _nicomotion_internal.RH7D_hand.isHandMotor(jointName)):
+                return _nicomotion_internal.RH7D_hand.getPresentCurrent(
+                    self._robot, jointname)
             else:
                 motor = getattr(self._robot, jointName)
                 if hasattr(motor, 'present_current'):
@@ -790,20 +804,24 @@ class Motion:
 
     def getPose(self, objectName, relativeToObject=None):
         """
-          Returns the current pose of the scene object with given name relative to the second given object
+          Returns the current pose of the scene object with given name relative
+          to the second given object
 
           :param objectName: Name of the object
           :type objectName: str
-          :param relativeToObject: Name of the object that the position should be relative to
+          :param relativeToObject: Name of the object that the position should
+                                   be relative to
           :type relativeToObject: str
-          :return: Position of the requestet object in x,y,z coordinates relative to the second object
+          :return: Position of the requestet object in x,y,z coordinates
+                   relative to the second object
           :rtype: list of three floats
           """
         return self._robot.get_object_position(objectName, relativeToObject)
 
     def cleanup(self):
         """
-        Cleans up the current connection to the robot. After this you can no longer control the robot
+        Cleans up the current connection to the robot. After this you can no
+        longer control the robot
         """
         if self._robot is None:
             self._logger.warning(

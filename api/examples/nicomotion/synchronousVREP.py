@@ -1,12 +1,18 @@
 #!/usr/bin/env python
 
-from nicomotion.Motion import Motion
+import logging
 import time
-from os.path import dirname, abspath
+from os.path import abspath, dirname
 
-robot = Motion(dirname(abspath(__file__))+"/../../../json/nico_humanoid_upper.json",vrep=True)
+from nicomotion.Motion import Motion
 
-# set simulation timestep (make sure dt is set to custom and simulation is stopped!)
+logging.basicConfig(level=logging.WARNING)
+
+robot = Motion(dirname(abspath(__file__)) +
+               "/../../../json/nico_humanoid_upper.json", vrep=True)
+
+# set simulation timestep (make sure dt is set to custom and simulation is
+# stopped!)
 dt = 0.01
 robot.setSimulationDeltatime(dt)
 # start simulation with synchronize enabled
