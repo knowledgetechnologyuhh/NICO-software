@@ -25,18 +25,23 @@ class optoforce():
 
     def _scan_ports(self, ser_number=None):
         """
-        Scans serial ports for OptoForce device with given serial number and returns the port. Returns the first sensor found if no serial number is given.
+        Scans serial ports for OptoForce device with given serial number and
+        returns the port. Returns the first sensor found if no serial number is
+        given.
 
         :param ser_number: Serial number of the sensor (optional)
         :type ser_number: str
-        :return: Port of OptoForce sensor with specified serial number (or first one found if ser_number is None)
+        :return: Port of OptoForce sensor with specified serial number (or
+                 first one found if ser_number is None)
         :rtype: str
         """
         ports = serial.tools.list_ports.comports()
         for p in ports:
             if "OptoForce" in p.description:
                 self._logger.info(
-                    "Connecting to OptoForce sensor on port {}".format(p.device))
+                    (
+                        "Connecting to OptoForce sensor on port {}"
+                    ).format(p.device))
                 try:
                     ser = serial.Serial(port=p.device,
                                         baudrate=1000000,
@@ -53,15 +58,25 @@ class optoforce():
                         try:
                             data = driver.read()
 
-                            if isinstance(data, optoforce_driver.OptoforceSerialNumber):
-                                if ser_number is None or ser_number == str(data):
-                                    self._logger.info("Successfully connected to OptoForce sensor {} on port {}".format(
-                                        str(data), p.device))
+                            if isinstance(
+                                    data,
+                                    optoforce_driver.OptoforceSerialNumber
+                            ):
+                                if(ser_number is None
+                                   or ser_number == str(data)):
+                                    self._logger.info(
+                                        ("Successfully connected to " +
+                                         "OptoForce sensor {} on port {}"
+                                         ).format(
+                                            str(data), p.device))
                                     del driver
                                     self._ser_number = str(data)
                                     return p.device
-                                self._logger.info("OptoForce sensor on port {} skipped - serial number {} not matching {}".format(
-                                    p.device, ser_number, str(data)))
+                                self._logger.info(
+                                    ("OptoForce sensor on port {} skipped - " +
+                                     "serial number {} not matching {}"
+                                     ).format(
+                                        p.device, ser_number, str(data)))
                                 driver._serial.close()
                                 del driver
 
@@ -69,14 +84,15 @@ class optoforce():
                             pass
 
                 except serial.SerialException as e:
-                    self._logger.warning(
-                        "Connection to OptoForce sensor port {} failed due to {}".format(p.device, e))
+                    self._logger.warning(("Connection to OptoForce sensor " +
+                                          "port {} failed due to {}"
+                                          ).format(p.device, e))
 
         if ser_number is None:
             self._logger.fatal("No OptoForce sensor found")
         else:
-            self._logger.fatal(
-                "No matching OptoForce sensor found for serial number {}".format(ser_number))
+            self._logger.fatal("No matching OptoForce sensor found for " +
+                               "serial number {}".format(ser_number))
         return None
 
     def get_sensor_values_m(self):
@@ -94,11 +110,11 @@ class optoforce():
             zAxis -= 0x10000
             # zAxis += 255
         return(xAxis, yAxis, zAxis)
-        #print ('X Axis: ', xAxis, ' Y Axis: ', yAxis,' Z Axis: ',zAxis )
+        # print ('X Axis: ', xAxis, ' Y Axis: ', yAxis,' Z Axis: ',zAxis )
         # i += 1
 
     def get_sensor_values_hex(self):
-        if self.cache_frequency != None and self.cached_sensor_array != None:
+        if self.cache_frequency and self.cached_sensor_array is not None:
             seq = self.cached_sensor_array
         else:
             seq = self.get_sensor_array()
@@ -126,7 +142,7 @@ class optoforce():
 
     def get_sensor_values_raw(self):
 
-        if self.cache_frequency != None and self.cached_sensor_array != None:
+        if self.cache_frequency and self.cached_sensor_array is not None:
             seq = self.cached_sensor_array
         else:
             seq = self.get_sensor_array()
@@ -144,7 +160,7 @@ class optoforce():
 
     def get_sensor_all(self):
         # return (time of sensor reading,reading counter, x,y,z, checksum)
-        if self.cache_frequency != None and self.cached_sensor_array != None:
+        if self.cache_frequency and self.cached_sensor_array is not None:
             seq = self.cached_sensor_array
         else:
             seq = self.get_sensor_array()
@@ -162,7 +178,8 @@ class optoforce():
         self.ser.flushOutput()
         seq = []
         '''
-        # approach for taking the start sequence of the protocol, but this is not needed here
+        # approach for taking the start sequence of the protocol,
+        # but this is not needed here
         seq=["aa"]
         one_byte = self.ser.read().encode('hex')
         while (one_byte!="aa"):
@@ -173,7 +190,7 @@ class optoforce():
         while (one_byte != "aa"):
             print one_byte
             seq.append(one_byte)  # convert from ANSII
-            joined_seq = ''.join(str(v) for v in seq)  # Make a string from array
+            joined_seq = ''.join(str(v) for v in seq)# Make a string from array
             one_byte = self.ser.read().encode('hex')
         return joined_seq
         '''
@@ -253,17 +270,25 @@ if __name__ == "__main__":
     import argparse
 
     # examples
-    # Get one raw sample from the sensor at /dev/ttyACM0 and the serial-number of the sensor DSE0A125
+    # Get one raw sample from the sensor at /dev/ttyACM0 and the serial-number
+    # of the sensor DSE0A125
     # python optoforcesensors.py raw --device /dev/ttyACM0 --serial DSE0A125
     # Move to position stored in move file
-    # python Mover.py pp --file mov_take_something_with_left_arm.csv - -subset subset_left_arm_and_head.csv --speed 0.1
+    # python Mover.py pp --file mov_take_something_with_left_arm.csv
+    #                    --subset subset_left_arm_and_head.csv --speed 0.1
     # Record move file (trajectory)
 
     parser = argparse.ArgumentParser()
     parser.add_argument("command",
-                        help="One of the commands raw (get raw sensor values), newton (get sensor values in Newton), string ( get the whole message as hex-string-representation ) "
-                             + " all (get all data  (time,sample counter, status,x,y,z,checksum)), csv (all data in csv format to store this right away)")
-    # fj freeze joints as they are by torquing it. You subset to freeze only a subset of the joints.
+                        help="One of the commands raw (get raw sensor " +
+                        "values), newton (get sensor values in Newton)," +
+                        " string ( get the whole message as " +
+                        "hex-string-representation) all (get all data " +
+                        "(time,sample counter, status,x,y,z,checksum)), " +
+                        "csv (all data in csv format to store this right away)"
+                        )
+    # fj freeze joints as they are by torquing it. You subset to freeze only a
+    # subset of the joints.
     parser.add_argument('--serial', nargs='?', default=None,
                         help="serial number of the sensors device")
     parser.add_argument('--cont', action="store_true", default=False,
@@ -275,7 +300,7 @@ if __name__ == "__main__":
 
     command = args.command
 
-    #optsens = optoforce(args.serial,cache_frequency=30)
+    # optsens = optoforce(args.serial,cache_frequency=30)
     optsens = optoforce(ser_number=None, cache_frequency=30)
 
     oneTime = True
@@ -298,12 +323,14 @@ if __name__ == "__main__":
             print(optsens.get_sensor_string())
 
         elif command == "all":
-            (stime, counter, status, x, y, z, checksum) = optsens.get_sensor_all()
+            (stime, counter, status, x, y, z, checksum) = \
+                optsens.get_sensor_all()
             print("time, counter, status,x, y, z,checksum " +
                   str((stime, counter, status, x, y, z, checksum)))
 
         elif command == "csv":
-            (stime, counter, status, x, y, z, checksum) = optsens.get_sensor_all()
+            (stime, counter, status, x, y, z, checksum) = \
+                optsens.get_sensor_all()
             print(str(stime) + "," + str(counter) + "," + str(status) + "," +
                   str(x) + "," + str(y) + "," + str(z) + "," + str(checksum))
 

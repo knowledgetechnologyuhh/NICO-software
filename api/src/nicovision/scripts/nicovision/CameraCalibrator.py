@@ -133,7 +133,8 @@ class CameraCalibrator():
         """
         if self._imgpoints[id] is None or not self._imgpoints[id]:
             self._logger.warning("Unable to calibrate device " +
-                                 self._deviceIds[id] + " - no imagepoints recorded")
+                                 self._deviceIds[id] +
+                                 " - no imagepoints recorded")
             return None
 
         self._logger.info("Calibrating device {}".format(self._deviceIds[id]))
@@ -254,7 +255,8 @@ class CameraCalibrator():
         Calibration related code was partially taken from:
         https://medium.com/@kennethjiang/calibrate-fisheye-lens-using-opencv-333b05afa0b0
         and
-        https://github.com/sourishg/fisheye-stereo-calibration/blob/master/calibrate.cpp (stereo term_criteria and fov_scale)
+        https://github.com/sourishg/fisheye-stereo-calibration/blob/master/calibrate.cpp
+        (stereo term_criteria and fov_scale)
 
         :param chessboard: Dimensions of the chessboard pattern (inner corners)
         :type chessboard: tuple(int)
@@ -316,8 +318,8 @@ class CameraCalibrator():
             if (stereo and str(zoom) in existing_calibration["stereo"]
                     [str(devicenames)][str(self._dim)]):
                 self._logger.warning(("Calibration aborted - Overwrite not " +
-                                      "enabled and setting for devices {} and " +
-                                      "dimension {} already exists in {}"
+                                      "enabled and setting for devices {} " +
+                                      "and dimension {} already exists in {}"
                                       ).format(devicenames, self._dim,
                                                calibration_file))
                 return
@@ -325,12 +327,13 @@ class CameraCalibrator():
                 for i in range(len(self._deviceIds)):
                     if (str(zoom[i]) in existing_calibration["mono"]
                             [str(devicenames[i])][str(self._dim)]):
-                        self._logger.warning(("Calibration aborted - Overwrite " +
-                                              "not enabled and setting for " +
-                                              "device {} and dimension {} " +
-                                              "already exists in {}"
-                                              ).format(devicenames[i], self._dim,
-                                                       calibration_file))
+                        self._logger.warning(
+                            ("Calibration aborted - Overwrite " +
+                             "not enabled and setting for " +
+                             "device {} and dimension {} " +
+                             "already exists in {}"
+                             ).format(devicenames[i], self._dim,
+                                      calibration_file))
                         return
         # start recording
         self._logger.info("Start recording images for calibration")

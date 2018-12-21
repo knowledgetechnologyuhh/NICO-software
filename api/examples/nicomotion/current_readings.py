@@ -1,3 +1,4 @@
+import logging
 import random
 import sys
 import time
@@ -5,6 +6,8 @@ from os.path import abspath, dirname
 from threading import Thread
 
 from nicomotion import Motion
+
+logging.basicConfig(level=logging.WARNING)
 
 
 def current_reading(robot):
