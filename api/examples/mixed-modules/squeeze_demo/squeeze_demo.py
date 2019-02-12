@@ -33,9 +33,48 @@ from stub_touch_data_classifier import touch_data_classifier
 
 from stub_touch_data_classifier_stop import touch_data_classifier as stop_touch_data_classifier
 
-classifier = ClientWrapper(touch_data_classifier, 54010)
-stop_classifier = ClientWrapper(stop_touch_data_classifier, 54011)
 
+
+#classifier = ClientWrapper(touch_data_classifier, 54010)
+#stop_classifier = ClientWrapper(stop_touch_data_classifier, 54011)
+
+def wrapped_function():
+	print ""
+	#####################!!!!!!!!!!!!!
+	from touch_data_classifier import touch_data_classifier
+	tdc=touch_data_classifier()
+	return tdc
+	
+	#from flaskcom.complex_test_class import ComplexTestClass
+		
+	#test_object = ComplexTestClass('hallo') #initialize the object you want to use
+	
+	#print "end wrapped function"
+	#return test_object #return it
+	#return None
+
+import sys
+sys.path.append("/home/sysadmin/NICO")
+
+#import the RemoteObject
+from flaskcom.remote_object import RemoteObject
+
+#wrap it around the function
+#returns an object that can be used like the object initialized in the wrapped function,
+#here: test_object = ComplexTestClass('hallo')
+classifier = RemoteObject(wrapped_function = wrapped_function, #the function that initializes the remote object
+							path_to_virtualenv = "../../../../../../NICO/NICO-haptic-object-classification/virtualenv", #a virtualenv can loaded before exectuting the code in the remote terminal.
+							server = "localhost", #the remote object is running on another computer
+							original_working_directory = "../../../../../../NICO/NICO-haptic-object-classification/", #a working directory can be specified, which can be used to search for the code
+							keep_open = False, #the remote object can be kept open, when the program is exectuted the next time, it will use the open remote object instead of creating a new one
+							time_out = -1, #the time to wait for the remote terminal to start, -1 means forever
+							flaskcom_path = "/home/sysadmin/NICO", #if flaskcom is not inside the searchpath, set a path to a folder containing flaskcom
+							debug = True) #keeps the terminal open even if an error occurs
+
+
+
+result=classifier.classify(db_filename)
+print ("This is a " + classifier.numberToString(result))
 
 db_filename="/tmp/one_sample.db"
 
