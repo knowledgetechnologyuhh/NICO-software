@@ -62,9 +62,9 @@ if not isdir(nico_path):
 def wrapped_function():
 	print ""
 	#####################!!!!!!!!!!!!!
-	from touch_data_classifier import touch_data_classifier
-	tdc=touch_data_classifier()
-	return tdc
+	from all_models_one_sample_classifier import all_models_classifier
+	cnn_1_classifier=all_models_classifier()
+	return cnn_1_classifier
 	
 	#from flaskcom.complex_test_class import ComplexTestClass
 		
@@ -84,7 +84,7 @@ from flaskcom.remote_object import RemoteObject
 #returns an object that can be used like the object initialized in the wrapped function,
 #here: test_object = ComplexTestClass('hallo')
 classifier = RemoteObject(wrapped_function = wrapped_function, #the function that initializes the remote object
-							path_to_virtualenv = "../../../../../../NICO/NICO-haptic-object-classification/virtualenv", #a virtualenv can loaded before exectuting the code in the remote terminal.
+							path_to_virtualenv = "../../../../../../NICO/NICO-haptic-object-classification/virtenv", #a virtualenv can loaded before exectuting the code in the remote terminal.
 							server = "localhost", #the remote object is running on another computer
 							original_working_directory = "../../../../../../NICO/NICO-haptic-object-classification/", #a working directory can be specified, which can be used to search for the code
 							keep_open = False, #the remote object can be kept open, when the program is exectuted the next time, it will use the open remote object instead of creating a new one
@@ -95,12 +95,12 @@ classifier = RemoteObject(wrapped_function = wrapped_function, #the function tha
 
 ##### flaskcom definitions
 
-db_filename="/tmp/one_sample.db"
-database_file=db_filename
+db_filename="../../../../../../NICO/NICO-haptic-object-classification/sample_1_from_experiment_2.db"
 
-result=classifier.classify(db_filename)
-print ("This is a " + classifier.numberToString(result))
 
+most_likely,all_results=classifier.classify(db_filename)
+print ("This is a most likely a {} ".format(classifier.number_to_object(result)))
+raw_input()
 
 # Data for robot movement in high level mode
 # move joints with 10 per cent of the speed and hand joints with full speed
