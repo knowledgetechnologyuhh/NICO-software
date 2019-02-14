@@ -167,24 +167,6 @@
       ],
       "orientation": "direct"
     },
-    "l_wrist_y": {
-      "offset": 0.0,
-      "type": "SR-SEED28",
-      "id": 42,
-      "angle_limit": [-180,
-        180
-      ],
-      "orientation": "direct"
-    },
-    "l_wrist_x": {
-      "offset": 0.0,
-      "type": "SR-SEED28",
-      "id": 43,
-      "angle_limit": [-180,
-        180
-      ],
-      "orientation": "direct"
-    },
     "l_thumb_z": {
       "offset": 0.0,
       "type": "SR-SEED28",
@@ -234,24 +216,6 @@
       "offset": 0.0,
       "type": "SR-SEED28",
       "id": 31,
-      "angle_limit": [-180,
-        180
-      ],
-      "orientation": "direct"
-    },
-    "r_wrist_y": {
-      "offset": 0.0,
-      "type": "SR-SEED28",
-      "id": 32,
-      "angle_limit": [-180,
-        180
-      ],
-      "orientation": "direct"
-    },
-    "r_wrist_x": {
-      "offset": 0.0,
-      "type": "SR-SEED28",
-      "id": 33,
       "angle_limit": [-180,
         180
       ],

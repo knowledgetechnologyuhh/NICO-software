@@ -1,289 +1,183 @@
 import logging
 import threading
 import time
-
-MAX_CUR_FINGER = 100
-MAX_CUR_THUMB = 100
-CURRENT_PORTS = {"wrist_z": "present_current_port_1",
-                 "wrist_x": "present_current_port_2",
-                 "thumb_x": "present_current_port_3",
-                 "indexfingers_x": "present_current_port_4"}
-
-logger = logging.getLogger(__name__)
+from abc import ABCMeta, abstractmethod, abstractproperty
+from threading import Semaphore
 
 
-def _HAND_compliant(robot):
-    """
-    Removes the compliant from the hand. This function is used as a callback
-    for the timer
+class AbstractHand(object):
+    """Abstract hand class to represent Seed Robotics hands."""
+    __metaclass__ = ABCMeta
 
-    :param robot: The robot
-    :type robot: pypot.robot
-    """
-    if hasattr(robot, 'r_indexfingers_x'):
-        robot.r_indexfingers_x.compliant = True
+    @abstractproperty
+    def current_limit(self):
+        """Integer to limit motor currents to avoid damage, see knowledge
+        base for specific hand"""
+        pass
 
-    if hasattr(robot, 'r_thumb_x'):
-        robot.r_thumb_x.compliant = True
+    @abstractproperty
+    def sensitive_motors(self):
+        """List of motors (with tendons) that should not surpass current
+        limit"""
+        pass
 
-    if hasattr(robot, 'l_indexfingers_x'):
-        robot.l_indexfingers_x.compliant = True
+    @abstractproperty
+    def current_ports(self):
+        """Dict that specifies which mainboard property holds the current
+        readings of the hand motors as in {"motor_name": "board_attribute"}"""
+        pass
 
-    if hasattr(robot, 'l_thumb_x'):
-        robot.l_thumb_x.compliant = True
+    @abstractproperty
+    def poses(self):
+        """Nested dict that specifies position and speed of involved motors
+        for each pose as in {"poseName": {"motor_name": (pos, speed_fract)}}"""
+        pass
 
+    def __init__(self, robot, isLeft, monitorCurrents=True):
+        self.logger = logging.getLogger(__name__)
 
-def _closeHandWithCurrentLimit(board, thumb, indexfingers, percentage):
-    for it, pos in enumerate(range(int(indexfingers.present_position),
-                                   int(130. * percentage), 5)):
-        for retries in range(10):
-            success = True
-            try:
-                if (board.present_current_port_4 > MAX_CUR_FINGER
-                        or board.present_current_port_3 > MAX_CUR_THUMB):
-                    logger.warning("Reached maximum current - Hand won't " +
-                                   "be closed any further")
-                    return
-                break
-            except AttributeError as e:
-                if retries == 9:
-                    logger.error("Current check failed after 10 retries")
-                    success = False
-                    raise
-                logger.error(
-                    "Current check failed - retry {}".format(retries + 1))
-        if not success:
-            break
-        indexfingers.goal_position = pos
-        thumb.goal_position = pos
-        time.sleep(0.05)
-    indexfingers.compliant = True
-    thumb.compliant = True
+        if isLeft:
+            self.prefix = "l_"
+        else:
+            self.prefix = "r_"
 
+        # get hand motor accessors from robot
+        self.board = getattr(robot, self.prefix + "virtualhand_x")
+        for motor in self.current_ports.keys():
+            setattr(self, motor, getattr(robot, self.prefix + motor))
 
-def isHandMotor(jointname):
-    """
-    Checks whether the given motor belongs to the RH4D hand
+        # genereate named methods for poses
+        def add_pose_method(pose):
 
-    :param jointname: Name of the motor
-    :type jointname: str
-    :return: True if motor is a hand motor, False else
-    :rtype: boolean
-    """
-    if jointname[2:] in CURRENT_PORTS.keys():
-        return True
-    return False
+            def pose_func(self, fraction_max_speed, percentage):
+                self.executePose(pose, fraction_max_speed, percentage)
+            setattr(AbstractHand, pose, pose_func)
 
+            pose_func.__name__ = pose
+            pose_func.__doc__ = "Executes the {} pose".format(pose)
 
-def getPresentCurrent(robot, jointname):
-    """
-    Returns the current reading for the given joint from the hand's mainboard.
-    (Current readings are not stored in the motors themselves)
+        for pose_name in self.poses.keys():
+            add_pose_method(pose_name)
 
-    :param jointName: Name of the joint
-    :type jointName: str
-    :return: Current of the joint
-    :rtype: float
-    """
+        self.mutex = Semaphore()
 
-    """
-    Wrist Rotation: ID 23/24, Port Number 1 == wrist_z
-    Wrist Flexion: ID 25/26, Port Number 2  == wrist_x
-    Thumb Flexion: ID 27/28, Port Number 3  == thumb_x
-    Middle finger Flexion: ID 29/30, Port Number 4 == indexfingers_x
-    """
+        self.motor_directions = dict(
+            zip(self.sensitive_motors, ["idle"] * len(self.sensitive_motors)))
 
-    if isHandMotor(jointname):
+        if monitorCurrents:
+            t = threading.Thread(target=self._current_check)
+            t.daemon = True
+            t.start()
 
-        if jointname.startswith('r_'):
-            board = getattr(robot, "r_virtualhand_x")
-        elif jointname.startswith('l_'):
-            board = getattr(robot, "l_virtualhand_x")
+    def setAngle(self, motor_name, position, fraction_max_speed):
+        """
+        Moves motor to given position.
 
-        # if board != None:
-        #    if jointname.endswith("wrist_z"):
-        #        return board.present_current_port_1
-        #    elif jointname.endswith("wrist_x"):
-        #        return board.present_current_port_2
-        #    elif jointname.endswith("thumb_x"):
-        #        return board.present_current_port_3
-        #    elif jointname.endswith("indexfingers_x"):
-        #        return board.present_current_port_4
+        :param motor_name: motor name
+        :type motor_name: str
+        :param position: goal position/angle
+        :type position: float
+        :param fraction_max_speed: Percentage of goal speed at which the motor
+                                 should operate [0.0, 1.0]
+        :type position: float
+        """
+        if self.isHandMotor(motor_name):
+            motor_name = motor_name[2:]
+            motor = getattr(self, motor_name)
 
-        return getattr(board, CURRENT_PORTS[jointname[2:]])
+            self.mutex.acquire()
+            if motor_name in self.sensitive_motors:
+                if position > motor.present_position:
+                    self.motor_directions[motor_name] = "closing"
+                else:
+                    self.motor_directions[motor_name] = "opening"
 
-    logging.warning("{} is not a handjoint".format(jointname))
-    return 0
+            motor.compliant = False
+            motor.goal_speed = 1000.0 * fraction_max_speed
+            motor.goal_position = position
+            self.mutex.release()
+        else:
+            self.logger.warning(
+                "Trying to move unknown motor {}".format(motor_name))
 
+    def isHandMotor(self, jointname):
+        """
+        Checks whether the given motor belongs to the hand
 
-def openHand(robot, handName, fractionMaxSpeed=1.0, percentage=1.0):
-    """
-    Opens the specified hand. handName can be 'RHand' or 'LHand'
+        :param jointname: Name of the motor
+        :type jointname: str
+        :return: True if motor is a hand motor, False else
+        :rtype: boolean
+        """
+        if jointname.startswith(self.prefix) and hasattr(self, jointname[2:]):
+            return True
+        return False
 
-    :param robot: Robot object
-    :type robot: pypot.robot
-    :param handName: Name of the hand (RHand, LHand)
-    :type handName: str
-    :param fractionMaxSpeed: Speed at which hand should open. Default: 1.0
-    :type fractionMaxSpeed: float
-    :param percentage: Percentage hand should open. 0.0 < percentage <= 1.0
-    :type percentage: float
-    :return: None
-    """
-    if robot is None:
-        logger.critical('No robot provided')
-        return
+    def getPresentCurrent(self, jointname):
+        """
+        Returns the current reading for the given joint from the hand's
+        mainboard. (Current readings are not stored in the motors themselves)
 
-    if not (0.0 < percentage <= 1.0):
-        logger.critical('percentage (%f) out of bounds' % percentage)
-        return
+        :param jointName: Name of the joint
+        :type jointName: str
+        :return: Current of the joint
+        :rtype: float
+        """
 
-    if handName == 'RHand':
-        robot.r_indexfingers_x.compliant = False
-        robot.r_indexfingers_x.goal_speed = 1000.0 * fractionMaxSpeed
-        robot.r_indexfingers_x.goal_position = -170.0 * percentage
-        robot.r_thumb_x.compliant = False
-        robot.r_thumb_x.goal_speed = 1000.0 * fractionMaxSpeed
-        robot.r_thumb_x.goal_position = -170.0 * percentage
-        threading.Timer(1.0, _HAND_compliant, [robot]).start()
-    elif handName == 'LHand':
-        robot.l_indexfingers_x.compliant = False
-        robot.l_indexfingers_x.goal_speed = 1000.0 * fractionMaxSpeed
-        robot.l_indexfingers_x.goal_position = -170.0 * percentage
-        robot.l_thumb_x.compliant = False
-        robot.l_thumb_x.goal_speed = 1000.0 * fractionMaxSpeed
-        robot.l_thumb_x.goal_position = -170.0 * percentage
-        threading.Timer(1.0, _HAND_compliant, [robot]).start()
-    else:
-        logger.warning('Unknown hand handle: %s' % handName)
-        return
+        if self.isHandMotor(jointname):
+            return getattr(self.board, self.current_ports[jointname[2:]])
 
+        self.logger.warning("{} is not a joint of {}Hand".format(
+            jointname, self.prefix[0].upper()))
+        return 0
 
-def openHandVREP(robot, handName, fractionMaxSpeed=1.0, percentage=1.0):
-    """
-    Opens the specified hand. handName can be 'RHand' or 'LHand'
+    def executePose(self, poseName, fractionMaxSpeed=1., percentage=1.):
+        """
+        Executes given pose.
 
-    This function does the conversion to the V-REP simulator
+        :param fractionMaxSpeed: Speed at which to execute the pose.
+                                 Default: 1.0
+        :type fractionMaxSpeed: float
+        :param percentage: Percentage of the pose to execute.
+                           0.0 < percentage <= 1.0 (default)
+        :type percentage: float
+        """
+        if poseName not in self.poses.keys():
+            self.logger.warning((
+                "Unknown pose {} - known poses are {}"
+            ).format(poseName, self.poses.keys()))
+            return
 
-    :param robot: Robot object
-    :type robot: pypot.robot
-    :param handName: Name of the hand (RHand, LHand)
-    :type handName: str
-    :param fractionMaxSpeed: Speed at which hand should open. Default: 1.0
-    :type fractionMaxSpeed: float
-    :param percentage: Percentage hand should open. 0.0 < percentage <= 1.0
-    :type percentage: float
-    :return: None
-    """
-    if robot is None:
-        logger.critical('No robot provided')
-        return
+        pose = self.poses[poseName]
+        for motor in pose.keys():
+            angle, speed = pose[motor]
+            if hasattr(self, motor):
+                self.setAngle(self.prefix + motor, angle * percentage,
+                              speed * fractionMaxSpeed)
+            else:
+                self.logger.warning(
+                    "Unknown motor {} in {}".format(motor, poseName))
 
-    if not (0.0 < percentage <= 1.0):
-        logger.critical('percentage (%f) out of bounds' % percentage)
-        return
+    def _current_check(self):
+        """Thread to halt movement of sensitive motors when they exceed the
+        current limit"""
+        while True:
+            before = time.time()
+            self.mutex.acquire()
+            for motor_name in self.sensitive_motors:
+                if self.motor_directions[motor_name] == "closing":
+                    if (getattr(self.board, self.current_ports[motor_name]) >
+                            self.current_limit):
 
-    if handName == 'RHand':
-        robot.r_indexfingers_x.compliant = False
-        robot.r_indexfingers_x.goal_speed = 1000.0 * fractionMaxSpeed
-        robot.r_indexfingers_x.goal_position = 0.0 * percentage
-        robot.r_thumb_x.compliant = False
-        robot.r_thumb_x.goal_speed = 1000.0 * fractionMaxSpeed
-        robot.r_thumb_x.goal_position = 0.0 * percentage
-    elif handName == 'LHand':
-        robot.l_indexfingers_x.compliant = False
-        robot.l_indexfingers_x.goal_speed = 1000.0 * fractionMaxSpeed
-        robot.l_indexfingers_x.goal_position = 0.0 * percentage
-        robot.l_thumb_x.compliant = False
-        robot.l_thumb_x.goal_speed = 1000.0 * fractionMaxSpeed
-        robot.l_thumb_x.goal_position = 0.0 * percentage
-    else:
-        logger.warning('Unknown hand handle: %s' % handName)
-        return
+                        self.logger.warning(
+                            (
+                                "Reached maximum current - Stopping " +
+                                "movement of {}{}"
+                            ).format(self.prefix, motor_name))
 
+                        motor = getattr(self, motor_name)
 
-def closeHand(robot, handName, fractionMaxSpeed=1.0, percentage=1.0):
-    """
-    Closes the specified hand. handName can be 'RHand' or 'LHand'
-
-    :param robot: Robot object
-    :type robot: pypot.robot
-    :param handName: Name of the hand (RHand, LHand)
-    :type handName: str
-    :param fractionMaxSpeed: Speed at which hand should close. Default: 1.0
-    :type fractionMaxSpeed: float
-    :param percentage: Percentage hand should open. 0.0 < percentage <= 1.0
-    :type percentage: float
-    :return: None
-    """
-    if robot is None:
-        logger.critical('No robot provided')
-        return
-
-    if not (0.0 < percentage <= 1.0):
-        logger.critical('percentage (%f) out of bounds' % percentage)
-        return
-
-    if handName == 'RHand':
-        robot.r_indexfingers_x.compliant = False
-        robot.r_indexfingers_x.goal_speed = 1000.0 * fractionMaxSpeed
-        robot.r_thumb_x.compliant = False
-        robot.r_thumb_x.goal_speed = 1000.0 * fractionMaxSpeed
-        threading.Thread(target=_closeHandWithCurrentLimit, args=[
-                         robot.r_virtualhand_x, robot.r_thumb_x,
-                         robot.r_indexfingers_x, percentage]).start()
-
-    elif handName == 'LHand':
-        robot.l_indexfingers_x.compliant = False
-        robot.l_indexfingers_x.goal_speed = 1000.0 * fractionMaxSpeed
-        robot.l_thumb_x.compliant = False
-        robot.l_thumb_x.goal_speed = 1000.0 * fractionMaxSpeed
-        threading.Thread(target=_closeHandWithCurrentLimit, args=[
-                         robot.l_virtualhand_x, robot.l_thumb_x,
-                         robot.l_indexfingers_x, percentage]).start()
-    else:
-        logger.warning('Unknown hand handle: %s' % handName)
-        return
-
-
-def closeHandVREP(robot, handName, fractionMaxSpeed=1.0, percentage=1.0):
-    """
-    Opens the specified hand. handName can be 'RHand' or 'LHand'
-
-    This function does the conversion to the V-REP simulator
-
-    :param robot: Robot object
-    :type robot: pypot.robot
-    :param handName: Name of the hand (RHand, LHand)
-    :type handName: str
-    :param fractionMaxSpeed: Speed at which hand should open. Default: 1.0
-    :type fractionMaxSpeed: float
-    :param percentage: Percentage hand should open. 0.0 < percentage <= 1.0
-    :type percentage: float
-    :return: None
-    """
-    if robot is None:
-        logger.critical('No robot provided')
-        return
-
-    if not (0.0 < percentage <= 1.0):
-        logger.critical('percentage (%f) out of bounds' % percentage)
-        return
-
-    if handName == 'RHand':
-        robot.r_indexfingers_x.compliant = False
-        robot.r_indexfingers_x.goal_speed = 1000.0 * fractionMaxSpeed
-        robot.r_indexfingers_x.goal_position = -30.0 * percentage
-        robot.r_thumb_x.compliant = False
-        robot.r_thumb_x.goal_speed = 1000.0 * fractionMaxSpeed
-        robot.r_thumb_x.goal_position = -30.0 * percentage
-    elif handName == 'LHand':
-        robot.l_indexfingers_x.compliant = False
-        robot.l_indexfingers_x.goal_speed = 1000.0 * fractionMaxSpeed
-        robot.l_indexfingers_x.goal_position = -30.0 * percentage
-        robot.l_thumb_x.compliant = False
-        robot.l_thumb_x.goal_speed = 1000.0 * fractionMaxSpeed
-        robot.l_thumb_x.goal_position = -30.0 * percentage
-    else:
-        logger.warning('Unknown hand handle: %s' % handName)
-        return
+                        motor.goal_position = motor.present_position
+                        self.motor_directions[motor_name] = "idle"
+            self.mutex.release()
+            time.sleep(max(0, .1 - (time.time() - before)))

@@ -1,17 +1,15 @@
 from hand import AbstractHand
 
 
-class RH7DHand(AbstractHand):
+class RH5DHand(AbstractHand):
     """This class represents the Seed Robotics RH4D Hand."""
 
-    current_limit = 225
+    current_limit = 175
 
     sensitive_motors = ("thumb_z", "thumb_x",
                         "indexfinger_x", "middlefingers_x")
 
     current_ports = {"wrist_z": "present_current_port_1",
-                     "wrist_y": "present_current_port_2",
-                     "wrist_x": "present_current_port_3",
                      "thumb_z": "present_current_port_4",
                      "thumb_x": "present_current_port_5",
                      "indexfinger_x": "present_current_port_6",
@@ -48,12 +46,8 @@ class RH7DHand(AbstractHand):
              "pencilGrip": {"indexfinger_x": (90., .5),
                             "middlefingers_x": (150., 1.),
                             "thumb_x": (60., .6),
-                            "thumb_z": (150., 1.)},
-             "prepareGrab": {"indexfinger_x": (-150., 1.),
-                             "middlefingers_x": (-150., 1.),
-                             "thumb_x": (-150., 1.),
-                             "thumb_z": (150., 1.)},
+                            "thumb_z": (150., 1.)}
              }
 
     def __init__(self, robot, isLeft, monitorCurrents=True):
-        super(RH7DHand, self).__init__(robot, isLeft, monitorCurrents)
+        super(RH5DHand, self).__init__(robot, isLeft, monitorCurrents)
