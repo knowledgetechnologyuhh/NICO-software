@@ -3,16 +3,19 @@ import json
 import logging
 import pprint
 import re
+import subprocess
 import time
 
+import pypot.dynamixel
 import pypot.dynamixel.error as pypot_error
 import pypot.robot
 import pypot.vrep
 from nicomotion._nicomotion_internal.MotionError import MotionErrorHandler
 from pypot.vrep.remoteApiBindings import vrep as remote_api
 
-import _nicomotion_internal.hand
-import _nicomotion_internal.RH7D_hand
+from _nicomotion_internal.RH4D_hand import RH4DHand
+from _nicomotion_internal.RH5D_hand import RH5DHand
+from _nicomotion_internal.RH7D_hand import RH7DHand
 
 
 class Motion:
@@ -23,7 +26,7 @@ class Motion:
 
     def __init__(self, motorConfig='config.json', vrep=False,
                  vrepHost='127.0.0.1', vrepPort=19997, vrepScene=None,
-                 ignoreMissing=False):
+                 ignoreMissing=False, monitorHandCurrents=True):
         """
         Motion is an interface to control the movement of the NICO robot.
 
@@ -39,6 +42,11 @@ class Motion:
         :type vrepScene: str
         :param ignoreMissing: If missing motors should be removed
         :type ignoreMissing: bool
+        :param monitorHandCurrents: Whether movement of sensitiv hand motors
+                                    should be halted if their recommended
+                                    current threshold is surpassed (do not
+                                    deactivate unless absolutely necessary)
+        :type monitorHandCurrents: bool
         """
         self._robot = None
         self._maximumSpeed = 1.0
@@ -67,6 +75,7 @@ class Motion:
             self._vrepIO = self._robot._controllers[0].io
         else:
             self._logger.info('Using robot')
+            self._adjust_port_latency()
             retries = 0
             success = False
             while not success:
@@ -109,16 +118,57 @@ class Motion:
                     self._logger.warning(
                         "Retrying initialization after an error occured")
                     time.sleep(1)
-
-        if (hasattr(self._robot, "r_middlefingers_x")
-                or hasattr(self._robot, "l_middlefingers_x")):
-            self._handModel = "RH7D"
+        time.sleep(3)  # wait for syncloop to initialize values
+        if (hasattr(self._robot, "r_middlefingers_x")):
+            if (hasattr(self._robot, "r_wrist_x")):
+                self._leftHand = RH7DHand(robot=self._robot, isLeft=True,
+                                          monitorCurrents=monitorHandCurrents)
+                self._rightHand = RH7DHand(robot=self._robot, isLeft=False,
+                                           monitorCurrents=monitorHandCurrents)
+            else:
+                self._leftHand = RH5DHand(robot=self._robot, isLeft=True,
+                                          monitorCurrents=monitorHandCurrents)
+                self._rightHand = RH5DHand(robot=self._robot, isLeft=False,
+                                           monitorCurrents=monitorHandCurrents)
         else:
-            self._handModel = "RH4D"
+            self._leftHand = RH4DHand(robot=self._robot, isLeft=True,
+                                      monitorCurrents=monitorHandCurrents)
+            self._rightHand = RH4DHand(robot=self._robot, isLeft=False,
+                                       monitorCurrents=monitorHandCurrents)
         # remember initial situation as a safe state
         self.safeState = dict()
         for motor in self._robot.motors:
             self.safeState[motor.name] = motor.present_position
+
+    def _adjust_port_latency(self):
+        """
+        Lowers the latency of the NICO port to prevent communication delays
+        """
+        # checks whether setserial is installed
+        subprocess.check_output(["which", "setserial"])
+
+        # get all ports
+        ports = pypot.dynamixel.get_available_ports()
+
+        if not ports:
+            raise OSError('No available ports found')
+
+        # find a port which has dynamixel motors attached
+        ids = range(48)
+        motors_found = False
+        for i in range(len(ports)):
+            dxl_io = pypot.dynamixel.DxlIO(ports[i])
+            if len(dxl_io.scan(ids)) > 0:
+                port = ports[i]
+                motors_found = True
+                break
+
+        if not motors_found:
+            raise OSError("No valid port found")
+
+        # set latency
+        self._logger.info("Setting port {} to low latency".format(port))
+        subprocess.call(["setserial", port, "low_latency"])
 
     def getVrep(self):
         """
@@ -244,10 +294,11 @@ class Motion:
             self._logger.warning('A real robot has no VREP controller')
             return None
 
-    def setHandPose(self, handName, poseName, fractionMaxSpeed=1.0):
+    def setHandPose(self, handName, poseName, fractionMaxSpeed=1.0,
+                    percentage=1):
         """
-        Executes pose with the specified hand. This only works with the RH7D
-        4-finger hand. Make sure to open the hand beforehand.
+        Executes pose with the specified hand. Most poses only works with the
+        RH5D and RH7D 4-finger hands. Make sure to open the hand beforehand.
 
         Known poses are: ("thumbsUp", "pointAt", "okSign",
         "pinchToIndex", "keyGrip", "pencilGrip", "closeHand", "openHand").
@@ -262,22 +313,28 @@ class Motion:
         :type poseName: str
         :param fractionMaxSpeed: Speed at which hand move. Default: 1.0
         :type fractionMaxSpeed: float
+        :param percentage: Percentage of the pose to execute.
+                           0.0 < percentage <= 1.0 (default)
+        :type percentage: float
         """
         if self._vrep:
             self._logger.warning(
                 "'{}' pose is not supported for vrep".format(poseName))
         else:
-            if self._handModel == "RH7D":
+            if handName.lower().startswith("l"):
+                hand = self._leftHand
+            elif handName.lower().startswith("r"):
+                hand = self._rightHand
+            else:
+                self._logger.warning("Unknown hand name {}".format(handName))
+
+            if hasattr(hand, poseName):
                 speed = min(fractionMaxSpeed, self._maximumSpeed)
-                _nicomotion_internal.RH7D_hand.executePose(self._robot,
-                                                           handName,
-                                                           poseName,
-                                                           speed
-                                                           )
+                hand.executePose(poseName, speed, percentage)
             else:
                 self._logger.warning(
                     "'{}' pose is not supported for hand model {}".format(
-                        poseName, self._handModel))
+                        poseName, hand.__class__.__name__))
 
     def openHand(self, handName, fractionMaxSpeed=1.0, percentage=1.0):
         """
@@ -290,22 +347,24 @@ class Motion:
         :param percentage: Percentage hand should open. 0.0 < percentage <= 1.0
         :type percentage: float
         """
-        if self._vrep:
-            _nicomotion_internal.hand.openHandVREP(self._robot, handName,
-                                                   min(fractionMaxSpeed,
-                                                       self._maximumSpeed),
-                                                   percentage)
+        if handName.lower().startswith("l"):
+            hand = self._leftHand
+        elif handName.lower().startswith("r"):
+            hand = self._rightHand
         else:
-            if self._handModel == "RH4D":
-                _nicomotion_internal.hand.openHand(self._robot, handName,
-                                                   min(fractionMaxSpeed,
-                                                       self._maximumSpeed),
-                                                   percentage)
-            else:
-                if (percentage < 1.0):
-                    self._logger.warning("Open hand for RH7D doesn't " +
-                                         "support percentage parameter")
-                self.setHandPose(handName, "openHand", fractionMaxSpeed)
+            self._logger.warning("Unknown hand name {}".format(handName))
+
+        if self._vrep:
+            hand.openHandVREP(min(fractionMaxSpeed, self._maximumSpeed),
+                              percentage)
+        else:
+            hand.openHand(min(fractionMaxSpeed, self._maximumSpeed),
+                          percentage)
+            # else:
+            #     if (percentage < 1.0):
+            #         self._logger.warning("Open hand for RH7D doesn't " +
+            #                              "support percentage parameter")
+            #     self.setHandPose(handName, "openHand", fractionMaxSpeed)
 
     def closeHand(self, handName, fractionMaxSpeed=1.0, percentage=1.0):
         """
@@ -318,23 +377,19 @@ class Motion:
         :param percentage: Percentage hand should open. 0.0 < percentage <= 1.0
         :type percentage: float
         """
-        if self._vrep:
-            _nicomotion_internal.hand.closeHandVREP(self._robot, handName,
-                                                    min(fractionMaxSpeed,
-                                                        self._maximumSpeed),
-                                                    percentage)
+        if handName.lower().startswith("l"):
+            hand = self._leftHand
+        elif handName.lower().startswith("r"):
+            hand = self._rightHand
         else:
-            if self._handModel == "RH4D":
-                _nicomotion_internal.hand.closeHand(self._robot, handName,
-                                                    min(fractionMaxSpeed,
-                                                        self._maximumSpeed),
-                                                    percentage)
-            else:
-                if percentage != 1.0:
-                    self._logger.warning(
-                        "Close hand for RH7D doesn't support percentage " +
-                        "parameter")
-                self.setHandPose(handName, "closeHand", fractionMaxSpeed)
+            self._logger.warning("Unknown hand name {}".format(handName))
+
+        if self._vrep:
+            hand.closeHandVREP(min(fractionMaxSpeed, self._maximumSpeed),
+                               percentage)
+        else:
+            hand.closeHand(min(fractionMaxSpeed, self._maximumSpeed),
+                           percentage)
 
     def enableForceControlAll(self, goalForce=500):
         """
@@ -417,13 +472,17 @@ class Motion:
         :type fractionMaxSpeed: float
         """
         if hasattr(self._robot, jointName):
-            if self._handModel == "RH7D" and _nicomotion_internal.RH7D_hand\
-                    .isHandMotor(jointName):
-                _nicomotion_internal.RH7D_hand.setAngle(self._robot, jointName,
-                                                        angle, min(
-                                                            fractionMaxSpeed,
-                                                            self._maximumSpeed
-                                                        ))
+            handMotor = False
+            if self._leftHand.isHandMotor(jointName):
+                hand = self._leftHand
+                handMotor = True
+            elif (self._rightHand.isHandMotor(jointName)):
+                hand = self._rightHand
+                handMotor = True
+
+            if handMotor:
+                hand.setAngle(jointName, angle, min(
+                    fractionMaxSpeed, self._maximumSpeed))
             else:
                 motor = getattr(self._robot, jointName)
                 motor.compliant = False
@@ -611,14 +670,10 @@ class Motion:
         :rtype: float
         """
         if hasattr(self._robot, jointName):
-            if(self._handModel == "RH4D"
-               and _nicomotion_internal.hand.isHandMotor(jointName)):
-                return _nicomotion_internal.hand.getPresentCurrent(self._robot,
-                                                                   jointName)
-            elif (self._handModel == "RH7D"
-                  and _nicomotion_internal.RH7D_hand.isHandMotor(jointName)):
-                return _nicomotion_internal.RH7D_hand.getPresentCurrent(
-                    self._robot, jointname)
+            if(self._leftHand.isHandMotor(jointName)):
+                return self._leftHand.getPresentCurrent(jointName)
+            elif(self._rightHand.isHandMotor(jointName)):
+                return self._rightHand.getPresentCurrent(jointName)
             else:
                 motor = getattr(self._robot, jointName)
                 if hasattr(motor, 'present_current'):

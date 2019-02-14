@@ -23,7 +23,8 @@ if __name__ == '__main__':
         "keyGrip",
         "pencilGrip",
         "closeHand",
-        "openHand")
+        "openHand",
+        "prepareGrab")
 
     if len(sys.argv) < 2 or sys.argv[1] not in ("left", "right"):
         message = ("Please specify which hand to use as first argument " +
@@ -57,11 +58,11 @@ if __name__ == '__main__':
     robot.setAngle(arm + "_shoulder_y", prefix * -20., .03)
     robot.setAngle(arm + "_elbow_y", prefix * 80., .03)
     for pose in sys.argv[2:]:
-        robot.setHandPose(hand, pose)
+        robot.setHandPose(hand, pose, .2)
         time.sleep(5.0)
 
     robot.setAngle(arm + "_shoulder_y", prefix * 0, .03)
     robot.setAngle(arm + "_elbow_y", prefix * 80, .03)
-    robot.openHand(hand)
+    robot.openHand(hand, .2)
     time.sleep(3)
     robot.disableTorqueAll()
