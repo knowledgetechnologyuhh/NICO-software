@@ -139,7 +139,7 @@ class VideoDevice:
         Opens the device and starts the eventloop
         """
         if self._open:
-            logging.warning('Device is already oprn')
+            logging.warning('Device is already open')
             return
 
         # Open camera

@@ -1,0 +1,199 @@
+{
+  "controllers": {
+    "all_controller": {
+      "sync_read": false,
+      "attached_motors": [
+        "hands"
+      ],
+      "port": "auto"
+    }
+   },
+  "motorgroups": {
+    "l_hand": [
+      "l_wrist_z",
+      "l_wrist_y",
+      "l_wrist_x",
+      "l_indexfinger_x",
+      "l_thumb_z",
+      "l_thumb_x",
+      "l_middlefingers_x",
+      "l_virtualhand"
+    ],
+    "r_hand": [
+      "r_wrist_z",
+      "r_wrist_y",
+      "r_wrist_x",
+      "r_indexfinger_x",
+      "r_thumb_z",
+      "r_thumb_x",
+      "r_middlefingers_x",
+      "r_virtualhand"
+    ],
+    "hands": [
+      "r_hand",
+      "l_hand"
+    ]
+  },
+  "motors": {
+    "l_virtualhand": {
+      "offset": 0.0,
+      "type": "SR-EROSBRD",
+      "id": 40,
+      "angle_limit": [
+        -180,
+        180
+      ],
+      "orientation": "direct"
+    },
+    "l_wrist_z": {
+      "offset": 0.0,
+      "type": "SR-SEED28",
+      "id": 41,
+      "angle_limit": [
+        -180,
+        180
+      ],
+      "orientation": "direct"
+    },
+    "l_wrist_y": {
+      "offset": 0.0,
+      "type": "SR-SEED28",
+      "id": 42,
+      "angle_limit": [
+        -180,
+        180
+      ],
+      "orientation": "direct"
+    },
+    "l_wrist_x": {
+      "offset": 0.0,
+      "type": "SR-SEED28",
+      "id": 43,
+      "angle_limit": [
+        -180,
+        180
+      ],
+      "orientation": "direct"
+    },
+    "l_thumb_z": {
+      "offset": 0.0,
+      "type": "SR-SEED28",
+      "id": 44,
+      "angle_limit": [
+        -180,
+        180
+      ],
+      "orientation": "direct"
+    },
+    "l_thumb_x": {
+      "offset": 0.0,
+      "type": "SR-SEED28",
+      "id": 45,
+      "angle_limit": [
+        -180,
+        180
+      ],
+      "orientation": "direct"
+    },
+    "l_indexfinger_x": {
+      "offset": 0.0,
+      "type": "SR-SEED28",
+      "id": 46,
+      "angle_limit": [
+        -180,
+        180
+      ],
+      "orientation": "direct"
+    },
+    "l_middlefingers_x": {
+      "offset": 0.0,
+      "type": "SR-SEED28",
+      "id": 47,
+      "angle_limit": [
+        -180,
+        180
+      ],
+      "orientation": "direct"
+    },
+    "r_virtualhand": {
+      "offset": 0.0,
+      "type": "SR-EROSBRD",
+      "id": 30,
+      "angle_limit": [
+        -180,
+        180
+      ],
+      "orientation": "direct"
+    },
+    "r_wrist_z": {
+      "offset": 0.0,
+      "type": "SR-SEED28",
+      "id": 31,
+      "angle_limit": [
+        -180,
+        180
+      ],
+      "orientation": "direct"
+    },
+    "r_wrist_y": {
+      "offset": 0.0,
+      "type": "SR-SEED28",
+      "id": 32,
+      "angle_limit": [
+        -180,
+        180
+      ],
+      "orientation": "direct"
+    },
+    "r_wrist_x": {
+      "offset": 0.0,
+      "type": "SR-SEED28",
+      "id": 33,
+      "angle_limit": [
+        -180,
+        180
+      ],
+      "orientation": "direct"
+    },
+    "r_thumb_z": {
+      "offset": 0.0,
+      "type": "SR-SEED28",
+      "id": 34,
+      "angle_limit": [
+        -180,
+        180
+      ],
+      "orientation": "direct"
+    },
+    "r_thumb_x": {
+      "offset": 0.0,
+      "type": "SR-SEED28",
+      "id": 35,
+      "angle_limit": [
+        -180,
+        180
+      ],
+      "orientation": "direct"
+    },
+    "r_indexfinger_x": {
+      "offset": 0.0,
+      "type": "SR-SEED28",
+      "id": 36,
+      "angle_limit": [
+        -180,
+        180
+      ],
+      "orientation": "direct"
+    },
+    "r_middlefingers_x": {
+      "offset": 0.0,
+      "type": "SR-SEED28",
+      "id": 37,
+      "angle_limit": [
+        -180,
+        180
+      ],
+      "orientation": "direct"
+    }
+   }
+}

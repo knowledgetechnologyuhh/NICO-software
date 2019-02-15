@@ -1,0 +1,10 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: moveiturdf
+    relative_path: urdf/complete.urdf
+  SRDF:
+    relative_path: config/complete.srdf
+  CONFIG:
+    author_name: 2schmid
+    author_email: 2schmid@informatik.uni-hamburg.de
+    generated_timestamp: 1518198257

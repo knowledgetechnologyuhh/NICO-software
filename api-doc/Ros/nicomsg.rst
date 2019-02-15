@@ -25,8 +25,10 @@ A message with the parameters:
  * float64
  * int32
 
+If an array is used the type of its content should be surrounded by two a's (e.g. asa for a string array parameter)
+
 will be called *nicomsg/sfi*. The parameter name is called **paramX**, where **X** is the position of the parameter.
- 
+
 
 Service name convention
 #######################

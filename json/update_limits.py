@@ -20,13 +20,14 @@ for joint in root.findall('joint'):
     name  = joint.get('name')
     limit = joint.find('limit')
     # convert joint limits from rad to degrees
-    lower = int(round(math.degrees(float(limit.get('lower')))))
-    upper = int(round(math.degrees(float(limit.get('upper')))))
-    # if a motor exists in the json with the same name as the joint, update limits
-    if name in json1['motors']:
-        json1['motors'][name]['angle_limit'] = [lower,upper]
-    if name in json2['motors']:
-        json2['motors'][name]['angle_limit'] = [lower,upper]
+    if limit != None:
+        lower = int(round(math.degrees(float(limit.get('lower')))))
+        upper = int(round(math.degrees(float(limit.get('upper')))))
+        # if a motor exists in the json with the same name as the joint, update limits
+        if name in json1['motors']:
+            json1['motors'][name]['angle_limit'] = [lower,upper]
+        if name in json2['motors']:
+            json2['motors'][name]['angle_limit'] = [lower,upper]
 
 # remove old json files to avoid leftovers
 try:
