@@ -1,16 +1,29 @@
+# -*- coding: utf-8
+
 import time
+from os.path import abspath, dirname
+
 from nicoemotionrecognition import EmotionRecognition
-from nicomotion import Motion
 from nicoface.FaceExpression import faceExpression
-from os.path import dirname, abspath
+from nicomotion import Motion
+from nicovision.VideoDevice import VideoDevice
 
-robot = Motion.Motion(dirname(abspath(__file__))+"/../../../json/nico_humanoid_upper.json",vrep=False)
-face = faceExpression("/dev/ttyACM0")
-#torso NICO
-#emotionRecogniton = EmotionRecognition.EmotionRecognition(device='usb-046d_080a_6C686AA1-video-index0', robot=robot, face=face)
-#legged NICO
+robot = Motion.Motion(dirname(abspath(__file__)) +
+                      "/../../../json/nico_humanoid_upper.json", vrep=False,
+                      ignoreMissing=True)
+face = faceExpression()
+# torso NICO
 
-emotionRecogniton = EmotionRecognition.EmotionRecognition(device='usb-046d_080a_17E79161-video-index0', robot=robot, face=face,faceDetectionDelta=10, voiceEnabled=True)
+camera = VideoDevice.autodetect_nicoeyes()[0]  # 0: left_eye, 1: right_eye
+
+emotionRecogniton = EmotionRecognition.EmotionRecognition(
+    device=camera, robot=robot, face=face, voiceEnabled=True, german=True)
+
+# emotionRecogniton = EmotionRecognition.EmotionRecognition(
+#     device='usb-046d_080a_6C686AA1-video-index0', robot=robot, face=face, voiceEnabled=True, german=True)
+# legged NICO
+
+#emotionRecogniton = EmotionRecognition.EmotionRecognition(device='usb-046d_080a_17E79161-video-index0', robot=robot, face=face,faceDetectionDelta=10, voiceEnabled=True)
 
 #emotionRecogniton = EmotionRecognition.EmotionRecognition(device='usb-046d_080a_2DE7B460-video-index0', face=face)
 

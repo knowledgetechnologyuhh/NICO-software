@@ -1,19 +1,18 @@
 #!/usr/bin/env python
 
-import logging
 import argparse
+import ast
+import logging
+import math
 
-import rospy
 import actionlib
 import control_msgs.msg
-import trajectory_msgs.msg
 import nicomsg.msg
 import nicomsg.srv
-
-import math
-import ast
-
+import rospy
+import trajectory_msgs.msg
 from nicomoveit import moveitWrapper
+
 
 class TrajectoryServer:
     """
@@ -28,12 +27,12 @@ class TrajectoryServer:
 
         :return: dict
         """
-        return {'rostopicName': '/trajectory',                
+        return {'rostopicName': '/trajectory',
                 'rosnicoPrefix': '/nico/motion',
                 'check_correct_path_execution': True,
                 }
 
-    def __init__(self, planningGroup, config = None):
+    def __init__(self, planningGroup, config=None):
         """
         The TrajectoryServer provides the FollowJointTrajectoryAction via ROS
 
@@ -42,12 +41,14 @@ class TrajectoryServer:
         """
         if config is None:
             config = TrajectoryServer.getConfig()
-            
+
         self.config = config
 
         self._error_string = 'Successful'
-        # Error codes see http://docs.ros.org/api/control_msgs/html/action/FollowJointTrajectory.html
-        self._error_code = control_msgs.msg.FollowJointTrajectoryResult.SUCCESSFUL
+        # Error codes see
+        # http://docs.ros.org/api/control_msgs/html/action/FollowJointTrajectory.html
+        self._error_code = \
+            control_msgs.msg.FollowJointTrajectoryResult.SUCCESSFUL
         self._path_tolerance = dict()
 
         logging.debug('Init ROS')
@@ -55,7 +56,7 @@ class TrajectoryServer:
 
         logging.info('Waiting for rosnico')
         rospy.wait_for_service('%s/getAngle' % config['rosnicoPrefix'])
-        
+
         # at default the allowed joint angle error is 2 radians
         # setting this to a lower value will allow to stop motion after collision,
         # however because of the delayed motion on the NICO valid paths might not be correctly executed
@@ -66,19 +67,27 @@ class TrajectoryServer:
         rostopic = planningGroup + config['rostopicName']
 
         logging.debug('Init action server')
-        #for group in config['planningGroups']:
-        self._actionServer = actionlib.SimpleActionServer('%s' % rostopic, control_msgs.msg.FollowJointTrajectoryAction, execute_cb=self._FollowJointTrajectoryCallback, auto_start=False)
+        # for group in config['planningGroups']:
+        self._actionServer = actionlib.SimpleActionServer(
+            '%s' % rostopic, control_msgs.msg.FollowJointTrajectoryAction,
+            execute_cb=self._FollowJointTrajectoryCallback, auto_start=False)
         self._actionServer.start()
 
         logging.debug('Init publishers')
-        self._setAngle = rospy.Publisher('%s/setAngle' % config['rosnicoPrefix'], nicomsg.msg.sff, queue_size=10)
+        self._setAngle = rospy.Publisher(
+            '%s/setAngle' % config['rosnicoPrefix'], nicomsg.msg.sff,
+            queue_size=10)
 
         logging.debug('Init service proxies')
-        self._getAngle = rospy.ServiceProxy('%s/getAngle' % config['rosnicoPrefix'], nicomsg.srv.GetValue )
-        self._getJointNames = rospy.ServiceProxy('%s/getJointNames' % config['rosnicoPrefix'], nicomsg.srv.GetNames )
-        self._getConfig = rospy.ServiceProxy('%s/getConfig' % config['rosnicoPrefix'], nicomsg.srv.GetString )
+        self._getAngle = rospy.ServiceProxy(
+            '%s/getAngle' % config['rosnicoPrefix'], nicomsg.srv.GetValue)
+        self._getJointNames = rospy.ServiceProxy(
+            '%s/getJointNames' % config['rosnicoPrefix'], nicomsg.srv.GetNames)
+        self._getConfig = rospy.ServiceProxy(
+            '%s/getConfig' % config['rosnicoPrefix'], nicomsg.srv.GetString)
         self.jsonConfig = ast.literal_eval(self._getConfig().data)
-        self._getVrep = rospy.ServiceProxy('%s/getVrep' % config['rosnicoPrefix'], nicomsg.srv.GetString )        
+        self._getVrep = rospy.ServiceProxy(
+            '%s/getVrep' % config['rosnicoPrefix'], nicomsg.srv.GetString)
         self.vrep = bool(self._getVrep().data)
 
     def _FollowJointTrajectoryCallback(self, message):
@@ -90,14 +99,17 @@ class TrajectoryServer:
         """
         self._error_string = 'Successful'
         self._error_code = control_msgs.msg.FollowJointTrajectoryResult.SUCCESSFUL
-        
-        self.pathTolerance = rospy.get_param(config['rosnicoPrefix']+'/pathTolerance', self.pathTolerance)
-        self.fractionMaxSpeed = rospy.get_param(config['rosnicoPrefix']+'/fractionMaxSpeed', self.fractionMaxSpeed)
-        self.config['check_correct_path_execution'] = not rospy.get_param(config['rosnicoPrefix']+'/fakeExecution', not self.config['check_correct_path_execution'])
+
+        self.pathTolerance = rospy.get_param(
+            config['rosnicoPrefix'] + '/pathTolerance', self.pathTolerance)
+        self.fractionMaxSpeed = rospy.get_param(
+            config['rosnicoPrefix'] + '/fractionMaxSpeed', self.fractionMaxSpeed)
+        self.config['check_correct_path_execution'] = not rospy.get_param(
+            config['rosnicoPrefix'] + '/fakeExecution', not self.config['check_correct_path_execution'])
 
         self._testJoints(message.trajectory.joint_names)
 
-        #rospy.logwarn(str(message))
+        # rospy.logwarn(str(message))
 
         if self._error_code is not control_msgs.msg.FollowJointTrajectoryResult.SUCCESSFUL:
             self._sendResult()
@@ -117,11 +129,14 @@ class TrajectoryServer:
             sleep = start - rospy.Time.now()
             if sleep.to_sec() > 0.0:
                 rospy.sleep(sleep)
-            self._moveTo(message.trajectory.joint_names, message.trajectory.points[i])
-            sleep = message.trajectory.points[i].time_from_start - (rospy.Time.now() - start)
+            self._moveTo(message.trajectory.joint_names,
+                         message.trajectory.points[i])
+            sleep = message.trajectory.points[i].time_from_start - \
+                (rospy.Time.now() - start)
             if sleep.to_sec() > 0.0:
                 rospy.sleep(sleep)
-            self._sendFeedback(message.trajectory.joint_names, message.trajectory.points[i], start)
+            self._sendFeedback(message.trajectory.joint_names,
+                               message.trajectory.points[i], start)
             if self._error_code is not control_msgs.msg.FollowJointTrajectoryResult.SUCCESSFUL:
                 rospy.logwarn(str("ERROR occured"))
                 self._moveToCurrentJointAngles(message.trajectory.joint_names)
@@ -147,7 +162,7 @@ class TrajectoryServer:
         unknown = []
         for joint in jointNames:
             if not joint in names:
-                unknown += [ joint ]
+                unknown += [joint]
 
         if len(unknown) is not 0:
             self._error_code = control_msgs.msg.FollowJointTrajectoryResult.INVALID_JOINTS
@@ -166,7 +181,8 @@ class TrajectoryServer:
         for i in range(0, len(jointNames)):
             message = nicomsg.msg.sff()
             message.param1 = jointNames[i]
-            message.param2 = moveitWrapper.rosToNicoAngle(jointNames[i], point.positions[i], self.jsonConfig, self.vrep)          
+            message.param2 = moveitWrapper.rosToNicoAngle(
+                jointNames[i], point.positions[i], self.jsonConfig, self.vrep)
             message.param3 = self.fractionMaxSpeed
             self._setAngle.publish(message)
         rospy.sleep(.1)
@@ -187,19 +203,21 @@ class TrajectoryServer:
         error = trajectory_msgs.msg.JointTrajectoryPoint()
         for i in range(0, len(jointNames)):
             joint = jointNames[i]
-            desired.positions += [ point.positions[i] ]
+            desired.positions += [point.positions[i]]
             value = self._getAngle(joint).value
-            value = moveitWrapper.nicoToRosAngle(joint, value, self.jsonConfig, self.vrep)
-            actual.positions += [ value ]
+            value = moveitWrapper.nicoToRosAngle(
+                joint, value, self.jsonConfig, self.vrep)
+            actual.positions += [value]
             calculated_error = abs(desired.positions[i] - actual.positions[i])
-            error.positions += [ calculated_error ]
+            error.positions += [calculated_error]
             # Check margin
             if self.config['check_correct_path_execution']:
-              if (joint in self._path_tolerance and calculated_error > self._path_tolerance[joint]) or calculated_error > self.pathTolerance:
-                  self._error_code = control_msgs.msg.FollowJointTrajectoryResult.PATH_TOLERANCE_VIOLATED
-                  self._error_string = 'Joint %s missed path position by %f (should: %f, is: %f)' % (joint, calculated_error, desired.positions[i], actual.positions[i] )
-                  rospy.logwarn(self._error_string)
-                  return
+                if (joint in self._path_tolerance and calculated_error > self._path_tolerance[joint]) or calculated_error > self.pathTolerance:
+                    self._error_code = control_msgs.msg.FollowJointTrajectoryResult.PATH_TOLERANCE_VIOLATED
+                    self._error_string = 'Joint %s missed path position by %f (should: %f, is: %f)' % (
+                        joint, calculated_error, desired.positions[i], actual.positions[i])
+                    rospy.logwarn(self._error_string)
+                    return
 
         desired.time_from_start = point.time_from_start
         actual.time_from_start = rospy.Time.now() - start_time
@@ -212,7 +230,7 @@ class TrajectoryServer:
     def _moveToCurrentJointAngles(self, jointNames):
         """
         Sets joint angles to current values to stop any further movement.
-        
+
         :param jointNames: Names of joints
         :type jointNames: list
         """
@@ -220,7 +238,7 @@ class TrajectoryServer:
         for i in range(0, len(jointNames)):
             message = nicomsg.msg.sff()
             message.param1 = jointNames[i]
-            message.param2 = self._getAngle(jointNames[i]).value     
+            message.param2 = self._getAngle(jointNames[i]).value
             message.param3 = speed
             self._setAngle.publish(message)
 
@@ -247,22 +265,26 @@ class TrajectoryServer:
             if joint in tolerance_dict:
                 desired = followJointMessage.trajectory.points[-1].positions[i]
                 value = self._getAngle(joint).value
-                actual = moveitWrapper.nicoToRosAngle(joint, value, self.jsonConfig, self.vrep)
+                actual = moveitWrapper.nicoToRosAngle(
+                    joint, value, self.jsonConfig, self.vrep)
                 error = abs(desired - actual)
                 if error > tolerance_dict[joint]:
                     self._error_code = control_msgs.msg.FollowJointTrajectoryResult.GOAL_TOLERANCE_VIOLATED
-                    self._error_string = 'Joint %s missed goal position by %f (should: %f, is: %f)' % (joint, error, desired, actual)
+                    self._error_string = 'Joint %s missed goal position by %f (should: %f, is: %f)' % (
+                        joint, error, desired, actual)
                     rospy.logwarn(self._error_string)
                     return
 
         # Check time tolerance
-        time_error = (start_time + followJointMessage.trajectory.points[-1].time_from_start) - rospy.Time.now()
+        time_error = (
+            start_time + followJointMessage.trajectory.points[-1].time_from_start) - rospy.Time.now()
         # if no time tolerance is set no error is produced
         if abs(followJointMessage.goal_time_tolerance.secs) + abs(followJointMessage.goal_time_tolerance.nsecs) > 0.0:
-          if (abs(time_error.secs) > followJointMessage.goal_time_tolerance.secs) or (abs(time_error.secs) == followJointMessage.goal_time_tolerance.secs and abs(time_error.nsecs) > followJointMessage.goal_time_tolerance.nsecs):
-              self._error_code = control_msgs.msg.FollowJointTrajectoryResult.GOAL_TOLERANCE_VIOLATED
-              self._error_string = 'Goal time tolerance violated (tolerance: %s, error: %s)' % (str(followJointMessage.goal_time_tolerance), str(time_error))
-              rospy.logwarn(self._error_string)
+            if (abs(time_error.secs) > followJointMessage.goal_time_tolerance.secs) or (abs(time_error.secs) == followJointMessage.goal_time_tolerance.secs and abs(time_error.nsecs) > followJointMessage.goal_time_tolerance.nsecs):
+                self._error_code = control_msgs.msg.FollowJointTrajectoryResult.GOAL_TOLERANCE_VIOLATED
+                self._error_string = 'Goal time tolerance violated (tolerance: %s, error: %s)' % (
+                    str(followJointMessage.goal_time_tolerance), str(time_error))
+                rospy.logwarn(self._error_string)
 
     def _sendResult(self):
         """
@@ -276,13 +298,17 @@ class TrajectoryServer:
         else:
             self._actionServer.set_succeeded(message)
 
+
 if __name__ == '__main__':
     config = TrajectoryServer.getConfig()
 
     parser = argparse.ArgumentParser('NICO trajectory server')
-    parser.add_argument('--rostopic-name', dest='rostopicName', help='Topic name for ROS. Default: %s' % config['rostopicName'], type=str)
-    parser.add_argument('--rosnico-prefix', dest='rosnicoPrefix', help='Prefix of the NICO ROS motion interface. Default: %s' % config['rosnicoPrefix'], type=str)
-    parser.add_argument('-c', '--check', dest='check', help='Check if joint path is correctly executed', action='store_false')
+    parser.add_argument('--rostopic-name', dest='rostopicName',
+                        help='Topic name for ROS. Default: %s' % config['rostopicName'], type=str)
+    parser.add_argument('--rosnico-prefix', dest='rosnicoPrefix',
+                        help='Prefix of the NICO ROS motion interface. Default: %s' % config['rosnicoPrefix'], type=str)
+    parser.add_argument('-c', '--check', dest='check',
+                        help='Check if joint path is correctly executed', action='store_false')
 
     args = parser.parse_known_args()[0]
 
@@ -294,10 +320,10 @@ if __name__ == '__main__':
     config['check_correct_path_execution'] = args.check
 
     #server = TrajectoryServer(config)
-    
+
     leftArm_controller = TrajectoryServer('/leftArm_controller', config)
     rightArm_controller = TrajectoryServer('/rightArm_controller', config)
     leftLeg_controller = TrajectoryServer('/leftLeg_controller', config)
     rightLeg_controller = TrajectoryServer('/rightLeg_controller', config)
-    
+
     rospy.spin()

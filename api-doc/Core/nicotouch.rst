@@ -13,3 +13,13 @@ The optoforce class allows access to the optoforce sensor data.
     :undoc-members:
     :show-inheritance:
     :private-members:
+
+OptoforceMultichannel
+#####################
+The OptoforceMultichannel class allows access to the data of optoforce devices with multiple sensors.
+
+.. automodule:: nicotouch.OptoforceMultichannel
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :private-members:

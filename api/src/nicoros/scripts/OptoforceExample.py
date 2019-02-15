@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 
-import rospy
 import nicomsg.msg as msg
+import rospy
+
 
 def callback(data):
     rospy.loginfo("x: %i, y: %i, z: %i", data.param1, data.param2, data.param3)
+
 
 def listener():
     """
@@ -15,6 +17,7 @@ def listener():
     rospy.Subscriber("nico/optoforce/DSE0A125/raw", msg.iii, callback)
 
     rospy.spin()
+
 
 if __name__ == '__main__':
     listener()

@@ -3,11 +3,11 @@ nicoros - FaceExpression
 
 The FaceExpression class allows to manipulate the facial expression of NICO through ROS.
 
-To start the interface run:
+To start the interface run (use -h to list optional arguments):
 
 .. code-block:: bash
 
-   rosrun nicoros FaceExpression.py --devicename='/dev/ttyACM0'
+   rosrun nicoros FaceExpression.py
 
 Exposed topics
 ==============

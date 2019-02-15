@@ -7,7 +7,7 @@
       ],
       "port": "auto"
     }
-   },
+  },
   "motorgroups": {
     "l_hand": [
       "l_wrist_z",
@@ -17,7 +17,7 @@
       "l_thumb_z",
       "l_thumb_x",
       "l_middlefingers_x",
-      "l_virtualhand"
+      "l_virtualhand_x"
     ],
     "r_hand": [
       "r_wrist_z",
@@ -27,7 +27,7 @@
       "r_thumb_z",
       "r_thumb_x",
       "r_middlefingers_x",
-      "r_virtualhand"
+      "r_virtualhand_x"
     ],
     "hands": [
       "r_hand",
@@ -35,12 +35,11 @@
     ]
   },
   "motors": {
-    "l_virtualhand": {
+    "l_virtualhand_x": {
       "offset": 0.0,
       "type": "SR-EROSBRD",
       "id": 40,
-      "angle_limit": [
-        -180,
+      "angle_limit": [-180,
         180
       ],
       "orientation": "direct"
@@ -49,8 +48,7 @@
       "offset": 0.0,
       "type": "SR-SEED28",
       "id": 41,
-      "angle_limit": [
-        -180,
+      "angle_limit": [-180,
         180
       ],
       "orientation": "direct"
@@ -59,8 +57,7 @@
       "offset": 0.0,
       "type": "SR-SEED28",
       "id": 42,
-      "angle_limit": [
-        -180,
+      "angle_limit": [-180,
         180
       ],
       "orientation": "direct"
@@ -69,8 +66,7 @@
       "offset": 0.0,
       "type": "SR-SEED28",
       "id": 43,
-      "angle_limit": [
-        -180,
+      "angle_limit": [-180,
         180
       ],
       "orientation": "direct"
@@ -79,8 +75,7 @@
       "offset": 0.0,
       "type": "SR-SEED28",
       "id": 44,
-      "angle_limit": [
-        -180,
+      "angle_limit": [-180,
         180
       ],
       "orientation": "direct"
@@ -89,8 +84,7 @@
       "offset": 0.0,
       "type": "SR-SEED28",
       "id": 45,
-      "angle_limit": [
-        -180,
+      "angle_limit": [-180,
         180
       ],
       "orientation": "direct"
@@ -99,8 +93,7 @@
       "offset": 0.0,
       "type": "SR-SEED28",
       "id": 46,
-      "angle_limit": [
-        -180,
+      "angle_limit": [-180,
         180
       ],
       "orientation": "direct"
@@ -109,18 +102,16 @@
       "offset": 0.0,
       "type": "SR-SEED28",
       "id": 47,
-      "angle_limit": [
-        -180,
+      "angle_limit": [-180,
         180
       ],
       "orientation": "direct"
     },
-    "r_virtualhand": {
+    "r_virtualhand_x": {
       "offset": 0.0,
       "type": "SR-EROSBRD",
       "id": 30,
-      "angle_limit": [
-        -180,
+      "angle_limit": [-180,
         180
       ],
       "orientation": "direct"
@@ -129,8 +120,7 @@
       "offset": 0.0,
       "type": "SR-SEED28",
       "id": 31,
-      "angle_limit": [
-        -180,
+      "angle_limit": [-180,
         180
       ],
       "orientation": "direct"
@@ -139,8 +129,7 @@
       "offset": 0.0,
       "type": "SR-SEED28",
       "id": 32,
-      "angle_limit": [
-        -180,
+      "angle_limit": [-180,
         180
       ],
       "orientation": "direct"
@@ -149,8 +138,7 @@
       "offset": 0.0,
       "type": "SR-SEED28",
       "id": 33,
-      "angle_limit": [
-        -180,
+      "angle_limit": [-180,
         180
       ],
       "orientation": "direct"
@@ -159,8 +147,7 @@
       "offset": 0.0,
       "type": "SR-SEED28",
       "id": 34,
-      "angle_limit": [
-        -180,
+      "angle_limit": [-180,
         180
       ],
       "orientation": "direct"
@@ -169,8 +156,7 @@
       "offset": 0.0,
       "type": "SR-SEED28",
       "id": 35,
-      "angle_limit": [
-        -180,
+      "angle_limit": [-180,
         180
       ],
       "orientation": "direct"
@@ -179,8 +165,7 @@
       "offset": 0.0,
       "type": "SR-SEED28",
       "id": 36,
-      "angle_limit": [
-        -180,
+      "angle_limit": [-180,
         180
       ],
       "orientation": "direct"
@@ -189,11 +174,10 @@
       "offset": 0.0,
       "type": "SR-SEED28",
       "id": 37,
-      "angle_limit": [
-        -180,
+      "angle_limit": [-180,
         180
       ],
       "orientation": "direct"
     }
-   }
+  }
 }

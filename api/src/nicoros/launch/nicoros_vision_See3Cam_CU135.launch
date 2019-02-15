@@ -1,0 +1,32 @@
+<launch>
+  <arg name="mode" default="stereo"/>
+  <!-- cameras are autodetected when not set
+  <arg name="device-left" default="usb-e-con_systems_See3CAM_CU135_09229807-video-index0"/>
+  <arg name="device-right" default="usb-e-con_systems_See3CAM_CU135_36249807-video-index0"/>
+  -->
+  <arg name="width" default="1920"/>
+  <arg name="height" default="1080"/>
+  <arg name="framerate" default="30"/>
+  <!-- these are already set in settings file
+  <arg name="zoom" default="0"/>
+  <arg name="pan" default="0"/>
+  <arg name="tilt" default="0"/>
+  -->
+  <!-- File path relative to NICO-software directory-->
+  <arg name="settings-file" default="json/nico_vision_See3CAM_CU135_settings.json"/>
+  <arg name="setting" default="standard"/>
+  <arg name="rostopic-prefix" default="/nico/vision"/>
+  <arg name="rostopic-left" default="/left"/>
+  <arg name="rostopic-right" default="/right"/>
+
+  <node name="nicovision" pkg="nicoros" type="Vision.py"
+    args="--mode='$(arg mode)'
+    --width='$(arg width)'
+    --height='$(arg height)'
+    --framerate='$(arg framerate)'
+    --settings-file='$(arg settings-file)'
+    --setting='$(arg setting)'
+    --rostopic-prefix='$(arg rostopic-prefix)'
+    --rostopic-left='$(arg rostopic-left)'
+    --rostopic-right='$(arg rostopic-right)'"/>
+</launch>

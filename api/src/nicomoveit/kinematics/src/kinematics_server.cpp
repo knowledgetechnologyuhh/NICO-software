@@ -1,5 +1,5 @@
 /**
-This program is a server for inverse kinematics requests for the NICO.
+This program is a server for kinematics requests for the NICO.
 **/
 
 // Ros
