@@ -1,17 +1,24 @@
 #!/usr/bin/env python
-
 from nicomotion.Motion import Motion
+from nicomoveit import moveitWrapper
 import logging
 import argparse
 import sys
+import time
+import threading
 
 import rospy
 import nicomsg.msg
 import nicomsg.srv
+import sensor_msgs.msg
+import control_msgs.msg
+
+from std_msgs.msg import String
 
 class NicoRosMotion():
     """
-    The NicoRosMotion class exposes the functions of :class:`nicomotion.Motion` to ROS
+    The NicoRosMotion class exposes the functions of :class:`nicomotion.Motion` to ROS and 
+    periodically publishes the current joint states
     """
 
     @staticmethod
@@ -27,24 +34,36 @@ class NicoRosMotion():
                 'vrepHost': '127.0.0.1',
                 'vrepPort': 19997,
                 'vrepScene': None,
-                'rostopicName': '/nico/motion'
+                'rostopicName': '/nico/motion',
+                'jointStateName': '/joint_states',
+                'fakeExecution': False,
                 }
 
     def __init__(self, config = None):
         """
-        RosNicoMotion provides :class:`nicomotion.Motion` functions over ROS
+        RosNicoMotion provides :class:`nicomotion.Motion` functions over ROS and 
+        periodically publishes the current joint states
 
         :param config: Configuration of the :class:`nicomotion.Motion` and RosNicoMotion interface
         :type config: dict
-        """
+        """        
         self.robot = None
         if config is None:
             config = NicoRosMotion.getConfig()
+            
+        if rospy.has_param(config['rostopicName']+'/robotMotorFile'):
+            config['robotMotorFile'] = rospy.get_param(config['rostopicName']+'/robotMotorFile')
+        if rospy.has_param(config['rostopicName']+'/vrep'):
+            config['vrep'] = rospy.get_param(config['rostopicName']+'/vrep')
+        if rospy.has_param(config['rostopicName']+'/vrepScene'):
+            config['vrepScene'] = rospy.get_param(config['rostopicName']+'/vrepScene')
+        if rospy.has_param(config['rostopicName']+'/fakeExecution'):
+            config['fakeExecution'] = rospy.get_param(config['rostopicName']+'/fakeExecution')
 
         # init Motion
         logging.info('-- Init NicoRosMotion --')
         self.robot = Motion(motorConfig=config['robotMotorFile'], vrep=config['vrep'], vrepHost=config['vrepHost'], vrepPort=config['vrepPort'], vrepScene=config['vrepScene'])
-
+       
         # init ROS
         logging.debug('Init ROS')
         rospy.init_node('nicorosmotion', anonymous=True)
@@ -66,10 +85,14 @@ class NicoRosMotion():
         rospy.Subscriber('%s/disableTorque' % config['rostopicName'], nicomsg.msg.s, self._ROSPY__disableTorque)
         rospy.Subscriber('%s/enableTorqueAll' % config['rostopicName'], nicomsg.msg.empty, self._ROSPY__enableTorqueAll)
         rospy.Subscriber('%s/disableTorqueAll' % config['rostopicName'], nicomsg.msg.empty, self._ROSPY__disableTorqueAll)
+        rospy.Subscriber('%s/toSafePosition' % config['rostopicName'], nicomsg.msg.empty, self._ROSPY__toSafePosition)
 
         # setup services
         logging.debug('Init services')
+        rospy.Service('%s/getConfig' % config['rostopicName'], nicomsg.srv.GetString, self._ROSPY_getConfig)
+        rospy.Service('%s/getVrep' % config['rostopicName'], nicomsg.srv.GetString, self._ROSPY_getVrep)
         rospy.Service('%s/getAngle' % config['rostopicName'], nicomsg.srv.GetValue, self._ROSPY_getAngle)
+        rospy.Service('%s/getPose' % config['rostopicName'], nicomsg.srv.GetValues, self._ROSPY_getPose)
         rospy.Service('%s/getJointNames' % config['rostopicName'], nicomsg.srv.GetNames, self._ROSPY_getJointNames)
         rospy.Service('%s/getAngleUpperLimit' % config['rostopicName'], nicomsg.srv.GetValue, self._ROSPY_getAngleUpperLimit)
         rospy.Service('%s/getAngleLowerLimit' % config['rostopicName'], nicomsg.srv.GetValue, self._ROSPY_getAngleLowerLimit)
@@ -79,8 +102,26 @@ class NicoRosMotion():
         rospy.Service('%s/getStiffness' % config['rostopicName'], nicomsg.srv.GetValue, self._ROSPY_getStiffness)
         rospy.Service('%s/getPID' % config['rostopicName'], nicomsg.srv.GetPID, self._ROSPY_getPID)
 
+        # setup class variables
+        self._running = True
+        self.jsonConfig = self.robot.getConfig()
+        self.vrep = self.robot.getVrep()
+        self.config = config
+        self.fakeJointStates = {}
+
+        # setup publishers
+        logging.debug('Init publishers')
+        self._jointStatePublisher = rospy.Publisher('%s' % config['jointStateName'], sensor_msgs.msg.JointState, queue_size = 1)
+        # a asynchronous thread is seperated from the main thread
+        self._jointStateThread = threading.Thread(target=self._sendJointState)
+        self._jointStateThread.start()   
+
         # wait for messages
         logging.info('-- All done --')
+
+    def stop(self):
+        self._running = False
+        self._jointStateThread.join()
 
     def _ROSPY_openHand(self, message):
         """
@@ -143,6 +184,7 @@ class NicoRosMotion():
         :param message: ROS message
         :type message: nicomsg.msg.sff
         """
+        self.fakeJointStates[message.param1] = message.param2
         self.robot.setAngle(message.param1, message.param2, message.param3)
 
     def _ROSPY_changeAngle(self, message):
@@ -153,6 +195,28 @@ class NicoRosMotion():
         :type message: nicomsg.msg.sff
         """
         self.robot.changeAngle(message.param1, message.param2, message.param3)
+        
+    def _ROSPY_getVrep(self, message):
+        """
+        Callback handle for :meth:`nicomotion.Motion.getVrep`
+
+        :param message: ROS message
+        :type message: nicomsg.srv.GetString
+        :return: 'True' if vrep is used, 'False' if real NICO is used
+        :rtype: string
+        """
+        return str(self.robot.getVrep())
+        
+    def _ROSPY_getConfig(self, message):
+        """
+        Callback handle for :meth:`nicomotion.Motion.getConfig`
+
+        :param message: ROS message
+        :type message: nicomsg.srv.GetString
+        :return: Dictionary with motor config that has been converted to a string
+        :rtype: string
+        """
+        return str(self.robot.getConfig())
 
     def _ROSPY_getAngle(self, message):
         """
@@ -164,6 +228,17 @@ class NicoRosMotion():
         :rtype: float
         """
         return self.robot.getAngle(message.param1)
+        
+    def _ROSPY_getPose(self, message):
+        """
+        Callback handle for :meth:`nicomotion.Motion.getPose`
+
+        :param message: ROS message
+        :type message: nicomsg.srv.GetValues
+        :return: Position of the requestet object in x,y,z coordinates
+        :rtype: list
+        """
+        return [self.robot.getPose(message.param1)]
 
     def _ROSPY_getJointNames(self, message):
         """
@@ -316,6 +391,49 @@ class NicoRosMotion():
         """
         self.robot.disableTorqueAll()
 
+    def _ROSPY__toSafePosition(self, message):
+        """
+        Callback handle for :meth:`nicomotion.Motion.toSafePosition`
+
+        :param message: ROS message
+        :type message: nicomsg.msg.empty
+        """
+        self.robot.toSafePosition()
+
+    def _sendJointState(self):
+        """
+        Loop for sending the current joint state
+        """
+        while self._running:
+            if rospy.has_param(self.config['rostopicName']+'/fakeExecution'):
+                self.config['fakeExecution'] = rospy.get_param(self.config['rostopicName']+'/fakeExecution')
+            message = sensor_msgs.msg.JointState()
+            message.name = []
+            message.position = []
+            message.effort = []
+            joints = self.robot.getJointNames()
+            
+            for joint in joints:
+                if self.config['fakeExecution'] and joint in self.fakeJointStates:
+                    value = self.fakeJointStates[joint]
+                else:
+                    value = self.robot.getAngle(joint)
+                message.name += [joint]
+                value = moveitWrapper.nicoToRosAngle(joint, value, self.jsonConfig, self.vrep)
+                rospy.loginfo(joint+' '+str(value))
+                message.position += [value]
+                #message.effort += [self.robot.getLoad(joint)]
+
+            joints_without_motor = ['l_indexfinger_1st_x', 'l_indexfinger_2nd_x', 'l_ringfingers_x', 'l_ringfinger_1st_x', 'l_ringfinger_2nd_x', 'l_thumb_1st_x', 'l_thumb_2nd_x', 'r_indexfinger_1st_x', 'r_indexfinger_2nd_x', 'r_ringfingers_x', 'r_ringfinger_1st_x', 'r_ringfinger_2nd_x', 'r_thumb_1st_x', 'r_thumb_2nd_x']
+            for joint in joints_without_motor:
+                message.name += [joint]
+                value = 0.0
+                message.position += [value]            
+
+            message.header.stamp = rospy.get_rostime()
+            self._jointStatePublisher.publish(message)
+            time.sleep(0.25)    
+
     def __del__(self):
         self.robot.cleanup()
 
@@ -332,6 +450,8 @@ if __name__ == '__main__':
     parser.add_argument('--vrep-port', dest='vrepPort', help='Port of VREP. Default: %i' % config['vrepPort'], type=int)
     parser.add_argument('--vrep-scene', dest='vrepScene', help='Scene to load in VREP. Default: %s' % config['vrepScene'], type=str)
     parser.add_argument('--rostopic-name', dest='rostopicName', help='Topic name for ROS. Default: %s' % config['rostopicName'], type=str)
+    parser.add_argument('-j', '--joint-state-name', dest='jointStateName', help='Name of the joint state topic. PLEASE NOTE: A lot of other nodes assume the joint state note to be at /joint_states, so be careful when changing it. Default: %s' % config['jointStateName'], type=str)
+    parser.add_argument('-f', '--fake-execution', dest='fake', help='Publish fake joint states instead of real joint states', action='store_false')
 
     args = parser.parse_known_args()[0]
     if args.logFile:
@@ -347,6 +467,9 @@ if __name__ == '__main__':
         config['vrepScene'] = args.vrepScene
     if args.rostopicName:
         config['rostopicName'] = args.rostopicName
+    if args.jointStateName:
+        config['jointStateName'] = args.jointStateName
+    config['fakeExecution'] = args.fake        
 
     # Set logging setting
     loggingLevel = logging.INFO
@@ -378,3 +501,5 @@ if __name__ == '__main__':
     rosConnection = NicoRosMotion(config)
 
     rospy.spin()
+    
+    rosConnection.stop()

@@ -1,4 +1,4 @@
-rosnico - Motion
+nicoros - Motion
 ****************
 
 The Motion class allows control over the NICO motors through ROS.
@@ -102,6 +102,11 @@ The following ROS services are exposed by the class - where $PREFIX stands for t
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
 | $PREFIX/getTorqueLimit                         | nicomsg/GetValue                               | Returns the torque limit of a single joint                                 |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
+| $PREFIX/getVrep                                | nicomsg/GetString                              | Returns if vrep simulation is used or not                                  |
++------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
+| $PREFIX/getConfig                              | nicomsg/GetString                              | Returns the JSON configuration of motors                                   |
++------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
+
 
 Class documentation
 ###################

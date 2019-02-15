@@ -1,7 +1,7 @@
 nicomotion
 **********
 
-The **nicomotion** packet contains classes to control the movement of the NICO robot.
+The **nicomotion** package contains classes to control the movement of the NICO robot.
 
 Motion
 ######

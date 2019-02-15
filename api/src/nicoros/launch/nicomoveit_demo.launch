@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<!--launches MoveIt! in demo mode and kinematics server-->
+<launch>
+
+  <include file="$(find moveitgenerated)/launch/demo.launch">
+    <arg name="rviz" value="false"/>
+    <arg name="use_gui" value="false"/>
+  </include>
+  
+  <include file="$(find kinematics)/launch/kinematics_server.launch" />
+
+</launch>
