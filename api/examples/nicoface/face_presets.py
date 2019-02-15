@@ -1,17 +1,21 @@
-from nicoface.FaceExpression import faceExpression
 from time import sleep
+
+from nicoface.FaceExpression import faceExpression
 
 simulation = False
 if simulation:
-    fe=faceExpression('sim')
+    fe = faceExpression('sim')
 else:
     fe = faceExpression()
     # handcoded presets
     # 'happiness','sadness','anger','disgust','surprise','fear','neutral','clear'
-    fe.sendFaceExpression("happiness") # only works with a real robot
-    sleep(1)
+    for expression in ('happiness', 'sadness', 'anger', 'disgust', 'surprise',
+                       'fear', 'neutral', 'clear'):
+        fe.sendFaceExpression(expression)  # only works with a real robot
+        sleep(1)
 
 # trained expressions
 for expression in ('Angry', 'Happy', 'Neutral', 'Sad', 'Surprise'):
+    print(expression)
     fe.sendTrainedFaceExpression(expression)
     sleep(1)

@@ -1,5 +1,6 @@
 import logging
 
+
 class AudioPlayer:
     def __init__(self):
         pass
@@ -126,7 +127,7 @@ class AudioPlayer:
         # TODO: implement
         pass
 
-    def play(self, task, volume = 1.0, panorama = 0.0):
+    def play(self, task, volume=1.0, panorama=0.0):
         """
         Plays a given task
 
@@ -140,7 +141,7 @@ class AudioPlayer:
         # TODO: implement
         pass
 
-    def playFile(self, filename, position = 0, volume = 1.0, panorama = 0.0):
+    def playFile(self, filename, position=0, volume=1.0, panorama=0.0):
         """
         Plays a given file
 

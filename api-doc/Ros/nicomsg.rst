@@ -19,16 +19,17 @@ The message name contains the type of the parameter. The type is shortened as fo
 +-------------------------------------------------+------------------------------+
 | string                                          | s                            |
 +-------------------------------------------------+------------------------------+
+| array                                           | a<type>a                     |
++-------------------------------------------------+------------------------------+
 
 A message with the parameters:
  * string
  * float64
  * int32
 
-If an array is used the type of its content should be surrounded by two a's (e.g. asa for a string array parameter)
+will be called *nicomsg/sfi.msg*. The parameter name is called **paramX**, where **X** is the position of the parameter.
 
-will be called *nicomsg/sfi*. The parameter name is called **paramX**, where **X** is the position of the parameter.
-
+If an array is used, the type of its content should be surrounded by two a's (e.g. *asa.msg* for a string array parameter)
 
 Service name convention
 #######################

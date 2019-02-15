@@ -94,6 +94,7 @@ def build_net(input_var=None):
 # move the robot in start position, ask for object and take an image
 picture_directory = "/tmp/"
 fMS = 0.02
+fMS_hand=1.0
 robot = Motion.Motion("../../../../json/nico_humanoid_legged_with_hands_mod.json", vrep=False)
 
 safety_relevant_joints=["_shoulder_z","_shoulder_y", "_arm_x", "_elbow_y"]
@@ -139,8 +140,6 @@ lasagne.layers.set_all_param_values(network, param_values)
 print("Network loaded, connecting to robot.")
 
 
-
-
 # enable torque of left arm joints
 robot.enableForceControl("head_z", 20)
 robot.enableForceControl("head_y", 20)
@@ -164,7 +163,7 @@ ttr=mov.move_file_position(mover_path + "pos_90_right_arm.csv",
                            move_speed=0.05)
 
 # open hand and move to start position
-robot.openHand('RHand', fractionMaxSpeed=0.05)
+robot.openHand('RHand', fractionMaxSpeed=fMS_hand)
 
 print "Wait for " + str(ttr) + " seconds"
 
@@ -177,7 +176,7 @@ while (True):
 
     # open hand
     robot.openHand('RHand',
-                   fractionMaxSpeed=fMS)  # move to start position (example: ([-19.12,  11.65, -30.37,  79.52, -38.37,  -8.66]))
+                   fractionMaxSpeed=fMS_hand)  # move to start position (example: ([-19.12,  11.65, -30.37,  79.52, -38.37,  -8.66]))
 
 
     # move head into recording position
@@ -395,8 +394,8 @@ while (True):
     robot.setAngle("r_shoulder_y", bNet, fMS)
     robot.setAngle("r_arm_x", cNet, fMS)
 
-    robot.setAngle("r_wrist_z", eNet, fMS)
-    robot.setAngle("r_wrist_x", fNet, fMS)
+    robot.setAngle("r_wrist_z", eNet, fMS_hand)
+    robot.setAngle("r_wrist_x", fNet, fMS_hand)
     robot.setAngle("r_elbow_y", dNet-20, fMS)
     #raw_input()
     time.sleep(0.5)
@@ -408,15 +407,17 @@ while (True):
     #raw_input()
 
     # close hand
-    robot.closeHand('RHand', fractionMaxSpeed=fMS)
+    robot.closeHand('RHand', fractionMaxSpeed=fMS_hand)
     time.sleep(2)
 
     thumbAngle = robot.getAngle("r_thumb_x")
 
+    #robot.stop_sync()
     print("thumbAngle")
     print(thumbAngle)
+    #raw_input()
 
-    if thumbAngle > 68:
+    if thumbAngle > -75 or thumbAngle < -120:
 
         print("Error: I think I have not correctly grasped the object.")
 
@@ -440,17 +441,17 @@ while (True):
         robot.setAngle("r_shoulder_y", 22, fMS)
         robot.setAngle("r_arm_x", 26, fMS)
         robot.setAngle("r_elbow_y", -80, fMS)
-        robot.setAngle("r_wrist_z", -180, fMS)
-        robot.setAngle("r_wrist_x", -85, fMS)
+        robot.setAngle("r_wrist_z", -180, fMS_hand)
+        robot.setAngle("r_wrist_x", -85, fMS_hand)
 
-        #time.sleep(2)
+        time.sleep(2)
         # move arm to block
         #l_block_position(robot)
 
         #time.sleep(2)
 
-        robot.openHand('RHand', fractionMaxSpeed=0.05)
-        time.sleep(1)
+        robot.openHand('RHand', fractionMaxSpeed=fMS_hand)
+        time.sleep(5)
         # robot.setAngle("r_shoulder_z", 13, fMS)
         # robot.setAngle("r_shoulder_y", 5, fMS)
         # robot.setAngle("r_arm_x", 26, fMS)
@@ -461,8 +462,8 @@ while (True):
         robot.setAngle("r_shoulder_y", 21, fMS)
         robot.setAngle("r_arm_x", 29, fMS)
         # robot.setAngle("r_elbow_y", -85, fMS)
-        robot.setAngle("r_wrist_z", 25, fMS)
-        robot.setAngle("r_wrist_x", -86, fMS)
+        robot.setAngle("r_wrist_z", 25, fMS_hand)
+        robot.setAngle("r_wrist_x", -86, fMS_hand)
 
         #time.sleep(2)
         #l_shove_position(robot)

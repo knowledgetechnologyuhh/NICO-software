@@ -15,4 +15,4 @@ This readme file serves as an overview over the different ROS nodes and their re
 |Motion.py|yesno_example.py|
 |Optoforce.py|OptoforceExample.py|
 |AudioStream.py|StreamReceiverExample.py|
-|Vision.py|-|
+|Vision.py|ImageSubscriberExample.py|

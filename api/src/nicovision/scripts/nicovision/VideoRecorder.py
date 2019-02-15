@@ -1,18 +1,21 @@
 import logging
-import cv2
 import os
 
-from VideoDevice import VideoDevice
-from Colorspace import Colorspace
+import cv2
 
-def getDevices():
+from Colorspace import Colorspace
+from VideoDevice import VideoDevice
+
+
+def get_devices():
     """
     Returns a list containing the possible path of all video capturing devices
 
     :return: Video devices
     :rtype: list
         """
-    return VideoDevice.getAllDevices()
+    return VideoDevice.get_all_devices()
+
 
 class VideoCodec:
     """
@@ -30,9 +33,18 @@ class VideoCodec:
     """
     DivX codec (Also known as MPEG-4)
     """
+    XVID = 4
+    """
+    XVID codec
+    """
+
 
 class VideoRecorder:
-    def __init__(self, device='', colorspace=Colorspace.RGB, framerate=20, width=640, height=480, videoformat=VideoCodec.MPEG1):
+
+    def __init__(self, device='', colorspace=Colorspace.RGB, framerate=20,
+                 width=640, height=480, zoom=None, pan=None, tilt=None,
+                 settings_file=None, setting="standard",
+                 videoformat=VideoCodec.MPEG1):
         """
         Initialises the VideoRecorder
 
@@ -46,20 +58,62 @@ class VideoRecorder:
         :type width: int
         :param height: Height of captured stream
         :type height: int
+        :param zoom: Zoom of camera (if supported)
+        :type zoom: int
         :param videoformat: Used video format
         :type videoformat: VideoCodec
         """
-        self._deviceName = device
+        self._logger = logging.getLogger(__name__)
+        self._device = VideoDevice.from_device(device, framerate, width,
+                                               height, zoom, pan, tilt,
+                                               settings_file, setting)
         self._running = False
         self._colorspace = colorspace
         self._framerate = framerate
         self._width = width
         self._height = height
         self._format = videoformat
-        self._device = None
         self._encoder = None
 
-    def isRecording(self):
+    def load_settings(self, file_path, setting="standard"):
+        """
+        Loads a settings json file and applies the given setting to all cameras
+
+        :param file_path: the settings file
+        :type file_path: str
+        :param setting: name of the setting that should be applied
+        :type setting: str
+        """
+        self._device.load_settings(file_path, setting)
+
+    def zoom(self, value):
+        """
+        Sets zoom value if camera supports it. Requires v4l-utils.
+
+        :param value: zoom value between 100 and 800
+        :type value: int
+        """
+        self._device.zoom(value)
+
+    def pan(self, value):
+        """
+        Sets pan (x-axis) value if camera supports it. Requires v4l-utils.
+
+        :param value: pan value between -648000 and 648000, step 3600
+        :type value: int
+        """
+        self._device.pan(value)
+
+    def tilt(self, value):
+        """
+        Sets tilt (y-axis) value if camera supports it. Requires v4l-utils.
+
+        :param value: tilt value between -648000 and 648000, step 3600
+        :type value: int
+        """
+        self._device.tilt(value)
+
+    def is_recording(self):
         """
         Returns true if the VideoRecorder is recording
 
@@ -68,7 +122,7 @@ class VideoRecorder:
         """
         return self._running
 
-    def getColorSpace(self):
+    def get_color_space(self):
         """
         Returns the currently used colorspace
 
@@ -77,7 +131,7 @@ class VideoRecorder:
         """
         return self._colorspace
 
-    def getFrameRate(self):
+    def get_frame_rate(self):
         """
         Returns the current frame rate
 
@@ -86,7 +140,7 @@ class VideoRecorder:
         """
         return self._framerate
 
-    def getResolution(self):
+    def get_resolution(self):
         """
         Returns the current resolution
 
@@ -95,8 +149,7 @@ class VideoRecorder:
         """
         return self._width, self._height
 
-
-    def getVideoFormat(self):
+    def get_video_format(self):
         """
         Returns the current video format
 
@@ -105,7 +158,7 @@ class VideoRecorder:
         """
         return self._format
 
-    def setColorSpace(self, colorspace):
+    def set_color_Space(self, colorspace):
         """
         Sets the current color space
 
@@ -114,7 +167,7 @@ class VideoRecorder:
         """
         self._colorspace = colorspace
 
-    def setFrameRate(self, framerate):
+    def set_frame_rate(self, framerate):
         """
         Sets the current framerate
 
@@ -123,7 +176,7 @@ class VideoRecorder:
         """
         self._framerate = framerate
 
-    def setResolution(self, width, height):
+    def set_resolution(self, width, height):
         """
         Sets the current resolution
 
@@ -135,7 +188,7 @@ class VideoRecorder:
         self._width = width
         self._height = height
 
-    def setVideoFormat(self, format):
+    def set_video_format(self, format):
         """
         Sets the current video format
 
@@ -144,12 +197,14 @@ class VideoRecorder:
         """
         self._format = format
 
-    def startRecording(self, folder, file, overwrite = True):
+    def start_recording(self, folder, file, overwrite=True):
         """
-        Starts the recording into folder/file. 
-        File has to have the extension '.avi'. Extension will be attached automatically. 
+        Starts the recording into folder/file.
+        File has to have the extension '.avi'. Extension will be attached
+        automatically.
 
-        :param folder: Target folder. Will be created if none existent and overwrite is set to true
+        :param folder: Target folder. Will be created if none existent and
+                       overwrite is set to true
         :type folder: str
         :param file: Target file name
         :type file: str
@@ -157,54 +212,58 @@ class VideoRecorder:
         :type overwrite: bool
         """
         if self._running:
-            logging.warning('Trying to start recording while already running')
+            self._logger.warning(
+                'Trying to start recording while already running')
             return
         if folder[-1] is not '/':
             folder += '/'
         if not file.endswith(('.avi', '.AVI')):
-            logging.debug('Attaching ".avi" as file extension')
+            self._logger.debug('Attaching ".avi" as file extension')
             file += '.avi'
         if not os.path.isdir(folder):
             if overwrite:
                 os.makedirs(folder)
             else:
-                logging.error('Folder %s not existing' % folder)
+                self._logger.error('Folder %s not existing' % folder)
         if not overwrite and os.path.exists(folder + file):
-            logging.error('File %s already exists' % folder+file)
+            self._logger.error('File %s already exists' % folder + file)
             return
 
         # Resolve codec
         fourcc = None
         try:
             fourcc = {
-                VideoCodec.MPEG1: cv2.cv.FOURCC('P','I','M','1'),
-                VideoCodec.H264: cv2.cv.FOURCC('X','2','6','4'),
-                VideoCodec.DIVX: cv2.cv.FOURCC('D','I','V','X'),
+                VideoCodec.MPEG1: cv2.VideoWriter_fourcc('P', 'I', 'M', '1'),
+                VideoCodec.H264: cv2.VideoWriter_fourcc('X', '2', '6', '4'),
+                VideoCodec.DIVX: cv2.VideoWriter_fourcc('D', 'I', 'V', 'X'),
+                VideoCodec.XVID: cv2.VideoWriter_fourcc('X', 'V', 'I', 'D'),
             }[self._format]
-        except:
-            logging.error('Unknown codec')
+        except KeyError:
+            self._logger.error('Unknown codec')
+            return
 
         # Setup video capturing
-        self._device = VideoDevice.fromDevice(self._deviceName)
-        self._encoder = cv2.VideoWriter(folder + file, fourcc, self._framerate, (self._width, self._height))
-        self._device.addCallback(self._callback)
-        self._device.setResolution(self._width, self._height)
-        self._device.setFrameRate(self._framerate)
-        self._device.open()
+        self._encoder = cv2.VideoWriter(folder + file, fourcc, self._framerate,
+                                        (self._width, self._height))
+        self._device.add_callback(self._callback)
+        if not self._device._open:
+            self._device.set_resolution(self._width, self._height)
+            self._device.set_framerate(self._framerate)
+            self._device.open()
         self._running = True
 
-    def stopRecording(self):
+    def stop_recording(self):
         """
         Stops the current recording
         """
         if not self._running:
-            logging.warning('Trying to stop recording while no recording is running')
+            self._logger.warning(
+                'Trying to stop recording while no recording is running')
             return
         self._device.close()
-        self._device = None
         self._encoder = None
         self._running = False
 
     def _callback(self, rval, frame):
-        if frame is not None:
+        if rval:
             self._encoder.write(frame)

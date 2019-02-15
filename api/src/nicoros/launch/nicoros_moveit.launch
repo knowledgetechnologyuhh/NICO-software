@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!--launches NICO ROS capabilities, MoveIt! and kinematics server-->
+<!--launches NICO ROS capabilities, MoveIt! and kinematics server for the simulated NICO-->
 <launch>
 
   <include file="$(find nicoros)/launch/nicoros.launch" />

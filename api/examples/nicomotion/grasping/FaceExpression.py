@@ -9,8 +9,8 @@ class faceExpression:
     def __init__(self, devicename='/dev/ttyACM1'):
         self.mode = "real"
         if devicename != "sim":
-            #self.ser = serial.Serial(devicename, 115200)  # Establish the connection on a specific port
-            self.ser = serial.Serial(devicename, 9600)  # Establish the connection on a specific port
+            self.ser = serial.Serial(devicename, 115200)  # Establish the connection on a specific port
+            #self.ser = serial.Serial(devicename, 9600)  # Establish the connection on a specific port
             sleep(2)
         else:
             self.mode = "sim"

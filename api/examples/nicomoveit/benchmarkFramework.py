@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+"""
+Helper script to generate random reachable poses or a grid of positions in a grid.
+These can be used in the IK bechmark framework.
+"""
+
 import time
 import math
 from nicomoveit import moveitWrapper
