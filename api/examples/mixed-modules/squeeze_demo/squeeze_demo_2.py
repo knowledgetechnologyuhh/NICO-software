@@ -68,11 +68,10 @@ MAX_CUR_THUMB = 250
 import sys
 sys.path.append("/export/home/sysadmin/NICO/NICO-haptic-demo/NICO-haptic-object-classification/")
 def wrapped_function():
-    #print ""
-    # !!!!!!!!!!!!!
+    import sys
+    sys.path.append("/export/home/sysadmin/NICO/NICO-haptic-demo/")
     from all_models_one_sample_classifier import all_models_classifier
-    db_filename = "/export/home/sysadmin/NICO/NICO-haptic-demo/NICO-haptic-object-classification/sample_2_from_experiment_2.db"
-    cnn_1_classifier=all_models_classifier(db_filename)
+    cnn_1_classifier=all_models_classifier()
     return cnn_1_classifier
 
     #from flaskcom.complex_test_class import ComplexTestClass
@@ -83,11 +82,18 @@ def wrapped_function():
     # return test_object #return it
     # return None
 
-wrapped_code = """
+wrapped_code_cnn = """
     import sys
     sys.path.append("/export/home/sysadmin/NICO/NICO-haptic-demo/")
     from all_models_one_sample_classifier import all_models_classifier
     cnn_1_classifier=all_models_classifier()
+"""
+
+wrapped_code_mlp = """
+    import sys
+    sys.path.append("/export/home/sysadmin/NICO/NICO-haptic-demo/")
+    from all_models_one_sample_classifier import all_models_classifier
+    mlp_1_classifier=all_models_classifier(model_number=1)
 """
 #"/export/home/sysadmin/NICO/NICO-haptic-demo/NICO-haptic-object-classification/sample_1_from_experiment_2.db"
 #classifier = wrapped_function()
@@ -96,7 +102,21 @@ wrapped_code = """
 # wrap it around the function
 # returns an object that can be used like the object initialized in the wrapped function,
 # here: test_object = ComplexTestClass('hallo')
-classifier = RemoteObject(wrapped_code=wrapped_code,
+cnn_classifier = RemoteObject(#wrapped_code=wrapped_code_cnn,
+                          wrapped_function=wrapped_function,  # the function that initializes the remote object
+                          # a virtualenv can loaded before exectuting the code in the remote terminal.
+                          path_to_virtualenv="../../../../../NICO-haptic-object-classification/virtenv/",
+                          server="localhost",  # the remote object is running on another computer
+                          # a working directory can be specified, which can be used to search for the code
+                          original_working_directory="../../../../../NICO-haptic-object-classification/",
+                          #keep_open=False,  # the remote object can be kept open, when the program is exectuted the next time, it will use the open remote object instead of creating a new one
+                          keep_open=True,  
+                          time_out=-1,  # the time to wait for the remote terminal to start, -1 means forever
+                          # if flaskcom is not inside the searchpath, set a path to a folder containing flaskcom
+                          flaskcom_path="/export/home/sysadmin/NICO/NICO-haptic-demo/",
+                          debug=True)  # keeps the terminal open even if an error occurs
+
+mlp_classifier = RemoteObject(wrapped_code=wrapped_code_mlp,
                           #wrapped_function=wrapped_function,  # the function that initializes the remote object
                           # a virtualenv can loaded before exectuting the code in the remote terminal.
                           path_to_virtualenv="../../../../../NICO-haptic-object-classification/virtenv/",
@@ -113,11 +133,14 @@ classifier = RemoteObject(wrapped_code=wrapped_code,
 
 # flaskcom definitions
 
-db_filename_test = "/export/home/sysadmin/NICO/NICO-haptic-demo/NICO-haptic-object-classification/sample_2_from_experiment_2.db"
+db_filename_test = "/export/home/sysadmin/NICO/NICO-haptic-demo/NICO-haptic-object-classification/sample_1_from_experiment_2.db"
 
-most_likely,all_results=classifier.classify(db_filename_test)
-print ("This is a most likely a {} ".format(classifier.number_to_object(most_likely)))
-#raw_input()
+most_likely,all_results=cnn_classifier.classify(db_filename_test)
+print ("This is a most likely a {} , says the CNN".format(cnn_classifier.number_to_object(most_likely)))
+
+most_likely,all_results=mlp_classifier.classify(db_filename_test)
+print ("This is a most likely a {} , says the MLP".format(mlp_classifier.number_to_object(most_likely)))
+raw_input()
 
 
 
@@ -177,7 +200,7 @@ def say(sen):
 def yes_no(ges,robot):
     import time
     position = -10
-    for i in xrange(6):
+    for i in xrange(2):
         position = position * -1 + 20
         if ges == "yes":
             robot.setAngle("head_y", position, 0.02)
@@ -211,6 +234,9 @@ raw_input()
 robot = Motion.Motion(
     nico_path + "/json/nico_humanoid_upper.json", vrep=False, ignoreMissing=True)
 atexit.register(cleanup, robot)
+
+mover_path = "../../../../moves_and_positions/"
+mov = Mover.Mover(robot, stiff_off=False)
 
 # set the robot to be compliant
 robot.disableTorqueAll()
@@ -295,15 +321,23 @@ while (not stop_demo):
         robot.openHand("LHand", fMS_hand)
         sleep(0.2)
 
+        mov.move_file_position(mover_path + "get_squeeze_object.csv",
+                                   subsetfname=mover_path + "subset_left_arm_and_head.csv",	
+                                   move_speed=0.03)
+
         # Put one of the objects in the hand
         say("Please put one of the objects in my hand.")
         sleep(2.2)
         raw_input()
 
+        mov.move_file_position(mover_path + "do_squeeze_object.csv",
+                                   subsetfname=mover_path + "subset_left_arm_and_head.csv",	
+                                   move_speed=0.03)
+
         # Squeeze
         print "\n Good. Let me squeeze this a little bit."
         #fe = faceExpression()
-        fe.sendFaceExpression("neutral")
+        #fe.sendFaceExpression("neutral")
 
         # Delete possible existing and create a new database and open it
         try:
@@ -321,6 +355,8 @@ while (not stop_demo):
         # print "\n " +sql_command
         cursor.execute(sql_command)
         sample_number = cursor.lastrowid
+
+        say("OK. I will squeeze this object now. Keep your fingers away!")
 
         # Status no overload
         status = 0
@@ -417,13 +453,14 @@ while (not stop_demo):
         connection.close()
 
         print("Asking the classifier")
-        #fe.sendFaceExpression("neutral")
-        say("Let me think about it")
+        
+        fe.sendFaceExpression("neutral")
+        say("Let me think about it. I will first ask my CNN classifier.")
 
-        most_likely,all_results=classifier.classify(db_filename)
+        most_likely,all_results=cnn_classifier.classify(db_filename)
         import numpy as np
         best_3=np.argsort(-all_results)[:3]
-        print ("This is a most likely a {} ".format(classifier.number_to_object(most_likely)))
+        print ("This is a most likely a {} ".format(cnn_classifier.number_to_object(most_likely)))
 
         #if first:
         #    say("I will ask two different classifiers")
@@ -455,25 +492,64 @@ while (not stop_demo):
         # Put the sample in the model
         first = False
         print (all_results)
+        np.savetxt("/tmp/all_results.csv",all_results)
         #
         objects_caller_name = ["a tomato", " a cucumber", "the red ball", "a soft banana",
            " a heavy banana", "the yellow dice", "a pepper", "the soft blue ball",
            "the soft red dice", "the grapes", "the red sponge", "a carrot",
            "the black hat", "the purple duck", "the grey and pronage fish", "the green figure"]
         # Present the result
+        #say("OK, let me think!")
         if all_results[0][most_likely]>0.95:
             say ("I am very sure what the squeezed object is.")
-            fe.sendFaceExpression("happiness")
+            #yes_no("yes",robot)
+            #sleep(2)
+            fe.sendFaceExpression("happiness")            
             say ("It really feels like " + objects_caller_name[most_likely] )
+            
             sure=True
         else: 
             print (best_3)
             best_3=best_3[0]
             say ("I am not so sure.")
+            #yes_no("no",robot)
+            #sleep(3)
             fe.sendFaceExpression("sadness")
-            say ("But this feels a bit like  " + objects_caller_name[most_likely]  + ".   Or the  " \
-                + objects_caller_name[best_3[1]]  + ". Or maybe even the  " + objects_caller_name[best_3[2]] )
+            
+            say ("But this feels a bit like  " + objects_caller_name[most_likely]  + ".   Or  " \
+                + objects_caller_name[best_3[1]]  + ". Or maybe even " + objects_caller_name[best_3[2]] )
+            
             sure=False
+        #sleep(1.2)
+        say("Do you want me to ask a my MLP classifier as well?")
+        x=raw_input()
+        if x=="y":
+            say("Then let me think again!")
+            most_likely,all_results=mlp_classifier.classify(db_filename)
+            import numpy as np
+            np.savetxt("/tmp/all_results.csv",all_results)
+            best_3=np.argsort(-all_results)[:3]
+            print ("This is a most likely a {} ".format(cnn_classifier.number_to_object(most_likely)))
+            if all_results[0][most_likely]>0.95:
+                say ("I am very sure what the squeezed object is.")
+                #yes_no("yes",robot)
+                #sleep(2)
+                fe.sendFaceExpression("happiness")
+                say ("It really feels like " + objects_caller_name[most_likely] )
+                
+                sure=True
+            else: 
+                print (best_3)
+                best_3=best_3[0]
+                say ("I am not so sure.")
+                #yes_no("no",robot)
+                #sleep(3)
+                fe.sendFaceExpression("sadness")
+                say ("But this feels a bit like  " + objects_caller_name[most_likely]  + ".   Or  " \
+                    + objects_caller_name[best_3[1]]  + ". Or maybe even " + objects_caller_name[best_3[2]] )
+                
+                sure=False
+
         '''
         if result != result2:
             say("Oh I am suprised.")
@@ -506,7 +582,9 @@ while (not stop_demo):
             # raw_input()
 
             say("OK. Let me try another one!")
+            fe.sendFaceExpression("happiness")
             raw_input("Please give a Return!")
+
             # mov.move_file_position(mover_path + "pos_left_arm_base.csv",
             #                       subsetfname=mover_path + "subset_left_arm_and_head.csv",
             #                       move_speed=0.05)
