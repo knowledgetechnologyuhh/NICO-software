@@ -64,6 +64,9 @@ installed")
 MOVEIT_kinetic=$(dpkg-query -W --showformat='${Status}\n' ros-kinetic-moveit 2>/dev/null|grep "install ok
 installed")
 if [ "" == "$MOVEIT_indigo" ] && [ "" == "$MOVEIT_kinetic" ]; then
+  if [ -f $WORKDIR/src/nicomoveit/kinematics/package.xml ]; then
+    rm $WORKDIR/src/nicomoveit/kinematics/package.xml
+  fi
   echo "MoveIt! is not installed"
 else
   if [ -f $WORKDIR/src/nicomoveit/kinematics/package_.xml ]; then
