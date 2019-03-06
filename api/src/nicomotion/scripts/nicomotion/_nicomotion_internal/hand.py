@@ -79,7 +79,7 @@ class AbstractHand(object):
         :type position: float
         :param fraction_max_speed: Percentage of goal speed at which the motor
                                  should operate [0.0, 1.0]
-        :type position: float
+        :type fraction_max_speed: float
         """
         if self.isHandMotor(motor_name):
             motor_name = motor_name[2:]
@@ -125,7 +125,8 @@ class AbstractHand(object):
         """
 
         if self.isHandMotor(jointname):
-            return getattr(self.board, self.current_ports[jointname[2:]])
+            return self.board.present_motor_currents[
+                self.current_ports[jointname[2:]]]
 
         self.logger.warning("{} is not a joint of {}Hand".format(
             jointname, self.prefix[0].upper()))
@@ -166,7 +167,8 @@ class AbstractHand(object):
             self.mutex.acquire()
             for motor_name in self.sensitive_motors:
                 if self.motor_directions[motor_name] == "closing":
-                    if (getattr(self.board, self.current_ports[motor_name]) >
+                    if (self.board.present_motor_currents[
+                            self.current_ports[motor_name]] >
                             self.current_limit):
 
                         self.logger.warning(

@@ -9,13 +9,13 @@ class RH7DHand(AbstractHand):
     sensitive_motors = ("thumb_z", "thumb_x",
                         "indexfinger_x", "middlefingers_x")
 
-    current_ports = {"wrist_z": "present_current_port_1",
-                     "wrist_y": "present_current_port_2",
-                     "wrist_x": "present_current_port_3",
-                     "thumb_z": "present_current_port_4",
-                     "thumb_x": "present_current_port_5",
-                     "indexfinger_x": "present_current_port_6",
-                     "middlefingers_x": "present_current_port_7"}
+    current_ports = {"wrist_z": 0,
+                     "wrist_y": 1,
+                     "wrist_x": 2,
+                     "thumb_z": 3,
+                     "thumb_x": 4,
+                     "indexfinger_x": 5,
+                     "middlefingers_x": 6}
 
     poses = {"pointAt": {"indexfinger_x": (-170., 1.),
                          "middlefingers_x": (150., 1.),
