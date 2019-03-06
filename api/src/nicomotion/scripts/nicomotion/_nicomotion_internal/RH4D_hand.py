@@ -8,10 +8,10 @@ class RH4DHand(AbstractHand):
 
     sensitive_motors = ("thumb_x", "indexfingers_x")
 
-    current_ports = {"wrist_z": "present_current_port_1",
-                     "wrist_x": "present_current_port_2",
-                     "thumb_x": "present_current_port_3",
-                     "indexfingers_x": "present_current_port_4"}
+    current_ports = {"wrist_z": 0,
+                     "wrist_x": 1,
+                     "thumb_x": 2,
+                     "indexfingers_x": 3}
 
     poses = {"openHand": {"thumb_x": (-160., 1.),
                           "indexfingers_x": (-160., 1.), },
