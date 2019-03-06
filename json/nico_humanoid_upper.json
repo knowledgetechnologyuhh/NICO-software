@@ -148,8 +148,8 @@
       "offset": 0.0,
       "type": "SR-SEED56",
       "id": 24,
-      "angle_limit": [-90,
-        90
+      "angle_limit": [-160,
+        160
       ],
       "orientation": "direct"
     },
@@ -193,8 +193,8 @@
       "offset": 0.0,
       "type": "SR-SEED56",
       "id": 23,
-      "angle_limit": [-90,
-        90
+      "angle_limit": [-160,
+        160
       ],
       "orientation": "direct"
     },

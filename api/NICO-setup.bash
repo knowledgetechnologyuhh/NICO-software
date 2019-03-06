@@ -42,6 +42,7 @@ if [ $VIRTUAL_ENV == ~/.$VIRTUALENVDIR ]; then
   cd /tmp
   git clone https://git.informatik.uni-hamburg.de/wtm-robots-and-equipment/pypot.git
   cd pypot
+  git checkout combined-hand-current-accessor #FIXME remove when changes are merged to master
   CURRENT_GIT_COMMIT=`git show --name-status | grep commit`
   CURRENT_GIT_COMMIT=${CURRENT_GIT_COMMIT#'commit '}
   if [ ! -f ~/.$VIRTUALENVDIR/.current_git_commit ] || [ ! `cat ~/.$VIRTUALENVDIR/.current_git_commit` == $CURRENT_GIT_COMMIT ]; then
@@ -64,6 +65,9 @@ installed")
 MOVEIT_kinetic=$(dpkg-query -W --showformat='${Status}\n' ros-kinetic-moveit 2>/dev/null|grep "install ok
 installed")
 if [ "" == "$MOVEIT_indigo" ] && [ "" == "$MOVEIT_kinetic" ]; then
+  if [ -f $WORKDIR/src/nicomoveit/kinematics/package.xml ]; then
+    rm $WORKDIR/src/nicomoveit/kinematics/package.xml
+  fi
   echo "MoveIt! is not installed"
 else
   if [ -f $WORKDIR/src/nicomoveit/kinematics/package_.xml ]; then
