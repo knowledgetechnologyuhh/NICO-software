@@ -11,7 +11,7 @@ import pypot.dynamixel.error as pypot_error
 import pypot.robot
 import pypot.vrep
 from nicomotion._nicomotion_internal.MotionError import MotionErrorHandler
-from pypot.dynamixel.io.abstract_io import DxlCommunicationError
+from pypot.dynamixel.io.abstract_io import DxlCommunicationError, DxlError
 from pypot.vrep.remoteApiBindings import vrep as remote_api
 
 from _nicomotion_internal.RH4D_hand import RH4DHand
@@ -77,34 +77,74 @@ class Motion:
         else:
             self._logger.info('Using robot')
             self._adjust_port_latency()
+
+            def remove_missing(ids):
+                for id in ids:
+                    id = int(id)
+                    for motor in config['motors'].keys():
+                        if config['motors'][motor]['id'] == id:
+                            self._logger.warning(
+                                'Removing motor {} ({})'.format(motor, id))
+                            config['motors'].pop(motor)
+                            for group in config['motorgroups'].keys():
+                                config['motorgroups'][group] = [
+                                    x for x in config['motorgroups'][
+                                        group] if x != motor]
+                self._logger.warning('New config created:')
+                self._logger.warning(pprint.pformat(config))
+
             retries = 0
             success = False
             while not success:
                 try:
                     self._robot = pypot.robot.from_config(config)
                     success = True
+                except KeyError as e:
+                    # reinitialize pypot up to 3 times
+                    if retries < 3:
+                        # fetch ids from error
+                        ids = [int(str(e))]
+                        self._logger.warning(
+                            "Missing id {} - Retrying initialization".format(e)
+                        )
+                        if ignoreMissing:
+                            remove_missing(ids)
+                        retries += 1
+                except DxlError as e:
+                    # reinitialize pypot up to 3 times
+                    if retries < 3:
+                        # fetch ids from error
+                        regex = re.compile(r'.*\((?P<ids>.*)\).*')
+                        match = regex.match(e.message)
+                        string = match.group('ids')
+                        ids = string.split(',')
+                        self._logger.warning(
+                            "Missing ids {} - Retrying initialization".format(
+                                string)
+                        )
+                        if ignoreMissing:
+                            remove_missing(ids)
+                        retries += 1
                 except IndexError as e:
-                    if ignoreMissing and retries < 3:
-                        # removes missing ids if enabled and tries to
-                        # reinitialize pypot up to 3 times
+                    # reinitialize pypot up to 3 times
+                    if retries < 3:
+                        # fetch ids from error
                         regex = re.compile(r'.*\[.*\].*\[(?P<ids>.*)\].*')
                         match = regex.match(e.message)
                         string = match.group('ids')
-                        for id in string.split(','):
-                            id = int(id)
-                            for motor in config['motors'].keys():
-                                if config['motors'][motor]['id'] == id:
-                                    self._logger.warning(
-                                        'Removing motor %s (%i)' % (motor, id))
-                                    config['motors'].pop(motor)
-                                    for group in config['motorgroups'].keys():
-                                        config['motorgroups'][group] = [
-                                            x for x in config['motorgroups'][
-                                                group] if x != motor]
-                        self._logger.warning('New config created:')
-                        self._logger.warning(pprint.pformat(config))
+                        ids = string.split(',')
+                        self._logger.warning(
+                            "Missing ids {} - Retrying initialization".format(
+                                string)
+                        )
+                        if ignoreMissing:
+                            remove_missing(ids)
                         retries += 1
                     else:
+                        self._logger.error(
+                            (
+                                "Initialization failed after {} retries"
+                            ).format(retries))
                         raise e
                 except RuntimeError as e:
                     # Workaround for every other init failing
