@@ -191,7 +191,13 @@ class Motion:
         Lowers the latency of the NICO port to prevent communication delays
         """
         # checks whether setserial is installed
-        subprocess.check_output(["which", "setserial"])
+        try:
+            subprocess.check_output(["which", "setserial"])
+        except subprocess.CalledProcessError as e:
+            self._logger.critical("could not find setserial - please make " +
+                                  "sure that the setserial package is " +
+                                  "installed on your system")
+            raise e
 
         # get all ports
         ports = pypot.dynamixel.get_available_ports()
