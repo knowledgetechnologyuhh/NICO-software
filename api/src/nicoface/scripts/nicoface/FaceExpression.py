@@ -25,6 +25,8 @@ class faceExpression:
 
         self.mode = mode
         self.comm_mode = 2
+	self.baudrate = 115200
+	self.timeout = 0.016
         self.left = self.create_test_PIL((8, 8))
         # self.show_PIL(self.left)
         self.right = self.create_test_PIL((8, 8))
@@ -36,7 +38,7 @@ class faceExpression:
                 self._scan_ports()
             else:
                 # Establish the connection on a specific port
-                self.ser = serial.Serial(devicename, 115200)
+                self.ser = serial.Serial(devicename, self.baudrate, timeout=self.timeout)
                 # self.ser = serial.Serial(devicename, 9600)
                 sleep(2)
                 # self.send_PIL(self.mouth, "m")
@@ -56,8 +58,8 @@ class faceExpression:
                 self._logger.info(
                     "Connecting to Arduino on port {}".format(p.device))
                 try:
-                    self.ser = serial.Serial(p.device, 115200)
-                    sleep(2)
+                    self.ser = serial.Serial(p.device, self.baudrate, timeout=self.timeout)
+                    sleep(1)
 
                     if self.ser.is_open:
                         self._logger.debug(
@@ -82,6 +84,21 @@ class faceExpression:
         self._logger.fatal("No FaceExpression Arduino device found")
         self.ser = None
 
+    def _send(self, message, expected_response):
+	self._logger.info("Sending '{}'".format(message))
+	self.ser.write(message)
+	response = self.ser.readline()
+	self._logger.debug("Received response: '{}'".format(message))
+	if response != expected_response:
+	    self._logger.warning("Failed to send {} - resetting serial connection".format(message))
+	    self.ser.close()
+	    self.ser.open()
+	    sleep(1)
+	    self._logger.info("Resending {}".format(message))
+	    self.ser.write(message)
+            response = self.ser.readline()
+        return response
+
     def setCommMode(self, mode):
         """
         Sets the communication mode (0-2)
@@ -96,8 +113,7 @@ class faceExpression:
         print("Sending " + expression)
 
         # Convert the decimal number to ASCII then send it to the Arduino
-        self.ser.write(str(expression))
-        print(self.ser.readline())  # Read the newest output from the Arduino
+        print(self._send(str(expression), "Showing  {}\r\n".format(mode)))  # Read the newest output from the Arduino
 
         sleep(.2)  # Delay for one tenth of a second
 
@@ -115,9 +131,7 @@ class faceExpression:
         print("Sending " + expression)
 
         # Convert the decimal number to ASCII then send it to the Arduino
-        self.ser.write(str(expression))
-        print(self.ser.readline())  # Read the newest output from the Arduino
-
+	print(self._send(str(expression), "Showing {}\r\n".format(expression)))
         sleep(.2)  # Delay for one tenth of a second
 
     # except:
