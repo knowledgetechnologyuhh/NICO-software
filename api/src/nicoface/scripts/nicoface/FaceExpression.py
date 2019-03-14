@@ -5,6 +5,7 @@
 
 import logging
 import sys
+import textwrap
 from time import sleep
 
 import matplotlib.pyplot
@@ -25,8 +26,8 @@ class faceExpression:
 
         self.mode = mode
         self.comm_mode = 2
-	self.baudrate = 115200
-	self.timeout = 0.016
+        self.baudrate = 115200
+        self.timeout = 0.016
         self.left = self.create_test_PIL((8, 8))
         # self.show_PIL(self.left)
         self.right = self.create_test_PIL((8, 8))
@@ -38,7 +39,8 @@ class faceExpression:
                 self._scan_ports()
             else:
                 # Establish the connection on a specific port
-                self.ser = serial.Serial(devicename, self.baudrate, timeout=self.timeout)
+                self.ser = serial.Serial(
+                    devicename, self.baudrate, timeout=self.timeout)
                 # self.ser = serial.Serial(devicename, 9600)
                 sleep(2)
                 # self.send_PIL(self.mouth, "m")
@@ -58,7 +60,8 @@ class faceExpression:
                 self._logger.info(
                     "Connecting to Arduino on port {}".format(p.device))
                 try:
-                    self.ser = serial.Serial(p.device, self.baudrate, timeout=self.timeout)
+                    self.ser = serial.Serial(
+                        p.device, self.baudrate, timeout=self.timeout)
                     sleep(1)
 
                     if self.ser.is_open:
@@ -85,19 +88,26 @@ class faceExpression:
         self.ser = None
 
     def _send(self, message, expected_response):
-	self._logger.info("Sending '{}'".format(message))
-	self.ser.write(message)
-	response = self.ser.readline()
-	self._logger.debug("Received response: '{}'".format(message))
-	if response != expected_response:
-	    self._logger.warning("Failed to send {} - resetting serial connection".format(message))
-	    self.ser.close()
-	    self.ser.open()
-	    sleep(1)
-	    self._logger.info("Resending {}".format(message))
-	    self.ser.write(message)
+        for i in range(3):
+            self._logger.info("Sending '{}'".format(message))
+            self.ser.write(message)
             response = self.ser.readline()
-        return response
+            if response == expected_response:
+                self._logger.info(response[:-2])
+                return
+            self._logger.debug("Expected response {} but received {}".format(
+                repr(expected_response), repr(response)))
+            self._logger.warning(
+                "Failed to send '{}' - resetting serial connection".format(
+                    message))
+            self.ser.close()
+            self.ser.open()
+            sleep(1)
+        self._logger.critical(
+            "Failed to send '{}' after 3 retries".format(message))
+        raise serial.SerialException(
+            "Expected response {} but received {}".format(
+                repr(expected_response), repr(response)))
 
     def setCommMode(self, mode):
         """
@@ -110,10 +120,11 @@ class faceExpression:
         """
         self.comm_mode = mode
         expression = "mod" + str(mode)
-        print("Sending " + expression)
 
         # Convert the decimal number to ASCII then send it to the Arduino
-        print(self._send(str(expression), "Showing  {}\r\n".format(mode)))  # Read the newest output from the Arduino
+        # Read the newest output from the Arduino
+        self._send(str(expression), "Change Comm mode to  {} \r\n".format(mode)
+                   )
 
         sleep(.2)  # Delay for one tenth of a second
 
@@ -127,11 +138,11 @@ class faceExpression:
         sadness,anger,disgust,surprise,fear,neutral,clear)
         :type expression: str
         """
-        # try:
-        print("Sending " + expression)
-
         # Convert the decimal number to ASCII then send it to the Arduino
-	print(self._send(str(expression), "Showing {}\r\n".format(expression)))
+        if expression == "clear":
+            self._send(str(expression), "Clearing LCDs\r\n")
+        else:
+            self._send(str(expression), "Showing {}\r\n".format(expression))
         sleep(.2)  # Delay for one tenth of a second
 
     # except:
@@ -274,23 +285,18 @@ class faceExpression:
         :param disp: part of face to send (l, r, m)
         :type disp: PIL.Image
         """
-        import timeit
-        start = timeit.default_timer()
-        pix = self.PIL_to_np(Img)
         pix = Img
         lcd_str = self.np_to_str(pix)
+        # generate expected response
+        resp = textwrap.wrap(lcd_str, 2)
+        resp = "".join(["{} {}".format(i, int(resp[i]))
+                        for i in range(len(resp))])
+        disp_verbose = {"m": "mouth:",
+                        "l": "eyebrow l ", "r": "eyebrow r "}[disp]
+        resp = "Displaying on {}{} \r\n".format(disp_verbose, resp)
+        # generate message
         lcd_str = "raw" + disp + lcd_str
-        st1 = timeit.default_timer() - start
-        self.ser.write(str(lcd_str))
-        st2 = timeit.default_timer() - start
-        if self.comm_mode > 0:
-            answ = self.ser.readline()
-        st3 = timeit.default_timer() - start
-        if self.comm_mode > 1:
-            print(answ)
-        st4 = timeit.default_timer() - start
-        print("times st1,st2,st3 : " + str(st1) + "," +
-              str(st2) + "," + str(st3) + "," + str(st4))
+        self._send(str(lcd_str), resp)
 
     def testDisplay(self):
         import random
