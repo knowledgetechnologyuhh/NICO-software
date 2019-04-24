@@ -33,7 +33,7 @@ class AbstractHand(object):
         for each pose as in {"poseName": {"motor_name": (pos, speed_fract)}}"""
         pass
 
-    def __init__(self, robot, isLeft, monitorCurrents=True):
+    def __init__(self, robot, isLeft, monitorCurrents=True, vrep=False):
         self.logger = logging.getLogger(__name__)
 
         if isLeft:
@@ -42,7 +42,8 @@ class AbstractHand(object):
             self.prefix = "r_"
 
         # get hand motor accessors from robot
-        self.board = getattr(robot, self.prefix + "virtualhand_x")
+        if not vrep:
+            self.board = getattr(robot, self.prefix + "virtualhand_x")
         for motor in self.current_ports.keys():
             setattr(self, motor, getattr(robot, self.prefix + motor))
 
@@ -64,7 +65,7 @@ class AbstractHand(object):
         self.motor_directions = dict(
             zip(self.sensitive_motors, ["idle"] * len(self.sensitive_motors)))
 
-        if monitorCurrents:
+        if monitorCurrents and not vrep:
             t = threading.Thread(target=self._current_check)
             t.daemon = True
             t.start()

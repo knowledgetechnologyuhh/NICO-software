@@ -160,27 +160,35 @@ class Motion:
                         "Retrying initialization after an error occured")
                     time.sleep(1)
         time.sleep(3)  # wait for syncloop to initialize values
+        # initialize hands
+        # left hand
         if (hasattr(self._robot, "l_middlefingers_x")):
             if (hasattr(self._robot, "l_wrist_x")):
                 self._leftHand = RH7DHand(robot=self._robot, isLeft=True,
-                                          monitorCurrents=monitorHandCurrents)
+                                          monitorCurrents=monitorHandCurrents,
+                                          vrep=vrep)
             else:
                 self._leftHand = RH5DHand(robot=self._robot, isLeft=True,
-                                          monitorCurrents=monitorHandCurrents)
+                                          monitorCurrents=monitorHandCurrents,
+                                          vrep=vrep)
         elif (hasattr(self._robot, "l_thumb_x")):
             self._leftHand = RH4DHand(robot=self._robot, isLeft=True,
-                                      monitorCurrents=monitorHandCurrents)
-
+                                      monitorCurrents=monitorHandCurrents,
+                                      vrep=vrep)
+        # right hand
         if (hasattr(self._robot, "r_middlefingers_x")):
             if (hasattr(self._robot, "r_wrist_x")):
                 self._rightHand = RH7DHand(robot=self._robot, isLeft=False,
-                                           monitorCurrents=monitorHandCurrents)
+                                           monitorCurrents=monitorHandCurrents,
+                                           vrep=vrep)
             else:
                 self._rightHand = RH5DHand(robot=self._robot, isLeft=False,
-                                           monitorCurrents=monitorHandCurrents)
+                                           monitorCurrents=monitorHandCurrents,
+                                           vrep=vrep)
         elif (hasattr(self._robot, "r_thumb_x")):
             self._rightHand = RH4DHand(robot=self._robot, isLeft=False,
-                                       monitorCurrents=monitorHandCurrents)
+                                       monitorCurrents=monitorHandCurrents,
+                                       vrep=vrep)
         # remember initial situation as a safe state
         self.safeState = dict()
         for motor in self._robot.motors:

@@ -34,7 +34,7 @@ class NicoRosMotion():
                 'vrep': False,
                 'vrepHost': '127.0.0.1',
                 'vrepPort': 19997,
-                'vrepScene': None,
+                'vrepScene': "",
                 'rostopicName': '/nico/motion',
                 'jointStateName': '/joint_states',
                 'fakeExecution': False,
