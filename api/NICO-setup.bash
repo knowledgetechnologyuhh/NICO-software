@@ -36,7 +36,7 @@ source ~/.$VIRTUALENVDIR/bin/activate
 #install python packages
 if [ $VIRTUAL_ENV == ~/.$VIRTUALENVDIR ]; then
   echo "Checking python packages"
-  pip install 'pyserial<=3.1' # versions 3.2 and 3.3 (most recent as of writing) are missing __init__.pyc for tools
+  pip install 'pyserial'
   pip install 'sphinx' # required inside virtualenv to find all modules
   # install/update custom pypot
   cd /tmp
@@ -53,8 +53,8 @@ if [ $VIRTUAL_ENV == ~/.$VIRTUALENVDIR ]; then
   else
     echo "Latest custom pypot already installed - skipping installation"
   fi
-  pip install 'pyassimp'
-  pip install pyassimp --upgrade
+  pip install 'pyassimp==4.1.3' #FIXME version 4.1.4 causes segmentation faults while loading stl files
+  # pip install pyassimp --upgrade
 else
   echo "Activation failed - skipping python package installations"
 fi
