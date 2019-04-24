@@ -39,14 +39,12 @@ if [ $VIRTUAL_ENV == ~/.$VIRTUALENVDIR ]; then
   pip install 'pyserial'
   pip install 'sphinx' # required inside virtualenv to find all modules
   # install/update custom pypot
-  cd /tmp
-  git clone https://git.informatik.uni-hamburg.de/wtm-robots-and-equipment/pypot.git
-  cd pypot
-  git checkout combined-hand-current-accessor #FIXME remove when changes are merged to master
-  CURRENT_GIT_COMMIT=`git show --name-status | grep commit`
-  CURRENT_GIT_COMMIT=${CURRENT_GIT_COMMIT#'commit '}
+  CURRENT_GIT_COMMIT=`git ls-remote https://github.com/knowledgetechnologyuhh/pypot.git HEAD | awk '{ print $1}'`
   if [ ! -f ~/.$VIRTUALENVDIR/.current_git_commit ] || [ ! `cat ~/.$VIRTUALENVDIR/.current_git_commit` == $CURRENT_GIT_COMMIT ]; then
     echo "Custom pypot outdated - updating to commit $CURRENT_GIT_COMMIT"
+    cd /tmp
+    git clone https://github.com/knowledgetechnologyuhh/pypot.git
+    cd pypot
     rm -rf ~/.$VIRTUALENVDIR/lib/python2.7/site-packages/pypot/
     ~/.$VIRTUALENVDIR/bin/python setup.py install
     echo $CURRENT_GIT_COMMIT >| ~/.$VIRTUALENVDIR/.current_git_commit
