@@ -1,16 +1,25 @@
 #!/bin/bash
 
 # get dir
-DIR=`dirname "$BASH_SOURCE"`
-WORKDIR=`pwd`
+CALLDIR=`pwd`
+cd "`dirname "$BASH_SOURCE"`"
+WORKDIR=$(pwd)
+cd "$CALLDIR"
 VIRTUALENV="virtualenv"
-echo Running at: $WORKDIR/$DIR
+echo Running at: "$WORKDIR"
+
+VIRTUALENVDIR="NICO"
+if [ $# -eq 1 ]
+  then
+    VIRTUALENVDIR="$1"
+fi
+echo Virtual environment directory: "$VIRTUALENVDIR"
 
 cd
 
 #virtualenv setup
 echo "Checking for virtualenv"
-if [ -d ".NICO/" ]; then
+if [ -d ".$VIRTUALENVDIR/" ]; then
     echo "Existing virtualenv found"
 else
   echo "No virtualenv found - setting up new virtualenv"
@@ -19,26 +28,67 @@ else
     pip install --user virtualenv
     VIRTUALENV=".local/bin/virtualenv"
   fi
-  $VIRTUALENV -p /usr/bin/python2.7 --system-site-packages ~/.NICO
+  $VIRTUALENV -p /usr/bin/python2.7 --system-site-packages ~/.$VIRTUALENVDIR
 fi
 echo "Activating virtualenv"
-source ~/.NICO/bin/activate
+source ~/.$VIRTUALENVDIR/bin/activate
 
 #install python packages
-if [ $VIRTUAL_ENV == ~/.NICO ]; then
+if [ $VIRTUAL_ENV == ~/.$VIRTUALENVDIR ]; then
   echo "Checking python packages"
-  pip install 'pyserial<=3.1' # versions 3.2 and 3.3 (most recent as of writing) are missing __init__.pyc for tools
-  pip install 'pypot>=3.0.0'
+  pip install 'pyserial'
+  pip install 'sphinx' # required inside virtualenv to find all modules
+  # install/update custom pypot
+  CURRENT_GIT_COMMIT=`git ls-remote https://github.com/knowledgetechnologyuhh/pypot.git HEAD | awk '{ print $1}'`
+  if [ ! -f ~/.$VIRTUALENVDIR/.current_git_commit ] || [ ! `cat ~/.$VIRTUALENVDIR/.current_git_commit` == $CURRENT_GIT_COMMIT ]; then
+    echo "Custom pypot outdated - updating to commit $CURRENT_GIT_COMMIT"
+    cd /tmp
+    git clone https://github.com/knowledgetechnologyuhh/pypot.git
+    cd pypot
+    rm -rf ~/.$VIRTUALENVDIR/lib/python2.7/site-packages/pypot/
+    ~/.$VIRTUALENVDIR/bin/python setup.py install
+    echo $CURRENT_GIT_COMMIT >| ~/.$VIRTUALENVDIR/.current_git_commit
+  else
+    echo "Latest custom pypot already installed - skipping installation"
+  fi
+  pip install 'pyassimp==4.1.3' #FIXME version 4.1.4 causes segmentation faults while loading stl files
+  # pip install pyassimp --upgrade
 else
   echo "Activation failed - skipping python package installations"
 fi
 
+#MoveIt!
+MOVEIT_indigo=$(dpkg-query -W --showformat='${Status}\n' ros-indigo-moveit 2>/dev/null|grep "install ok
+installed")
+MOVEIT_kinetic=$(dpkg-query -W --showformat='${Status}\n' ros-kinetic-moveit 2>/dev/null|grep "install ok
+installed")
+if [ "" == "$MOVEIT_indigo" ] && [ "" == "$MOVEIT_kinetic" ]; then
+  if [ -f $WORKDIR/src/nicomoveit/kinematics/package.xml ]; then
+    rm $WORKDIR/src/nicomoveit/kinematics/package.xml
+  fi
+  echo "MoveIt! is not installed"
+else
+  if [ -f $WORKDIR/src/nicomoveit/kinematics/package_.xml ]; then
+    cp $WORKDIR/src/nicomoveit/kinematics/package_.xml $WORKDIR/src/nicomoveit/kinematics/package.xml
+  fi
+  echo "MoveIt! is installed"
+  echo "To use MoveIt! with visualization run: roslaunch nicoros nicoros_moveit_visual.launch"
+  echo "To use MoveIt! without visualization run: roslaunch nicoros nicoros_moveit.launch"
+fi
+
 #ROS + catkin
 echo "Setting up API"
-cd $WORKDIR/$DIR
+cd $WORKDIR
+if [ -e /opt/ros/indigo/setup.bash ]; then
+  ROS_VERSION="indigo"
+  source /opt/ros/${ROS_VERSION}/setup.bash
+elif [ -e /opt/ros/kinetic/setup.bash ]; then
+  ROS_VERSION="kinetic"
+  source /opt/ros/${ROS_VERSION}/setup.bash
+fi
 if [ -x "$(command -v catkin_make)" ]; then
   catkin_make
-  source $WORKDIR/$DIR/devel/setup.bash
+  source $WORKDIR/devel/setup.bash
 fi
 if ! [ -x "$(command -v catkin_make)" ]; then
   echo "Catkin not found - skipping API building"
@@ -46,7 +96,8 @@ fi
 
 #cleanup
 echo "Cleanup"
-cd "$WORKDIR"
+rm -rf /tmp/pypot
+cd "$CALLDIR"
 
 echo "done"
 echo

@@ -1,0 +1,5 @@
+<launch>
+
+  <node name="ikTest" pkg="kinematics" type="ikTest" output="screen" />
+
+</launch>

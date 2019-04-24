@@ -1,0 +1,258 @@
+#!/usr/bin/env python
+
+import rospy
+import roslaunch
+import rospkg
+
+import os, errno
+import os.path
+import os
+import sys
+import fileinput
+import shutil
+
+from std_srvs.srv import Empty
+from geometry_msgs.msg import PointStamped
+
+import ik_test
+
+class Experiments:
+  def __init__(self, launch):
+      self.restart = False
+      
+  def start_experiment(self, req):         
+      #empty = Empty()            
+      self.restart = True      
+      return []
+
+
+def setJointConstraints(joint, min_val, max_val, file_path):
+  config_file = open(file_path+"/urdf/complete.urdf", 'r')
+  lines = []
+  for line in config_file:
+    lines.append(line)  
+  config_file.close()
+
+  joint_line = False
+  config_file = open(file_path+"/urdf/complete.urdf", 'w')
+  for line in lines:
+    if "<joint name=\""+joint+"\"" in line:
+      joint_line = True
+    if "</joint>" in line:
+      joint_line = False
+    if joint_line and "<limit" in line:
+      config_file.write("		<limit effort=\"30\" lower=\""+ str(min_val) +"\" upper=\""+ str(max_val) +"\" velocity=\"1\"/>" + "\n")
+    else:
+      config_file.write(line)
+  config_file.close()
+  
+  print "Joint "+ joint + " constraints set to: max_position: " + str(max_val) + " , min_position: " + str(min_val)
+
+
+def setKinematicsSolver(solver, file_path):
+  if solver == 'trac_ik' or solver == 'TRAC_IK' or solver == 'trac' or solver == 'TRAC':
+    for line in fileinput.input(file_path+"/config/kinematics.yaml", inplace = True): 
+      sys.stdout.write(line.replace("kdl_kinematics_plugin/KDLKinematicsPlugin", "trac_ik_kinematics_plugin/TRAC_IKKinematicsPlugin"))
+    for line in fileinput.input(file_path+"/config/kinematics.yaml", inplace = True): 
+      sys.stdout.write(line.replace("bio_ik/BioIKKinematicsPlugin", "trac_ik_kinematics_plugin/TRAC_IKKinematicsPlugin"))
+  elif solver == 'KDL' or solver == 'kdl':
+    for line in fileinput.input(file_path+"/config/kinematics.yaml", inplace = True): 
+      sys.stdout.write(line.replace("trac_ik_kinematics_plugin/TRAC_IKKinematicsPlugin", "kdl_kinematics_plugin/KDLKinematicsPlugin"))
+    for line in fileinput.input(file_path+"/config/kinematics.yaml", inplace = True): 
+      sys.stdout.write(line.replace("bio_ik/BioIKKinematicsPlugin", "kdl_kinematics_plugin/KDLKinematicsPlugin"))
+  elif solver == 'bio_ik' or solver == 'BIO_IK' or solver == 'bio' or solver == 'BIO':
+    for line in fileinput.input(file_path+"/config/kinematics.yaml", inplace = True): 
+      sys.stdout.write(line.replace("trac_ik_kinematics_plugin/TRAC_IKKinematicsPlugin", "bio_ik/BioIKKinematicsPlugin"))
+    for line in fileinput.input(file_path+"/config/kinematics.yaml", inplace = True): 
+      sys.stdout.write(line.replace("kdl_kinematics_plugin/KDLKinematicsPlugin", "bio_ik/BioIKKinematicsPlugin"))
+  else:
+    print "Please use either KDL, trac_ik or bio_ik as kinematic solvers"
+
+
+if __name__ == "__main__":
+    rospy.init_node('experiments_server')
+   
+    
+    uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+    roslaunch.configure_logging(uuid)
+   
+    rospack = rospkg.RosPack()
+   
+    moveitgenerated = rospack.get_path('moveitgenerated')
+    kinematics = rospack.get_path('kinematics')
+    moveiturdf = rospack.get_path('moveiturdf')
+    
+    try:
+      os.makedirs(kinematics+"/statistics")
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
+
+    try:
+      os.makedirs(kinematics+"/results")
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+          raise
+
+    results_folder_exists = True
+    experiment_count = 0
+    while results_folder_exists == True:
+      results_folder_exists = os.path.isdir(kinematics+"/results/results_"+str(experiment_count))
+      if results_folder_exists:
+        experiment_count += 1
+      
+    rospy.set_param('experiment_count', experiment_count)
+    try:
+      os.makedirs(kinematics+"/results/results_"+str(experiment_count))
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+          raise
+
+    if not os.path.isfile(kinematics+"/statistics/experiment"):
+      experiment_file = open(kinematics+"/statistics/experiment", 'w')
+      experiment_file.write("method, testSet, elbow_y_constraint_min, elbow_y_constraint_max, arm_x_constraint_min, arm_x_constraint_max, wrist_z_constraint_min, wrist_z_constraint_max, positives, negatives, meanDuration, meanDurationPerPositive, meanDistanceToTarget, meanXdif, meanYdif, meanZdif, outOfBounds" + '\n')
+      experiment_file.close()
+      
+    if not os.path.isfile(kinematics+"/temp"):  
+      setup_file = open(kinematics+"/experiment_setup", 'r')  
+      temp_file = open(kinematics+"/temp", 'w')  
+      count = 0
+      for line in setup_file:
+        if count != 0:
+          line = line.replace(" ", "")
+          line = line.replace("\n", "")
+          split = line.split(",")
+          method = split[0]
+          iterations = int(split[1])
+          testSet = split[2]
+          elbow_y_constraint_min = float(split[3])
+          elbow_y_constraint_max  = float(split[4])
+          arm_x_constraint_min = float(split[5])
+          arm_x_constraint_max = float(split[6])
+          wrist_z_constraint_min = float(split[7])
+          wrist_z_constraint_max = float(split[8])
+          temp_file.write(method+","+str(iterations)+","+testSet+","+str(elbow_y_constraint_min)+","+str(elbow_y_constraint_max)+","+str(arm_x_constraint_min)+","+str(arm_x_constraint_max)+","+str(wrist_z_constraint_min)+","+str(wrist_z_constraint_max)+"\n")
+        count += 1
+      setup_file.close()
+      temp_file.close()
+      
+    temp_file = open(kinematics+"/temp", 'r')
+    lines = []
+    first = True
+    for line in temp_file:
+      if "done" in line:
+        start = rospy.Time.now()
+        while not rospy.is_shutdown() and not experiment.restart:
+          print "Done with experiment since: "+str((rospy.Time.now() - start).to_sec())
+          continue
+      lines.append(line)
+      if first:
+        first = False
+        line = line.replace(" ", "")
+        line = line.replace("\n", "")
+        split = line.split(",")
+        method = split[0]
+        iterations = int(split[1])
+        testSet = split[2]
+        elbow_y_constraint_min = float(split[3])
+        elbow_y_constraint_max  = float(split[4])
+        arm_x_constraint_min = float(split[5])
+        arm_x_constraint_max = float(split[6])
+        wrist_z_constraint_min = float(split[7])
+        wrist_z_constraint_max = float(split[8])
+    temp_file.close()
+    
+    temp_file = open(kinematics+"/temp", 'w')
+    first = True
+    for line in lines:
+      if first:
+        first = False
+        iterations = iterations - 1
+        if iterations != 0:          
+          temp_file.write(method+","+str(iterations)+","+testSet+","+str(elbow_y_constraint_min)+","+str(elbow_y_constraint_max)+","+str(arm_x_constraint_min)+","+str(arm_x_constraint_max)+","+str(wrist_z_constraint_min)+","+str(wrist_z_constraint_max)+"\n")
+        elif len(lines) == 1:
+          temp_file.write("done")
+      else:
+        temp_file.write(line)
+    temp_file.close()
+    
+    if not os.path.isfile(kinematics+"/results/results_"+str(experiment_count)+"/parameters"):
+      parameters_file = open(kinematics+"/results/results_"+str(experiment_count)+"/parameters", 'w')
+      parameters_file.write(method+","+testSet+","+str(elbow_y_constraint_min)+","+str(elbow_y_constraint_max)+","+str(arm_x_constraint_min)+","+str(arm_x_constraint_max)+","+str(wrist_z_constraint_min)+","+str(wrist_z_constraint_max))
+      parameters_file.close()
+    else:
+      "Warning! Experimental files are currently overwritten"
+    
+    experiment_file = open(kinematics+"/statistics/experiment", 'a')
+    experiment_file.write(method+","+testSet+","+str(elbow_y_constraint_min)+","+str(elbow_y_constraint_max)+","+str(arm_x_constraint_min)+","+str(arm_x_constraint_max)+","+str(wrist_z_constraint_min)+","+str(wrist_z_constraint_max))
+    experiment_file.close()
+    
+  
+    setJointConstraints("l_elbow_y",elbow_y_constraint_min,elbow_y_constraint_max,moveiturdf)
+    setJointConstraints("l_arm_x",arm_x_constraint_min,arm_x_constraint_max,moveiturdf)
+    setJointConstraints("l_wrist_z",wrist_z_constraint_min,wrist_z_constraint_max,moveiturdf)
+        
+    if testSet == "grid_top":
+      src = kinematics+"/testPoses/grid_topGrasp"
+    elif testSet == "grid_side":
+      src = kinematics+"/testPoses/grid_sideGrasp"
+    elif testSet == "random":
+      src = kinematics+"/testPoses/random"
+    elif testSet == "reachable":
+      src = kinematics+"/testPoses/reachable"
+    else:
+      print "Please select a valid test set!"
+    
+    shutil.copy2(src, kinematics+"/testPoses/current")
+      
+    if method == "KDL" or method == 'kdl' or method == 'TRAC_IK' or method == 'trac' or method == 'TRAC' or method == "trac_ik" or method == 'bio_ik' or method == 'BIO_IK' or method == 'bio' or method == 'BIO':  
+      setKinematicsSolver(method, moveitgenerated)  
+        
+      launch = roslaunch.parent.ROSLaunchParent(uuid, [moveitgenerated+"/launch/demo.launch"])
+      launch.start()   
+        
+      experiment = Experiments(launch)
+      s = rospy.Service('restarter', Empty, experiment.start_experiment)     
+      
+      rospy.wait_for_service("/compute_ik", timeout=None)
+      rospy.sleep(3)
+      rospy.loginfo("System is ready, testing will start now")
+     
+      launch_ikTest = roslaunch.parent.ROSLaunchParent(uuid, [kinematics+"/launch/ikTest.launch"])
+      launch_ikTest.start()
+      
+      start = rospy.Time.now()
+      # restart if node is shutdown, restart service is used or time is over
+      while not rospy.is_shutdown() and not experiment.restart:
+        #print str((rospy.Time.now() - start).to_sec())
+        continue
+      if experiment.restart:
+        test_instance = ik_test.ik_test(method,False,experiment_count,kinematics,moveiturdf,kinematics+"/results/results_"+str(experiment_count)+"/reachedTargets",True, kinematics+"/results/results_"+str(experiment_count)+"/reached")
+        test_instance.test()
+      
+    if method == "L-BFGS-B" or method == "SLSQP" or method == "ga_simple":      
+      test_instance = ik_test.ik_test(method,False,experiment_count,kinematics,moveiturdf,kinematics + "/testPoses/current",False)
+      test_instance.test()
+      
+    fileName = kinematics+"/results/results_"+str(experiment_count)+"/jointValues"
+    jointValues = open(fileName, 'r')
+
+    jointNames = ["l_shoulder_z","l_shoulder_y","l_arm_x","l_elbow_y","l_wrist_z","l_wrist_x"]
+    constraints_min = [-2.182,-3.124,-1.8675,0.0,-1.571,-0.872665]
+    constraints_max = [1.745,3.124,1.309,1.74533,1.571,0.0]
+
+    outOfBounds = 0
+
+    for line in jointValues:
+      line = [float(i) for i in line.split(',')]
+      for jointIdx in range(len(line)):
+        if line[jointIdx] > constraints_max[jointIdx] or line[jointIdx] < constraints_min[jointIdx]:
+          outOfBounds += 1
+      break
+      
+    experiment_file = open(kinematics+"/statistics/experiment", 'a')
+    experiment_file.write("," + str(outOfBounds) + '\n')
+    experiment_file.close()
+      
+
+

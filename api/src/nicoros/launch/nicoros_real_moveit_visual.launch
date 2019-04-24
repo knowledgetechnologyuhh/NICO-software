@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!--launches NICO ROS capabilities, MoveIt!, kinematics server and RViz for the real NICO-->
+<launch>
+
+  <include file="$(find nicoros)/launch/nicoros_real.launch" />
+  <include file="$(find moveitgenerated)/launch/move_group.launch" />
+  <include file="$(find kinematics)/launch/kinematics_server.launch" />
+
+  <!-- Run Rviz and load the default config to see the state of the move_group node -->
+  <include file="$(find moveitgenerated)/launch/moveit_rviz.launch">
+    <arg name="config" value="true"/>
+    <arg name="debug" value="false"/>
+  </include>
+
+</launch>

@@ -1,7 +1,7 @@
 nicovision
 **********
 
-The **nicovision** packet contains classes to control the audio interface of the NICO.
+The **nicovision** package contains classes to control the audio interface of the NICO.
 
 VideoRecorder
 #############
@@ -21,6 +21,17 @@ ImageRecorder
 The ImageRecorder class enables the capturing of single images from a camera.
 
 .. automodule:: nicovision.ImageRecorder
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :private-members:
+
+MultiCamRecorder
+#############
+
+The MultiCamRecorder class enables synchronized capturing of single images from multiple cameras at once.
+
+.. automodule:: nicovision.MultiCamRecorder
     :members:
     :undoc-members:
     :show-inheritance:

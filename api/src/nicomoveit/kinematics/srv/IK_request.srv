@@ -1,0 +1,8 @@
+std_msgs/String planning_group
+std_msgs/String tip
+geometry_msgs/Pose pose
+std_msgs/Bool ignore_collisions
+kinematics/FloatList initial_joint_angles
+---
+std_msgs/Float32[] joint_angles
+std_msgs/Bool found_solution
