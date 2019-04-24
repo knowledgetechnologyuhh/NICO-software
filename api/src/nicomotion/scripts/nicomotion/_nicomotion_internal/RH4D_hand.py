@@ -23,5 +23,5 @@ class RH4DHand(AbstractHand):
                                "indexfingers_x": (-30., 1.), },
              }
 
-    def __init__(self, robot, isLeft, monitorCurrents=True):
-        super(RH4DHand, self).__init__(robot, isLeft, monitorCurrents)
+    def __init__(self, robot, isLeft, monitorCurrents=True, vrep=False):
+        super(RH4DHand, self).__init__(robot, isLeft, monitorCurrents, vrep)

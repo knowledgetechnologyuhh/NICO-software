@@ -49,5 +49,5 @@ class RH5DHand(AbstractHand):
                             "thumb_z": (150., 1.)}
              }
 
-    def __init__(self, robot, isLeft, monitorCurrents=True):
-        super(RH5DHand, self).__init__(robot, isLeft, monitorCurrents)
+    def __init__(self, robot, isLeft, monitorCurrents=True, vrep=False):
+        super(RH5DHand, self).__init__(robot, isLeft, monitorCurrents, vrep)
