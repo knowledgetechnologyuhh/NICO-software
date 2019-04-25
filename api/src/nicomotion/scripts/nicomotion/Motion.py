@@ -11,6 +11,7 @@ import pypot.dynamixel.error as pypot_error
 import pypot.robot
 import pypot.vrep
 from nicomotion._nicomotion_internal.MotionError import MotionErrorHandler
+from pypot.dynamixel.io.abstract_io import DxlCommunicationError, DxlError
 from pypot.vrep.remoteApiBindings import vrep as remote_api
 
 from _nicomotion_internal.RH4D_hand import RH4DHand
@@ -76,34 +77,74 @@ class Motion:
         else:
             self._logger.info('Using robot')
             self._adjust_port_latency()
+
+            def remove_missing(ids):
+                for id in ids:
+                    id = int(id)
+                    for motor in config['motors'].keys():
+                        if config['motors'][motor]['id'] == id:
+                            self._logger.warning(
+                                'Removing motor {} ({})'.format(motor, id))
+                            config['motors'].pop(motor)
+                            for group in config['motorgroups'].keys():
+                                config['motorgroups'][group] = [
+                                    x for x in config['motorgroups'][
+                                        group] if x != motor]
+                self._logger.warning('New config created:')
+                self._logger.warning(pprint.pformat(config))
+
             retries = 0
             success = False
             while not success:
                 try:
                     self._robot = pypot.robot.from_config(config)
                     success = True
+                except KeyError as e:
+                    # reinitialize pypot up to 3 times
+                    if retries < 3:
+                        # fetch ids from error
+                        ids = [int(str(e))]
+                        self._logger.warning(
+                            "Missing id {} - Retrying initialization".format(e)
+                        )
+                        if ignoreMissing:
+                            remove_missing(ids)
+                        retries += 1
+                except DxlError as e:
+                    # reinitialize pypot up to 3 times
+                    if retries < 3:
+                        # fetch ids from error
+                        regex = re.compile(r'.*\((?P<ids>.*)\).*')
+                        match = regex.match(e.message)
+                        string = match.group('ids')
+                        ids = string.split(',')
+                        self._logger.warning(
+                            "Missing ids {} - Retrying initialization".format(
+                                string)
+                        )
+                        if ignoreMissing:
+                            remove_missing(ids)
+                        retries += 1
                 except IndexError as e:
-                    if ignoreMissing and retries < 3:
-                        # removes missing ids if enabled and tries to
-                        # reinitialize pypot up to 3 times
+                    # reinitialize pypot up to 3 times
+                    if retries < 3:
+                        # fetch ids from error
                         regex = re.compile(r'.*\[.*\].*\[(?P<ids>.*)\].*')
                         match = regex.match(e.message)
                         string = match.group('ids')
-                        for id in string.split(','):
-                            id = int(id)
-                            for motor in config['motors'].keys():
-                                if config['motors'][motor]['id'] == id:
-                                    self._logger.warning(
-                                        'Removing motor %s (%i)' % (motor, id))
-                                    config['motors'].pop(motor)
-                                    for group in config['motorgroups'].keys():
-                                        config['motorgroups'][group] = [
-                                            x for x in config['motorgroups'][
-                                                group] if x != motor]
-                        self._logger.warning('New config created:')
-                        self._logger.warning(pprint.pformat(config))
+                        ids = string.split(',')
+                        self._logger.warning(
+                            "Missing ids {} - Retrying initialization".format(
+                                string)
+                        )
+                        if ignoreMissing:
+                            remove_missing(ids)
                         retries += 1
                     else:
+                        self._logger.error(
+                            (
+                                "Initialization failed after {} retries"
+                            ).format(retries))
                         raise e
                 except RuntimeError as e:
                     # Workaround for every other init failing
@@ -119,22 +160,35 @@ class Motion:
                         "Retrying initialization after an error occured")
                     time.sleep(1)
         time.sleep(3)  # wait for syncloop to initialize values
-        if (hasattr(self._robot, "r_middlefingers_x")):
-            if (hasattr(self._robot, "r_wrist_x")):
+        # initialize hands
+        # left hand
+        if (hasattr(self._robot, "l_middlefingers_x")):
+            if (hasattr(self._robot, "l_wrist_x")):
                 self._leftHand = RH7DHand(robot=self._robot, isLeft=True,
-                                          monitorCurrents=monitorHandCurrents)
-                self._rightHand = RH7DHand(robot=self._robot, isLeft=False,
-                                           monitorCurrents=monitorHandCurrents)
+                                          monitorCurrents=monitorHandCurrents,
+                                          vrep=vrep)
             else:
                 self._leftHand = RH5DHand(robot=self._robot, isLeft=True,
-                                          monitorCurrents=monitorHandCurrents)
-                self._rightHand = RH5DHand(robot=self._robot, isLeft=False,
-                                           monitorCurrents=monitorHandCurrents)
-        else:
+                                          monitorCurrents=monitorHandCurrents,
+                                          vrep=vrep)
+        elif (hasattr(self._robot, "l_thumb_x")):
             self._leftHand = RH4DHand(robot=self._robot, isLeft=True,
-                                      monitorCurrents=monitorHandCurrents)
+                                      monitorCurrents=monitorHandCurrents,
+                                      vrep=vrep)
+        # right hand
+        if (hasattr(self._robot, "r_middlefingers_x")):
+            if (hasattr(self._robot, "r_wrist_x")):
+                self._rightHand = RH7DHand(robot=self._robot, isLeft=False,
+                                           monitorCurrents=monitorHandCurrents,
+                                           vrep=vrep)
+            else:
+                self._rightHand = RH5DHand(robot=self._robot, isLeft=False,
+                                           monitorCurrents=monitorHandCurrents,
+                                           vrep=vrep)
+        elif (hasattr(self._robot, "r_thumb_x")):
             self._rightHand = RH4DHand(robot=self._robot, isLeft=False,
-                                       monitorCurrents=monitorHandCurrents)
+                                       monitorCurrents=monitorHandCurrents,
+                                       vrep=vrep)
         # remember initial situation as a safe state
         self.safeState = dict()
         for motor in self._robot.motors:
@@ -145,7 +199,13 @@ class Motion:
         Lowers the latency of the NICO port to prevent communication delays
         """
         # checks whether setserial is installed
-        subprocess.check_output(["which", "setserial"])
+        try:
+            subprocess.check_output(["which", "setserial"])
+        except subprocess.CalledProcessError as e:
+            self._logger.critical("could not find setserial - please make " +
+                                  "sure that the setserial package is " +
+                                  "installed on your system")
+            raise e
 
         # get all ports
         ports = pypot.dynamixel.get_available_ports()
@@ -156,12 +216,16 @@ class Motion:
         # find a port which has dynamixel motors attached
         ids = range(48)
         motors_found = False
-        for i in range(len(ports)):
-            dxl_io = pypot.dynamixel.DxlIO(ports[i])
-            if len(dxl_io.scan(ids)) > 0:
-                port = ports[i]
-                motors_found = True
-                break
+        for port in ports:
+            try:
+                self._logger.info("connecting to {}".format(port))
+                dxl_io = pypot.dynamixel.DxlIO(port)
+                if len(dxl_io.scan(ids)) > 0:
+                    motors_found = True
+                    break
+            except DxlCommunicationError:
+                self._logger.warning(
+                    "Skipping {} due to communication error".format(port))
 
         if not motors_found:
             raise OSError("No valid port found")
@@ -360,11 +424,6 @@ class Motion:
         else:
             hand.openHand(min(fractionMaxSpeed, self._maximumSpeed),
                           percentage)
-            # else:
-            #     if (percentage < 1.0):
-            #         self._logger.warning("Open hand for RH7D doesn't " +
-            #                              "support percentage parameter")
-            #     self.setHandPose(handName, "openHand", fractionMaxSpeed)
 
     def closeHand(self, handName, fractionMaxSpeed=1.0, percentage=1.0):
         """
@@ -473,10 +532,12 @@ class Motion:
         """
         if hasattr(self._robot, jointName):
             handMotor = False
-            if self._leftHand.isHandMotor(jointName):
+            if (hasattr(self, "_leftHand") and
+                    self._leftHand.isHandMotor(jointName)):
                 hand = self._leftHand
                 handMotor = True
-            elif (self._rightHand.isHandMotor(jointName)):
+            elif (hasattr(self, "_rightHand") and
+                  self._rightHand.isHandMotor(jointName)):
                 hand = self._rightHand
                 handMotor = True
 
@@ -505,13 +566,21 @@ class Motion:
         :type fractionMaxSpeed: float
         """
         if hasattr(self._robot, jointName):
+            handMotor = False
+            if (hasattr(self, "_leftHand") and
+                    self._leftHand.isHandMotor(jointName)):
+                hand = self._leftHand
+                handMotor = True
+            elif (hasattr(self, "_rightHand") and
+                  self._rightHand.isHandMotor(jointName)):
+                hand = self._rightHand
+                handMotor = True
+
             motor = getattr(self._robot, jointName)
-            if (self._handModel == "RH7D"
-                    and _nicomotion_internal.RH7D_hand.isHandMotor(jointName)):
-                _nicomotion_internal.RH7D_hand.setAngle(jointName,
-                                                        change +
-                                                        motor.present_position,
-                                                        fractionMaxSpeed)
+
+            if handMotor:
+                hand.setAngle(jointName, change + motor.present_position, min(
+                    fractionMaxSpeed, self._maximumSpeed))
             else:
                 motor.compliant = False
                 motor.goal_speed = 1000.0 * min(fractionMaxSpeed,
@@ -670,9 +739,11 @@ class Motion:
         :rtype: float
         """
         if hasattr(self._robot, jointName):
-            if(self._leftHand.isHandMotor(jointName)):
+            if(hasattr(self, "_leftHand") and
+               self._leftHand.isHandMotor(jointName)):
                 return self._leftHand.getPresentCurrent(jointName)
-            elif(self._rightHand.isHandMotor(jointName)):
+            elif(hasattr(self, "_rightHand") and
+                 self._rightHand.isHandMotor(jointName)):
                 return self._rightHand.getPresentCurrent(jointName)
             else:
                 motor = getattr(self._robot, jointName)
@@ -789,6 +860,11 @@ class Motion:
         if hasattr(self._robot, jointName):
             motor = getattr(self._robot, jointName)
             if hasattr(motor, 'pid'):
+                if ((hasattr(self, "_leftHand") and
+                     self._leftHand.isHandMotor(jointName)) or
+                    (hasattr(self, "_rightHand") and
+                     self._rightHand.isHandMotor(jointName))):
+                    motor.pid_lock = False
                 motor.pid = (p, i, d)
             else:
                 self._logger.warning('Joint %s has no pid' % jointName)

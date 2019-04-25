@@ -155,10 +155,8 @@ class Mover:
             reader = csv.DictReader(infile)
             # If no subsetfile, send to all the joints
             if (subsetfname is None):
-                # ES TODO Correct this: reader[0] will not work, but the
-                # iterator for row in reader:
-                for jName in reader[0]:
-                    mt = self.move_position(joi, move_speed)
+                for row in reader:
+                    mt = self.move_position(row, move_speed)
             else:
                 # Else send only to the joints defined in the subset file
 
@@ -223,8 +221,7 @@ class Mover:
             # If no subsetfile, send to all the joints
             if (subsetfname is None):
                 for row in reader:
-                    for jName in row:
-                        mt = self.move_position(jName, move_speed)
+                    mt = self.move_position(row, move_speed)
                     # print row
                     time.sleep(mt * 0.85)
                 time.sleep(mt * 3)
@@ -277,6 +274,9 @@ class Mover:
 if __name__ == "__main__":
 
     import argparse
+    import logging
+
+    logging.basicConfig(level=logging.WARNING)
 
     # examples
     # Move with move file from current position over trajectory

@@ -12,8 +12,8 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys
 import os
+import sys
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -24,7 +24,8 @@ sys.path.insert(0, os.path.abspath('../api/src/nicovision/scripts/nicovision'))
 sys.path.insert(0, os.path.abspath('../api/src/nicoface/scripts/nicoface'))
 sys.path.insert(0, os.path.abspath('../api/src/nicotouch/scripts/nicotouch'))
 sys.path.insert(0, os.path.abspath('../api/src/nicoros/scripts/'))
-sys.path.insert(0, os.path.abspath('../api/src/nicomotion/scripts/nicomoveit/moveitwrapper'))
+sys.path.insert(0, os.path.abspath(
+    '../api/src/nicomotion/scripts/nicomoveit/moveitwrapper'))
 
 # -- General configuration ------------------------------------------------
 
@@ -125,7 +126,7 @@ html_theme = 'pyramid'
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-#html_logo = None
+# html_logo = None
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -151,7 +152,8 @@ html_static_path = ['_static']
 #html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
-html_sidebars = { '**': ['globaltoc.html', 'relations.html', 'sourcelink.html', 'searchbox.html'], }
+html_sidebars = {'**': ['globaltoc.html',
+                        'relations.html', 'sourcelink.html', 'searchbox.html'], }
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
@@ -190,22 +192,22 @@ htmlhelp_basename = 'NICOdoc'
 # -- Options for LaTeX output ---------------------------------------------
 
 latex_elements = {
-# The paper size ('letterpaper' or 'a4paper').
-#'papersize': 'letterpaper',
+    # The paper size ('letterpaper' or 'a4paper').
+    # 'papersize': 'letterpaper',
 
-# The font size ('10pt', '11pt' or '12pt').
-#'pointsize': '10pt',
+    # The font size ('10pt', '11pt' or '12pt').
+    # 'pointsize': '10pt',
 
-# Additional stuff for the LaTeX preamble.
-#'preamble': '',
+    # Additional stuff for the LaTeX preamble.
+    # 'preamble': '',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'NICO.tex', u'NICO Documentation',
-   u'Marcus Soll', 'manual'),
+    ('index', 'NICO.tex', u'NICO Documentation',
+     u'Marcus Soll', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -248,9 +250,9 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'NICO', u'NICO Documentation',
-   u'Marcus Soll', 'NICO', 'One line description of project.',
-   'Miscellaneous'),
+    ('index', 'NICO', u'NICO Documentation',
+     u'Marcus Soll', 'NICO', 'One line description of project.',
+     'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.

@@ -33,7 +33,7 @@ class AbstractHand(object):
         for each pose as in {"poseName": {"motor_name": (pos, speed_fract)}}"""
         pass
 
-    def __init__(self, robot, isLeft, monitorCurrents=True):
+    def __init__(self, robot, isLeft, monitorCurrents=True, vrep=False):
         self.logger = logging.getLogger(__name__)
 
         if isLeft:
@@ -42,7 +42,8 @@ class AbstractHand(object):
             self.prefix = "r_"
 
         # get hand motor accessors from robot
-        self.board = getattr(robot, self.prefix + "virtualhand_x")
+        if not vrep:
+            self.board = getattr(robot, self.prefix + "virtualhand_x")
         for motor in self.current_ports.keys():
             setattr(self, motor, getattr(robot, self.prefix + motor))
 
@@ -64,7 +65,7 @@ class AbstractHand(object):
         self.motor_directions = dict(
             zip(self.sensitive_motors, ["idle"] * len(self.sensitive_motors)))
 
-        if monitorCurrents:
+        if monitorCurrents and not vrep:
             t = threading.Thread(target=self._current_check)
             t.daemon = True
             t.start()
@@ -79,7 +80,7 @@ class AbstractHand(object):
         :type position: float
         :param fraction_max_speed: Percentage of goal speed at which the motor
                                  should operate [0.0, 1.0]
-        :type position: float
+        :type fraction_max_speed: float
         """
         if self.isHandMotor(motor_name):
             motor_name = motor_name[2:]
@@ -125,7 +126,8 @@ class AbstractHand(object):
         """
 
         if self.isHandMotor(jointname):
-            return getattr(self.board, self.current_ports[jointname[2:]])
+            return self.board.present_motor_currents[
+                self.current_ports[jointname[2:]]]
 
         self.logger.warning("{} is not a joint of {}Hand".format(
             jointname, self.prefix[0].upper()))
@@ -166,7 +168,8 @@ class AbstractHand(object):
             self.mutex.acquire()
             for motor_name in self.sensitive_motors:
                 if self.motor_directions[motor_name] == "closing":
-                    if (getattr(self.board, self.current_ports[motor_name]) >
+                    if (self.board.present_motor_currents[
+                            self.current_ports[motor_name]] >
                             self.current_limit):
 
                         self.logger.warning(

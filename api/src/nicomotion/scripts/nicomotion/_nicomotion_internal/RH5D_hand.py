@@ -9,11 +9,11 @@ class RH5DHand(AbstractHand):
     sensitive_motors = ("thumb_z", "thumb_x",
                         "indexfinger_x", "middlefingers_x")
 
-    current_ports = {"wrist_z": "present_current_port_1",
-                     "thumb_z": "present_current_port_4",
-                     "thumb_x": "present_current_port_5",
-                     "indexfinger_x": "present_current_port_6",
-                     "middlefingers_x": "present_current_port_7"}
+    current_ports = {"wrist_z": 0,
+                     "thumb_z": 3,
+                     "thumb_x": 4,
+                     "indexfinger_x": 5,
+                     "middlefingers_x": 6}
 
     poses = {"pointAt": {"indexfinger_x": (-170., 1.),
                          "middlefingers_x": (150., 1.),
@@ -49,5 +49,5 @@ class RH5DHand(AbstractHand):
                             "thumb_z": (150., 1.)}
              }
 
-    def __init__(self, robot, isLeft, monitorCurrents=True):
-        super(RH5DHand, self).__init__(robot, isLeft, monitorCurrents)
+    def __init__(self, robot, isLeft, monitorCurrents=True, vrep=False):
+        super(RH5DHand, self).__init__(robot, isLeft, monitorCurrents, vrep)
