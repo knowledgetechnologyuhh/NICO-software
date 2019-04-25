@@ -94,8 +94,8 @@
       "offset": 0.0,
       "type": "MX-64",
       "id": 3,
-      "angle_limit": [-140,
-        75
+      "angle_limit": [-75,
+        140
       ],
       "orientation": "indirect"
     },
@@ -130,8 +130,8 @@
       "offset": 0.0,
       "type": "MX-64",
       "id": 4,
-      "angle_limit": [-75,
-        140
+      "angle_limit": [-140,
+        75
       ],
       "orientation": "indirect"
     },
