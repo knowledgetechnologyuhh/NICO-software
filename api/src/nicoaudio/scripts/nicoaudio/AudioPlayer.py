@@ -1,11 +1,9 @@
-import datetime
 import logging
 import threading
 import time
+from io import BytesIO
 
-import numpy as np
-from audiotsm import phasevocoder, wsola
-from audiotsm.io.array import ArrayReader, ArrayWriter
+from audiotsm import phasevocoder
 from audiotsm.io.wav import WavReader, WavWriter
 from pyaudio import PyAudio
 from pydub import AudioSegment
@@ -139,9 +137,12 @@ class AudioPlayer(object):
                       (this affects the speed)
         :type pitch: float
         """
-        new_sample_rate = int(self._segment.frame_rate * (2.0 ** octaves))
-        self._segment = self._segment._spawn(
-            self._segment.raw_data, overrides={'frame_rate': new_sample_rate})
+        if octaves != 0:
+            logger.info("Setting pitch to %f", octaves)
+            new_sample_rate = int(self._segment.frame_rate * (2.0 ** octaves))
+            self._segment = self._segment._spawn(
+                self._segment.raw_data,
+                overrides={'frame_rate': new_sample_rate})
 
     def speed(self, speed):
         """
@@ -151,26 +152,26 @@ class AudioPlayer(object):
                       pitch
         :type speed: float
         """
-        # TODO delete tmp files
-        # TODO find implementation without tmp files
-        # TODO remove excessive logging
-
-        filename = '/tmp/NICO_audio_{}.wav'.format(
-            datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S.%f"))
-        logger.info("Export")
-        self._segment.export(filename, format='wav')
-        logger.info("Read")
-        with WavReader(filename) as reader:
-            filename2 = '/tmp/NICO_audio_{}.wav'.format(
-                datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S.%f"))
-            with WavWriter(filename2, reader.channels,
-                           reader.samplerate) as writer:
-                logger.info("Initializing vocoder")
-                tsm = phasevocoder(reader.channels, speed=speed)
-                logger.info("Adjusting speed")
-                tsm.run(reader, writer)
-                logger.info("Reload audio segment")
-                self._segment = AudioSegment.from_file(filename2)
+        if speed != 1:
+            logger.info("Setting speed to %f", speed)
+            logger.debug("Export file to BytesIO")
+            wav_in = BytesIO()
+            wav_in = self._segment.export(wav_in, format='wav')
+            wav_in.seek(0)
+            logger.debug("Initializing reader and writer")
+            with WavReader(wav_in) as reader:
+                wav_out = BytesIO()
+                with WavWriter(wav_out, reader.channels,
+                               reader.samplerate) as writer:
+                    logger.debug("Adjusting speed with vocoder")
+                    tsm = phasevocoder(reader.channels, speed=speed)
+                    tsm.run(reader, writer)
+                    logger.debug("Reload audio segment")
+                    wav_out.seek(44)  # skip metadata and start at first sample
+                    self._segment = AudioSegment.from_raw(
+                        wav_out, sample_width=self._segment.sample_width,
+                        channels=self._segment.channels,
+                        frame_rate=self._segment.frame_rate)
 
     def play(self, volume=1.0):
         """
