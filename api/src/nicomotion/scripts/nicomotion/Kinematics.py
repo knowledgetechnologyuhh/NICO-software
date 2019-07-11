@@ -20,7 +20,7 @@ class Kinematics(object):
     with inverse kinematics."""
 
     def __init__(self, robot, urdf=(dirname(abspath(__file__)) +
-                                    "/../../../../../urdf/complete_mod.urdf")):
+                                    "/../../../../../urdf/kinematics.urdf")):
         """
         The Kinematics class can be used to control the arms of the NICO robot
         with inverse kinematics.
@@ -251,7 +251,7 @@ class Kinematics(object):
         self.robot.setAngle(prefix + "_arm_x", target_angles[3], vel)
         self.robot.setAngle(prefix + "_elbow_y", target_angles[4], vel)
         if self.robot._vrep:
-            self.robot.setAngle(prefix + "_wrist_z", target_angles[5], vel)
+            self.robot.setAngle(prefix + "_wrist_z", -target_angles[5], vel)
         else:
             self.robot.setAngle(prefix + "_wrist_z", target_angles[5] * 2, vel)
         self.robot.setAngle(prefix + "_wrist_x", target_angles[6], vel)
