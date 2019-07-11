@@ -13,15 +13,15 @@ logging.getLogger(name="nicomotion.Kinematics").setLevel(logging.DEBUG)
 VREP = False
 
 LEN_CUBE_EDGES = 0.05  # in meters
-SPACE_BETWEEN_CUBES = 0.05  # in meters
+SPACE_BETWEEN_CUBES = 0.04  # in meters
 CUBE_DISTANCE = LEN_CUBE_EDGES + SPACE_BETWEEN_CUBES
 # used to keep enough distance to the top layer when moving
 HAND_HEIGHT = 0.06  # in meters
 MAX_Z = 2.
 SAFE_HEIGHT = (MAX_Z + 1) * LEN_CUBE_EDGES  # + HAND_HEIGHT
-DROP_DISTANCE = LEN_CUBE_EDGES / 2.
+DROP_DISTANCE = LEN_CUBE_EDGES / 4.
 # initial position relative to top left cube (from NICO's perspective)
-INITIAL_HAND_OFFSET = (0, 0, 0)  # in meters
+INITIAL_HAND_OFFSET = (0.035, 0, 0.01)  # in meters
 
 # define cube positions relative to the top left
 CUBE_POSITIONS = []
@@ -34,6 +34,16 @@ for z in range(2):
             CUBE_POSITIONS[z][x].append((x * -CUBE_DISTANCE,
                                          y * -CUBE_DISTANCE,
                                          z * LEN_CUBE_EDGES))
+
+
+def initial_position(robot):
+    robot.setAngle("l_shoulder_z", 45, 0.02)
+    robot.setAngle("l_shoulder_y", -45, 0.02)
+    robot.setAngle("l_arm_x", 25, 0.02)
+    robot.setAngle("l_elbow_y", 80, 0.02)
+    robot.setAngle("l_wrist_z", 0, 0.02)
+    robot.setAngle("l_wrist_x", 0, 0.02)
+
 
 if VREP:
     robot = Motion.Motion(
@@ -60,10 +70,9 @@ else:
     robot = Motion.Motion(dirname(abspath(__file__)) +
                           "/../../../../json/nico_humanoid_upper.json",
                           vrep=False)
+    initial_position(robot)
 
 kinematics = Kinematics.Kinematics(robot)
-
-x
 
 
 def on_exit(robot):
@@ -74,18 +83,12 @@ atexit.register(on_exit, robot)
 
 robot.setAngle("head_y", 50, 0.05)
 
-raw_input("Move the left arm in its initial position (top grasp on the " +
-          "top left cube) and press [enter]")
-
-robot.enableTorqueAll()
-
-# save current position to use as origin
-kinematics.save_end_effector_transformation("left_arm", "cube_origin.npy")
-
 # move to safe height
 kinematics.move_to(
     "left_arm", 0, 0, SAFE_HEIGHT, 0, 0, 0,
     "cube_origin.npy")
+
+time.sleep(5)
 
 
 def move_cube_meters(cube_pos, target_pos, origin_orientation=(0, 0, 0),
@@ -105,19 +108,20 @@ def move_cube_meters(cube_pos, target_pos, origin_orientation=(0, 0, 0),
                        origin_orientation[1],
                        origin_orientation[2],
                        "cube_origin.npy")
-    robot.openHand("LHand", fractionMaxSpeed=0.1)
-    raw_input("moving above cube - press [enter] to continue")
+    robot.openHand("LHand", fractionMaxSpeed=0.05)
+    print("moving above cube")  # - press [enter] to continue")
+    time.sleep(2)
     # pickup cube
     # 1. move down
     kinematics.move_to("left_arm",
                        cube_pos[0],
                        cube_pos[1],
-                       cube_pos[2] + LEN_CUBE_EDGES,
+                       cube_pos[2] + LEN_CUBE_EDGES + DROP_DISTANCE,
                        origin_orientation[0],
                        origin_orientation[1],
                        origin_orientation[2],
                        "cube_origin.npy")
-    time.sleep(1)
+    time.sleep(2)
     kinematics.move_to("left_arm",
                        cube_pos[0],
                        cube_pos[1],
@@ -126,10 +130,12 @@ def move_cube_meters(cube_pos, target_pos, origin_orientation=(0, 0, 0),
                        origin_orientation[1],
                        origin_orientation[2],
                        "cube_origin.npy")
-    raw_input("lowering arm to pick up cube - press [enter] to continue")
+    print("lowering arm to pick up cube")  # - press [enter] to continue")
+    time.sleep(2)
     # 2. close hand
-    robot.closeHand("LHand", fractionMaxSpeed=0.1)
-    raw_input("grasping cube - press [enter] to continue")
+    robot.closeHand("LHand", fractionMaxSpeed=0.05)
+    print("grasping cube")  # - press [enter] to continue")
+    time.sleep(2)
     # 3. move up
     kinematics.move_to("left_arm",
                        cube_pos[0],
@@ -139,7 +145,7 @@ def move_cube_meters(cube_pos, target_pos, origin_orientation=(0, 0, 0),
                        origin_orientation[1],
                        origin_orientation[2],
                        "cube_origin.npy")
-    raw_input("lifting cube - press [enter] to continue")
+    print("lifting cube")  # - press [enter] to continue")
     # move above target position
     kinematics.move_to("left_arm",
                        target_pos[0],
@@ -149,7 +155,8 @@ def move_cube_meters(cube_pos, target_pos, origin_orientation=(0, 0, 0),
                        target_orientation[1],
                        target_orientation[2],
                        "cube_origin.npy")
-    raw_input("moving above target positon - press [enter] to continue")
+    print("moving above target positon")  # - press [enter] to continue")
+    time.sleep(2)
     # place cube
     # 1. move down
     kinematics.move_to("left_arm",
@@ -160,10 +167,12 @@ def move_cube_meters(cube_pos, target_pos, origin_orientation=(0, 0, 0),
                        target_orientation[1],
                        target_orientation[2],
                        "cube_origin.npy")
-    raw_input("lowering arm to place cube - press [enter] to continue")
+    print("lowering arm to place cube")  # - press [enter] to continue")
+    time.sleep(2)
     # 2. open hand
-    robot.openHand("LHand", fractionMaxSpeed=0.1)
-    raw_input("opening hand to place cube - press [enter] to continue")
+    robot.openHand("LHand", fractionMaxSpeed=0.05)
+    print("opening hand to place cube")  # - press [enter] to continue")
+    time.sleep(2)
     # 3. move up
     kinematics.move_to("left_arm",
                        target_pos[0],
@@ -188,20 +197,43 @@ def coords_to_meters(x, y, z):
 
 def move_cube_coords(cube_coord, target_coord, origin_orientation=(0, 0, 0),
                      target_orientation=(0, 0, 0)):
-    raw_input("moving {} to {} - press [enter] to continue".format(cube_coord,
-                                                                   target_coord
-                                                                   ))
+    # - press [enter] to continue"
+    print("moving {} to {}".format(cube_coord, target_coord))
     cube_meters = coords_to_meters(*cube_coord)
     target_meters = coords_to_meters(*target_coord)
     move_cube_meters(cube_meters, target_meters,
                      origin_orientation, target_orientation)
 
 
-# put top left on top of center cube
-move_cube_coords((0, 0, 0), (1, 1, 1), target_orientation=(22.5, 0, -22.5))
-# put bottom left on top of top right
-# move_cube_coords((2, 0, 0), (0, 2, 1), target_orientation=(-45, 10, 0))
+# put top left on top of top right
+# move_cube_coords((0, 0, 0), (0, 1, 1))  # works!
+# put top left on top of bottom left
+move_cube_coords((0, 0, 0), (1, 0, 1))  # works too!
+# put top left on top of bottom right
+# move_cube_coords((0, 0, 0), (1, 1, 1)) # kinda works as well!
 
+# put top right on top of top left
+# move_cube_coords((0, 1, 0), (0, 0, 1))  # works but throws it off afterwards
+# put top right on top of bottom left
+# move_cube_coords((0, 1, 0), (1, 0, 1))  # works if NICO doesn't drop the cube
+# put top right on top of bottom right
+# move_cube_coords((0, 1, 0), (1, 1, 1))  # kinda works
+
+# put bottom left on top of top left
+# move_cube_coords((1, 0, 0), (0, 0, 1))  # works
+# put bottom left on top of top right
+# move_cube_coords((1, 0, 0), (0, 1, 1))  # works
+# put bottom left on top of bottom right
+# move_cube_coords((1, 0, 0), (1, 1, 1))  # kinda works
+
+# put bottom right on top of top left
+# move_cube_coords((1, 1, 0), (0, 0, 1))  # 2-finger grip, knocks off cube
+# put bottom right on top of top right
+# move_cube_coords((1, 1, 0), (0, 1, 1))  # 2-fingers, works, but moves stack
+# put bottom right on top of bottom left
+# move_cube_coords((1, 1, 0), (1, 0, 1))  # 2-fingers, works, but moves stack
+
+initial_position(robot)
 time.sleep(4)
 
 robot.setAngle("head_y", 10, 0.05)
