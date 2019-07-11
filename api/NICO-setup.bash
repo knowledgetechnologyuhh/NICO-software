@@ -17,6 +17,12 @@ echo Virtual environment directory: "$VIRTUALENVDIR"
 
 cd
 
+# Test for network connection
+for interface in $(ls /sys/class/net/ | grep -v lo);
+do
+  if [[ $(cat /sys/class/net/$interface/carrier) = 1 ]]; then ONLINE=1; break; fi
+done
+
 #virtualenv setup
 echo "Checking for virtualenv"
 if [ -d ".$VIRTUALENVDIR/" ]; then
@@ -34,7 +40,7 @@ echo "Activating virtualenv"
 source ~/.$VIRTUALENVDIR/bin/activate
 
 #install python packages
-if [ $VIRTUAL_ENV == ~/.$VIRTUALENVDIR ]; then
+if [ $ONLINE ] && [ $VIRTUAL_ENV == ~/.$VIRTUALENVDIR ]; then
   echo "Checking python packages"
   pip install 'pyserial'
   pip install 'sphinx' # required inside virtualenv to find all modules
@@ -53,8 +59,12 @@ if [ $VIRTUAL_ENV == ~/.$VIRTUALENVDIR ]; then
   fi
   pip install 'pyassimp==4.1.3' #FIXME version 4.1.4 causes segmentation faults while loading stl files
   # pip install pyassimp --upgrade
-else
-  echo "Activation failed - skipping python package installations"
+else 
+  if [ ! $ONLINE ]; then
+    echo "Not connected to the internet - skipping python package installations"
+  else
+    echo "Activation failed - skipping python package installations"
+  fi
 fi
 
 #MoveIt!
