@@ -1,4 +1,5 @@
 import logging
+import sys
 
 from nicoaudio.pulse_audio_recorder import AudioRecorder, get_pulse_device
 
@@ -11,6 +12,9 @@ directory = "./."
 
 ar = AudioRecorder(audio_channels=2, samplerate=48000,
                    datadir=directory, audio_device=dev_idx)
+
+if sys.version_info >= (3,):
+    raw_input = input
 
 while True:
     print("Enter label for recording or \"0\" to exit")

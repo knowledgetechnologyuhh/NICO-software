@@ -10,8 +10,8 @@ import math3d as m3d
 import matplotlib.pyplot as plt
 import numpy as np
 import transforms3d
-from nicomotion import Motion
 
+import Motion
 from _nicomotion_internal.ikpy import chain, geometry_utils, plot_utils
 
 

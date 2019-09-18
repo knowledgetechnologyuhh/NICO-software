@@ -43,7 +43,7 @@ else:
             pass
 
     logging.getLogger().setLevel(logging.INFO)
-    print "devices" + str(ImageRecorder.get_devices())
+    print("devices" + str(ImageRecorder.get_devices()))
     if amount_of_cams == 1:
         device = ImageRecorder.get_devices()[0]
         ir = ImageRecorder.ImageRecorder(device, res_x, res_y,
@@ -53,8 +53,14 @@ else:
         # ir = ImageRecorder.ImageRecorder(device, 1920, 1080,framerate=30,writer_threads=5)
         # ir = ImageRecorder.ImageRecorder(device, 3840, 2160,framerate=30,writer_threads=5)
         # ir = ImageRecorder.ImageRecorder(device, 1280, 720,framerate=20,writer_threads=5)
-    elif amount_of_cams >= 2:
+    elif amount_of_cams > 2:
         devices = ImageRecorder.get_devices()[0:amount_of_cams]
+        ir = MultiCamRecorder.MultiCamRecorder(devices, res_x, res_y,
+                                               framerate=framerate, zoom=zoom,
+                                               writer_threads=4,
+                                               pixel_format="UYVY")
+    else:
+        devices = MultiCamRecorder.autodetect_nicoeyes()
         ir = MultiCamRecorder.MultiCamRecorder(devices, res_x, res_y,
                                                framerate=framerate, zoom=zoom,
                                                writer_threads=4,
