@@ -24,7 +24,6 @@ unset PYTHON
 unset VIRTUALENVDIR
 cd $WORKDIR/..
 echo $(pwd)
-source cv_bridge_build_ws/install/setup.bash
-source cv_bridge_build_ws/install/setup.bash
+source cv_bridge_build_ws/devel/setup.bash --extend
 echo $CALLDIR
 cd $CALLDIR
