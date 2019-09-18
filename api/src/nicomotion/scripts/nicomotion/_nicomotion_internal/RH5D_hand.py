@@ -1,4 +1,4 @@
-from hand import AbstractHand
+from .hand import AbstractHand
 
 
 class RH5DHand(AbstractHand):

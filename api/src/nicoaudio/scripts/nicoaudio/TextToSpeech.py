@@ -113,8 +113,8 @@ class TextToSpeech(object):
 
             # cache audio file
             self._cache[text + language] = file
-            with open(self._cache_file, "wb") as f:
-                f.write(json.dumps(self._cache))
+            with open(self._cache_file, "w") as f:
+                json.dump(self._cache, f)
         else:
             # otherwise use pico2wave as fallback
             logger.warn("Could not connect to google "

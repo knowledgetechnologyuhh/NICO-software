@@ -27,7 +27,7 @@ class ImageSubscriber(object):
             response = setPan(panvalue)
             if response.success:
                 print("I just set the pan value to {}".format(panvalue))
-        except rospy.ServiceException, e:
+        except rospy.ServiceException as e:
             "Service call failed: %s" % e
 
         self.bridge = cv_bridge.CvBridge()

@@ -12,8 +12,8 @@ from nicomotion import Motion
 
 logging.basicConfig(level=logging.WARNING)
 
-robot = Motion.Motion("../../../json/nico_humanoid_upper_with_hands_vrep.json",
-                      vrep=False)
+robot = Motion.Motion("../../../json/nico_humanoid_upper.json",
+                      vrep=False, ignoreMissing=True)
 
 position = -20
 for i in xrange(6):

@@ -8,7 +8,8 @@ cd "$CALLDIR"
 VIRTUALENV="virtualenv"
 echo Running at: "$WORKDIR"
 
-VIRTUALENVDIR="NICO"
+: ${PYTHON="/usr/bin/python2.7"}
+: ${VIRTUALENVDIR="NICO"}
 if [ $# -eq 1 ]
   then
     VIRTUALENVDIR="$1"
@@ -34,34 +35,34 @@ else
     pip install --user virtualenv
     VIRTUALENV=".local/bin/virtualenv"
   fi
-  $VIRTUALENV -p /usr/bin/python2.7 --system-site-packages ~/.$VIRTUALENVDIR
+  $VIRTUALENV -p $PYTHON ~/.$VIRTUALENVDIR
 fi
 echo "Activating virtualenv"
 source ~/.$VIRTUALENVDIR/bin/activate
 
 #install python packages
 if [ $ONLINE ] && [ $VIRTUAL_ENV == ~/.$VIRTUALENVDIR ]; then
+  for api_package in nicoaudio nicoemotionrecognition nicoface nicomotion nicotouch nicovision; do
+    pip install $WORKDIR/src/$api_package/
+  done
   echo "Checking python packages"
-  pip install 'pyserial'
   pip install 'sphinx' # required inside virtualenv to find all modules
+  pip install cffi
   # install/update custom pypot
   cd /tmp
   git clone https://git.informatik.uni-hamburg.de/wtm-robots-and-equipment/pypot.git
   cd pypot
-  git checkout combined-hand-current-accessor #FIXME remove when changes are merged to master
   CURRENT_GIT_COMMIT=`git show --name-status | grep commit`
   CURRENT_GIT_COMMIT=${CURRENT_GIT_COMMIT#'commit '}
   if [ ! -f ~/.$VIRTUALENVDIR/.current_git_commit ] || [ ! `cat ~/.$VIRTUALENVDIR/.current_git_commit` == $CURRENT_GIT_COMMIT ]; then
     echo "Custom pypot outdated - updating to commit $CURRENT_GIT_COMMIT"
-    rm -rf ~/.$VIRTUALENVDIR/lib/python2.7/site-packages/pypot/
-    ~/.$VIRTUALENVDIR/bin/python setup.py install
+    rm -rf ~/.$VIRTUALENVDIR/lib/python*/site-packages/pypot/
+    pip install .
     echo $CURRENT_GIT_COMMIT >| ~/.$VIRTUALENVDIR/.current_git_commit
   else
     echo "Latest custom pypot already installed - skipping installation"
   fi
-  pip install 'pyassimp==4.1.3' #FIXME version 4.1.4 causes segmentation faults while loading stl files
-  # pip install pyassimp --upgrade
-else 
+else
   if [ ! $ONLINE ]; then
     echo "Not connected to the internet - skipping python package installations"
   else
@@ -74,7 +75,9 @@ MOVEIT_indigo=$(dpkg-query -W --showformat='${Status}\n' ros-indigo-moveit 2>/de
 installed")
 MOVEIT_kinetic=$(dpkg-query -W --showformat='${Status}\n' ros-kinetic-moveit 2>/dev/null|grep "install ok
 installed")
-if [ "" == "$MOVEIT_indigo" ] && [ "" == "$MOVEIT_kinetic" ]; then
+MOVEIT_melodic=$(dpkg-query -W --showformat='${Status}\n' ros-melodic-moveit 2>/dev/null|grep "install ok
+installed")
+if [ "" == "$MOVEIT_indigo" ] && [ "" == "$MOVEIT_kinetic" ] && [ "" == "$MOVEIT_melodic" ]; then
   if [ -f $WORKDIR/src/nicomoveit/kinematics/package.xml ]; then
     rm $WORKDIR/src/nicomoveit/kinematics/package.xml
   fi
@@ -86,6 +89,7 @@ else
   echo "MoveIt! is installed"
   echo "To use MoveIt! with visualization run: roslaunch nicoros nicoros_moveit_visual.launch"
   echo "To use MoveIt! without visualization run: roslaunch nicoros nicoros_moveit.launch"
+  pip install 'pyassimp==4.1.3' #FIXME version 4.1.4 causes segmentation faults while loading stl files
 fi
 
 #ROS + catkin
@@ -97,9 +101,13 @@ if [ -e /opt/ros/indigo/setup.bash ]; then
 elif [ -e /opt/ros/kinetic/setup.bash ]; then
   ROS_VERSION="kinetic"
   source /opt/ros/${ROS_VERSION}/setup.bash
+elif [ -e /opt/ros/melodic/setup.bash ]; then
+  ROS_VERSION="melodic"
+  source /opt/ros/${ROS_VERSION}/setup.bash
 fi
 if [ -x "$(command -v catkin_make)" ]; then
-  catkin_make
+  pip install rospkg catkin_pkg empy
+  catkin_make -DPYTHON_EXECUTABLE=~/.$VIRTUALENVDIR/bin/python
   source $WORKDIR/devel/setup.bash
 fi
 if ! [ -x "$(command -v catkin_make)" ]; then
