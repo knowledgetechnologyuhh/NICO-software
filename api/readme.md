@@ -34,24 +34,13 @@ sudo apt-get install v4l-utils
 ```
 nicoros
 --
-**WIP**
 
 cv-bridge for python 3:
 
 ```
 sudo apt-get install python-catkin-tools
 ```
+Source in addition to api/devel/setup.bash and NICO-python3/bin/activate (NICO-python3.bash does all of this automatically):
 ```
-mkdir opencv_build_ws
-cd opencv_build_ws
-catkin config -DPYTHON_EXECUTABLE=~/.NICO-python3/bin/python3 -DPYTHON_INCLUDE_DIR=/usr/include/python3.6m -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.6m.so
-catkin config --install
-
-mkdir src
-cd src
-git clone -b melodic https://github.com/ros-perception/vision_opencv.git
-
-cd ..
-catkin build cv_bridge
-source install/setup.bash --extend
+source cv_bridge_build_ws/devel/setup.bash --extend
 ```
