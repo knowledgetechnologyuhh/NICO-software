@@ -4,7 +4,7 @@
 import sys
 import time
 
-from nicomotion import Motion
+import Motion
 
 
 class Freezer:

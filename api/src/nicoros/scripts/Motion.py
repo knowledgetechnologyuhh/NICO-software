@@ -13,6 +13,12 @@ import rospy
 import sensor_msgs.msg
 from nicomotion.Motion import Motion
 from std_msgs.msg import String
+from std_srvs.srv import Empty
+
+try:
+    from nicomoveit import moveitWrapper
+except ImportError as e:
+    pass
 
 
 class NicoRosMotion():
@@ -38,6 +44,8 @@ class NicoRosMotion():
                 'rostopicName': '/nico/motion',
                 'jointStateName': '/joint_states',
                 'fakeExecution': False,
+                'usePyrep': False,
+                'headless': False
                 }
 
     def __init__(self, config=None):
@@ -65,14 +73,27 @@ class NicoRosMotion():
         if rospy.has_param(config['rostopicName'] + '/fakeExecution'):
             config['fakeExecution'] = rospy.get_param(
                 config['rostopicName'] + '/fakeExecution')
+        if rospy.has_param(config['rostopicName'] + '/pyrep'):
+            config['pyrep'] = rospy.get_param(
+                config['rostopicName'] + '/pyrep')
+        if rospy.has_param(config['rostopicName'] + '/headless'):
+            config['headless'] = rospy.get_param(
+                config['rostopicName'] + '/headless')
 
         # init Motion
         self.logger.info('-- Init NicoRosMotion --')
+        if config['pyrep']:
+            vrepConfig = Motion.pyrepConfig()
+            vrepConfig['vrep_scene'] = config['vrepScene']
+            vrepConfig['headless'] = config['headless']
+        else:
+            vrepConfig = Motion.vrepRemoteConfig()
+            vrepConfig['vrep_scene'] = config['vrepScene']
+            vrepConfig['vrep_host'] = config['vrepHost']
+            vrepConfig['vrep_port'] = config['vrepPort']
         self.robot = Motion(motorConfig=config['robotMotorFile'],
                             vrep=config['vrep'],
-                            vrepHost=config['vrepHost'],
-                            vrepPort=config['vrepPort'],
-                            vrepScene=config['vrepScene'])
+                            vrepConfig=vrepConfig)
 
         # init ROS
         self.logger.debug('Init ROS')
@@ -168,6 +189,16 @@ class NicoRosMotion():
             '%s/getPID' % config['rostopicName'], nicomsg.srv.GetPID,
             self._ROSPY_getPID)
 
+        rospy.Service('%s/nextSimulationStep' %
+                      config['rostopicName'], Empty,
+                      self._ROSPY__nextSimulationStep)
+        rospy.Service('%s/startSimulation' %
+                      config['rostopicName'], Empty,
+                      self._ROSPY__startSimulation)
+        rospy.Service('%s/stopSimulation' %
+                      config['rostopicName'], Empty,
+                      self._ROSPY__stopSimulation)
+
         # setup class variables
         self._running = True
         self.jsonConfig = self.robot.getConfig()
@@ -177,19 +208,24 @@ class NicoRosMotion():
 
         # setup publishers
         self.logger.debug('Init publishers')
-        self._jointStatePublisher = rospy.Publisher(
-            '%s' % config['jointStateName'], sensor_msgs.msg.JointState,
-            queue_size=1)
-        # a asynchronous thread is seperated from the main thread
-        self._jointStateThread = threading.Thread(target=self._sendJointState)
-        self._jointStateThread.start()
+        if "nicomoveit.moveitWrapper" in sys.modules:
+            self._jointStatePublisher = rospy.Publisher(
+                '%s' % config['jointStateName'], sensor_msgs.msg.JointState,
+                queue_size=1)
+            # a asynchronous thread is seperated from the main thread
+            self._jointStateThread = threading.Thread(
+                target=self._sendJointState)
+            self._jointStateThread.start()
+        else:
+            self._jointStateThread = None
 
         # wait for messages
         self.logger.info('-- All done --')
 
     def stop(self):
         self._running = False
-        self._jointStateThread.join()
+        if self._jointStateThread:
+            self._jointStateThread.join()
 
     def _ROSPY_openHand(self, message):
         """
@@ -470,11 +506,40 @@ class NicoRosMotion():
         """
         self.robot.toSafePosition()
 
+    def _ROSPY__nextSimulationStep(self, message):
+        """
+        Callback handle for :meth:`nicomotion.Motion.nextSimulationStep`
+
+        :param message: ROS message
+        :type message: std_srvs.srv.Empty
+        """
+        self.robot.nextSimulationStep()
+        return []
+
+    def _ROSPY__startSimulation(self, message):
+        """
+        Callback handle for :meth:`nicomotion.Motion.startSimulation`
+
+        :param message: ROS message
+        :type message: std_srvs.srv.Empty
+        """
+        self.robot.startSimulation()
+        return []
+
+    def _ROSPY__stopSimulation(self, message):
+        """
+        Callback handle for :meth:`nicomotion.Motion.stopSimulation`
+
+        :param message: ROS message
+        :type message: std_srvs.srv.Empty
+        """
+        self.robot.stopSimulation()
+        return []
+
     def _sendJointState(self):
         """
         Loop for sending the current joint state
         """
-        from nicomoveit import moveitWrapper
         while self._running:
             if rospy.has_param(self.config['rostopicName'] + '/fakeExecution'):
                 self.config['fakeExecution'] = rospy.get_param(
@@ -563,6 +628,12 @@ if __name__ == '__main__':
     parser.add_argument('-f', '--fake-execution', dest='fake',
                         help=('Publish fake joint states instead of real ' +
                               'joint states'), action='store_false')
+    parser.add_argument('-p', '--pyrep', dest='pyrep',
+                        help=('Use pyrep instead of vrep remote api'),
+                        action='store_true')
+    parser.add_argument('--headless', dest='headless',
+                        help=('Run vrep in headless mode (requires pyrep)'),
+                        action='store_true')
 
     args = parser.parse_known_args()[0]
     if args.logFile:
@@ -581,6 +652,8 @@ if __name__ == '__main__':
     if args.jointStateName:
         config['jointStateName'] = args.jointStateName
     config['fakeExecution'] = args.fake
+    config['pyrep'] = args.pyrep
+    config['headless'] = args.headless
 
     # Set logging setting
     loggingLevel = logging.INFO

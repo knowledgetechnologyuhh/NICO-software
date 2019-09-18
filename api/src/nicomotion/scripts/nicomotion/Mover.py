@@ -25,7 +25,7 @@
 import sys
 import time
 
-from nicomotion import Motion
+import Motion
 
 
 class Mover:
@@ -276,7 +276,7 @@ if __name__ == "__main__":
     import argparse
     import logging
 
-    logging.basicConfig(level=logging.WARNING)
+    logging.basicConfig(level=logging.ERROR)
 
     # examples
     # Move with move file from current position over trajectory

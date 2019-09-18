@@ -10,13 +10,13 @@ import pypot.dynamixel
 import pypot.dynamixel.error as pypot_error
 import pypot.robot
 import pypot.vrep
-from nicomotion._nicomotion_internal.MotionError import MotionErrorHandler
 from pypot.dynamixel.io.abstract_io import DxlCommunicationError, DxlError
 from pypot.vrep.remoteApiBindings import vrep as remote_api
 
-from _nicomotion_internal.RH4D_hand import RH4DHand
-from _nicomotion_internal.RH5D_hand import RH5DHand
-from _nicomotion_internal.RH7D_hand import RH7DHand
+from ._nicomotion_internal.MotionError import MotionErrorHandler
+from ._nicomotion_internal.RH4D_hand import RH4DHand
+from ._nicomotion_internal.RH5D_hand import RH5DHand
+from ._nicomotion_internal.RH7D_hand import RH7DHand
 
 
 class Motion:
@@ -25,9 +25,46 @@ class Motion:
     related functions of the NICO robot
     """
 
+    @staticmethod
+    def vrepRemoteConfig():
+        """
+        Returns a default config dict
+
+        :return: dict
+        """
+        return {
+            'use_pyrep': False,
+            'vrep_host': '127.0.0.1',
+            'vrep_port': 19997,
+            'vrep_scene': "",
+            'tracked_objects': [],
+            'tracked_collisions': [],
+            'id': None,
+            'shared_vrep_io': None
+        }
+
+    @staticmethod
+    def pyrepConfig():
+        """
+        Returns a default config dict
+
+        :return: dict
+        """
+        return {
+            'use_pyrep': True,
+            'vrep_scene': "",
+            'start': False,
+            'headless': False,
+            'responsive_ui': False,
+            'tracked_objects': [],
+            'tracked_collisions': [],
+            'id': None,
+            'shared_vrep_io': None
+        }
+
     def __init__(self, motorConfig='config.json', vrep=False,
-                 vrepHost='127.0.0.1', vrepPort=19997, vrepScene=None,
-                 ignoreMissing=False, monitorHandCurrents=True):
+                 vrepConfig=None, ignoreMissing=False,
+                 monitorHandCurrents=True):
         """
         Motion is an interface to control the movement of the NICO robot.
 
@@ -57,6 +94,10 @@ class Motion:
 
         pypot_error.BaseErrorHandler = MotionErrorHandler
 
+        if vrepConfig is None:
+            vrepConfig = Motion.vrepRemoteConfig()
+        self._pyrep = vrepConfig["use_pyrep"]
+
         with open(motorConfig, 'r') as config_file:
             config = json.load(config_file)
 
@@ -71,9 +112,34 @@ class Motion:
                     config['motorgroups'][group] = [x for x in
                                                     config['motorgroups'][
                                                         group] if x != motor]
-            self._robot = pypot.vrep.from_vrep(config, vrepHost, vrepPort,
-                                               vrepScene)
-            self._vrepIO = self._robot._controllers[0].io
+            if self._pyrep:
+                try:
+                    from pypot import pyrep
+                except ImportError as e:
+                    self._logger.warning(
+                        "Failed to import pyrep from pypot. Make sure you are "
+                        "using Python 3.")
+                    raise e
+                self._robot = pyrep.from_vrep(config,
+                                              vrepConfig["vrep_scene"],
+                                              vrepConfig["start"],
+                                              vrepConfig["headless"],
+                                              vrepConfig["responsive_ui"],
+                                              vrepConfig["tracked_objects"],
+                                              vrepConfig["tracked_collisions"],
+                                              vrepConfig["id"],
+                                              vrepConfig["shared_vrep_io"])
+            else:
+                self._robot = pypot.vrep.from_vrep(
+                    config,
+                    vrepConfig["vrep_host"],
+                    vrepConfig["vrep_port"],
+                    vrepConfig["vrep_scene"],
+                    vrepConfig["tracked_objects"],
+                    vrepConfig["tracked_collisions"],
+                    vrepConfig["id"],
+                    vrepConfig["shared_vrep_io"])
+                self._vrepIO = self._robot._controllers[0].io
         else:
             self._logger.info('Using robot')
             self._adjust_port_latency()
@@ -256,17 +322,22 @@ class Motion:
         """
         Starts the V-REP Simulation. If 'synchronize' is set True the
         simulation steps will not advance until nextSimulationStep() is called.
+        (NOTE: pyrep is always in synchronous mode)
 
         :param synchronize: Enables control over simulation time steps
         :type synchronize: bool
         """
         if self._vrep:
-            if synchronize:
-                remote_api.simxSynchronous(self._vrepIO.client_id, True)
-                self._vrepIO.start_simulation()
+            if self._pyrep:
+                self._robot.start_simulation()
             else:
-                remote_api.simxSynchronous(self._vrepIO.client_id, False)
-                self._vrepIO.start_simulation()
+                if synchronize:
+                    remote_api.simxSynchronous(self._vrepIO.client_id, True)
+                    self._vrepIO.start_simulation()
+                else:
+                    remote_api.simxSynchronous(self._vrepIO.client_id, False)
+                    self._vrepIO.start_simulation()
+
         else:
             self._logger.warning(
                 'startSimulation() has no effect on a real robot')
@@ -294,7 +365,10 @@ class Motion:
         startSimulation().
         """
         if self._vrep:
-            remote_api.simxSynchronousTrigger(self._vrepIO.client_id)
+            if self._pyrep:
+                self._robot.simulation_step()
+            else:
+                remote_api.simxSynchronousTrigger(self._vrepIO.client_id)
         else:
             self._logger.warning(
                 'nextSimulationStep() has no effect on a real robot')
@@ -304,7 +378,10 @@ class Motion:
         Stops the V-REP simulation
         """
         if self._vrep:
-            self._vrepIO.stop_simulation()
+            if self._pyrep:
+                self._robot.stop_simulation()
+            else:
+                self._vrepIO.stop_simulation()
         else:
             self._logger.warning(
                 'stopSimulation() has no effect on a real robot')
@@ -314,7 +391,10 @@ class Motion:
         Restarts the V-REP simulation
         """
         if self._vrep:
-            self._vrepIO.restart_simulation()
+            if self._pyrep:
+                self._robot.reset_simulation()
+            else:
+                self._vrepIO.restart_simulation()
         else:
             self._logger.warning(
                 'resetSimulation() has no effect on a real robot')

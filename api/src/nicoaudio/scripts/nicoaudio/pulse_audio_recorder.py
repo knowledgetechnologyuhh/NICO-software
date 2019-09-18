@@ -6,19 +6,14 @@
 #  Compatibility imports
 from __future__ import absolute_import, division, print_function
 
-import audioop
-import copy
 import logging
 import os
-import struct
 # from threading import Thread
 import threading
 import time
 import wave
-from thread import start_new_thread
 
 import alsaaudio
-import numpy
 import pyaudio
 
 logger = logging.getLogger(__name__)
