@@ -17,6 +17,14 @@ mozilla tts?
 
 nicomotion
 --
+If possible (once, relog afterwards):
+```
+sudo adduser $USER dialout
+```
+otherwise (each time you open a shell):
+```
+sudo chmod 777 /dev/ttyACM*
+```
 
 PyRep:
 ```
@@ -40,7 +48,18 @@ cv-bridge for python 3:
 ```
 sudo apt-get install python-catkin-tools
 ```
-Source in addition to api/devel/setup.bash and NICO-python3/bin/activate (NICO-python3.bash does all of this automatically):
+Source in addition to `api/devel/setup.bash` and `~/.NICO-python3/bin/activate` (`NICO-python3.bash` does all of this automatically, consider adding catkin workspaces to .bashrc):
 ```
 source cv_bridge_build_ws/devel/setup.bash --extend
+```
+
+nicotouch
+--
+If possible (once, relog afterwards):
+```
+sudo adduser $USER dialout
+```
+otherwise (each time you open a shell):
+```
+sudo chmod 777 /dev/ttyACM*
 ```
