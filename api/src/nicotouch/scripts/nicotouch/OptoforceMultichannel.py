@@ -7,7 +7,7 @@ import weakref
 import serial
 import serial.tools.list_ports
 
-import _nicotouch_internal.optoforce as optoforce_driver
+import nicotouch._nicotouch_internal.optoforce as optoforce_driver
 
 # 'Counts/N' from sensitivity report
 scales = {"ONR0A003": [[230.34, 230.34, 230.34],  # DSE0A174 (ring)
@@ -196,5 +196,3 @@ class OptoforceMultichannel(object):
                                      raw["forces"][key],
                                      self._scale[self._keys.index(key)])
         return raw
-
-        return ret

@@ -25,9 +25,9 @@ class NicoRosOptoforce:
         sensor = optoforce(ser_number)
 
         publisher_raw = rospy.Publisher(
-            'nico/optoforce/' + ser_number + '/raw', msg.iii, queue_size=10)
+            'nico/optoforce/' + sensor._ser_number + '/raw', msg.iii, queue_size=10)
         publisher_newton = rospy.Publisher(
-            'nico/optoforce/' + ser_number + '/newton', msg.fff, queue_size=10)
+            'nico/optoforce/' + sensor._ser_number + '/newton', msg.fff, queue_size=10)
 
         rospy.init_node('optoforce', anonymous=True)
 
@@ -49,7 +49,7 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--serial', nargs='?', default='DSE0A125',
+    parser.add_argument('--serial', nargs='?', default=None,
                         help="serial number of the sensor")
 
     args = parser.parse_args()
