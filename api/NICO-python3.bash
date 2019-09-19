@@ -2,11 +2,9 @@
 export PYTHON=/usr/bin/python3
 export VIRTUALENVDIR=NICO-python3
 CALLDIR=$(pwd)
-echo $CALLDIR
 cd "`dirname "$BASH_SOURCE"`"
 WORKDIR=$(pwd)
 cd $CALLDIR
-echo $WORKDIR
 source $WORKDIR/NICO-setup.bash
 if ! [ -d $WORKDIR/../cv_bridge_build_ws/install/lib/python3/dist-packages/cv_bridge ]; then
   echo "Building cv_bridge for python 3"
@@ -23,7 +21,5 @@ fi
 unset PYTHON
 unset VIRTUALENVDIR
 cd $WORKDIR/..
-echo $(pwd)
 source cv_bridge_build_ws/devel/setup.bash --extend
-echo $CALLDIR
 cd $CALLDIR
