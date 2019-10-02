@@ -1,0 +1,1 @@
+recursive-include scripts/nicoemotionrecognition/_nicoemotionrecognition_internal/Trained* *.h5 *.hdf5

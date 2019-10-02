@@ -95,6 +95,9 @@ class faceExpression:
             if response == expected_response.encode("utf-8"):
                 self._logger.info(response[:-2])
                 return
+            elif response == b'Unknown command. Will not show anything\r\n':
+                self._logger.warning("Unknown command {}".format(message))
+                return
             self._logger.debug("Expected response {} but received {}".format(
                 repr(expected_response), repr(response)))
             self._logger.warning(
