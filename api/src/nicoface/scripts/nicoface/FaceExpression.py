@@ -67,11 +67,11 @@ class faceExpression:
                     if self.ser.is_open:
                         self._logger.debug(
                             "Trying to send neutral face expression")
-                        self.ser.write("neutral")
+                        self.ser.write(b"neutral")
                         response = self.ser.readline()
                         self._logger.debug(
                             'Received response: "{}"'.format(repr(response)))
-                        if response == "Showing neutral\r\n":
+                        if response == b'Showing neutral\r\n':
                             self._logger.info(
                                 "Successfully connected to FaceExpression " +
                                 "device on port {}".format(p.device))
@@ -90,10 +90,13 @@ class faceExpression:
     def _send(self, message, expected_response):
         for i in range(3):
             self._logger.info("Sending '{}'".format(message))
-            self.ser.write(message)
+            self.ser.write(message.encode("utf-8"))
             response = self.ser.readline()
-            if response == expected_response:
+            if response == expected_response.encode("utf-8"):
                 self._logger.info(response[:-2])
+                return
+            elif response == b'Unknown command. Will not show anything\r\n':
+                self._logger.warning("Unknown command {}".format(message))
                 return
             self._logger.debug("Expected response {} but received {}".format(
                 repr(expected_response), repr(response)))
@@ -140,9 +143,9 @@ class faceExpression:
         """
         # Convert the decimal number to ASCII then send it to the Arduino
         if expression == "clear":
-            self._send(str(expression), "Clearing LCDs\r\n")
+            self._send(expression, "Clearing LCDs\r\n")
         else:
-            self._send(str(expression), "Showing {}\r\n".format(expression))
+            self._send(expression, "Showing {}\r\n".format(expression))
         sleep(.2)  # Delay for one tenth of a second
 
     # except:
@@ -289,7 +292,7 @@ class faceExpression:
         lcd_str = self.np_to_str(pix)
         # generate expected response
         resp = textwrap.wrap(lcd_str, 2)
-        resp = "".join(["{} {}".format(i, int(resp[i]))
+        resp = "".join(["{} {}".format(i, resp[i].lstrip('0') or '0')
                         for i in range(len(resp))])
         disp_verbose = {"m": "mouth:",
                         "l": "eyebrow l ", "r": "eyebrow r "}[disp]

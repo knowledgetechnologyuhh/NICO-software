@@ -1,14 +1,13 @@
+import codecs
 import datetime
 import logging
-import sys
 import threading
 import time
 
-import numpy as np
 import serial
 import serial.tools.list_ports
 
-import _nicotouch_internal.optoforce as optoforce_driver
+from ._nicotouch_internal import optoforce as optoforce_driver
 
 
 """
@@ -43,13 +42,6 @@ class optoforce():
                         "Connecting to OptoForce sensor on port {}"
                     ).format(p.device))
                 try:
-                    ser = serial.Serial(port=p.device,
-                                        baudrate=1000000,
-                                        parity=serial.PARITY_NONE,
-                                        stopbits=serial.STOPBITS_ONE,
-                                        bytesize=serial.EIGHTBITS
-                                        )
-
                     driver = optoforce_driver.OptoforceDriver(
                         p.device, "s-ch/3-axis", [[1, 1, 1]])
 
@@ -78,7 +70,6 @@ class optoforce():
                                      ).format(
                                         p.device, ser_number, str(data)))
                                 driver._serial.close()
-                                del driver
 
                         except optoforce_driver.OptoforceError:
                             pass
@@ -93,7 +84,7 @@ class optoforce():
         else:
             self._logger.fatal("No matching OptoForce sensor found for " +
                                "serial number {}".format(ser_number))
-        return None
+        exit(1)
 
     def get_sensor_values_m(self):
         sensorValues = self.ser.read(16)
@@ -176,7 +167,6 @@ class optoforce():
         # delete the comm buffers
         self.ser.flushInput()
         self.ser.flushOutput()
-        seq = []
         '''
         # approach for taking the start sequence of the protocol,
         # but this is not needed here
@@ -194,12 +184,10 @@ class optoforce():
             one_byte = self.ser.read().encode('hex')
         return joined_seq
         '''
-        one_sequence = self.ser.read(16)
+        # read sequence and convert from ANSII
+        seq = codecs.encode(self.ser.read(16), "hex")
         self.last_reading_time = datetime.datetime.now().isoformat()
-        for c in one_sequence:
-            seq.append(c.encode('hex'))  # convert from ANSII
-
-        return seq
+        return [seq[i:i+2] for i in range(0, len(seq), 2)] # split into bytes
 
     def get_sensor_string(self):
         seq = self.get_sensor_array()

@@ -1,6 +1,6 @@
 import logging
 
-from _nicoaudio_internal.record_sound import RecordSound
+from ._nicoaudio_internal.record_sound import RecordSound
 
 
 class AudioRecorder:
