@@ -1,4 +1,3 @@
-import collections
 import json
 import logging
 import pprint
@@ -36,7 +35,7 @@ class Motion:
             "use_pyrep": False,
             "vrep_host": "127.0.0.1",
             "vrep_port": 19997,
-            "vrep_scene": "",
+            "vrep_scene": None,
             "tracked_objects": [],
             "tracked_collisions": [],
             "id": None,
@@ -893,7 +892,7 @@ class Motion:
         :type stiffness: float
         """
         if not 0.0 <= stiffness <= 1.0:
-            self._logger.warning("New stiffness out of bounds (%d)" % maximumSpeed)
+            self._logger.warning("New stiffness out of bounds (%d)", stiffness)
             return
 
         if hasattr(self._robot, jointName):

@@ -30,7 +30,7 @@ def find_next_joint(root, current_link, next_joint_name):
 
     for joint in root.iter("joint"):
         # Iterate through all joints to find the good one
-        if(search_by_name):
+        if search_by_name:
             # Find the joint given its name
             if joint.attrib["name"] == next_joint_name:
                 has_next = True
@@ -41,7 +41,7 @@ def find_next_joint(root, current_link, next_joint_name):
                 has_next = True
                 next_joint = joint
 
-    return(has_next, next_joint)
+    return (has_next, next_joint)
 
 
 def find_next_link(root, current_joint, next_link_name):
@@ -61,13 +61,15 @@ def find_next_link(root, current_joint, next_link_name):
         if urdf_link.attrib["name"] == next_link_name:
             next_link = urdf_link
             has_next = True
-    return(has_next, next_link)
+    return (has_next, next_link)
 
 
 def find_parent_link(root, joint_name):
-    return next(joint.find("parent").attrib["link"]
-                for joint in root.iter("joint")
-                if joint.attrib["name"] == joint_name)
+    return next(
+        joint.find("parent").attrib["link"]
+        for joint in root.iter("joint")
+        if joint.attrib["name"] == joint_name
+    )
 
 
 def get_chain_from_joints(urdf_file, joints):
@@ -82,7 +84,13 @@ def get_chain_from_joints(urdf_file, joints):
     return chain
 
 
-def get_urdf_parameters(urdf_file, base_elements=["base_link"], last_link_vector=None, base_element_type="link",last_link=None):
+def get_urdf_parameters(
+    urdf_file,
+    base_elements=["base_link"],
+    last_link_vector=None,
+    base_element_type="link",
+    last_link=None,
+):
     """Returns translated parameters from the given URDF file
 
    :param urdf_file: The path of the URDF file
@@ -112,10 +120,10 @@ def get_urdf_parameters(urdf_file, base_elements=["base_link"], last_link_vector
         node_type = "link"
 
     # Parcours récursif de la structure de la chain
-    while(has_next):
-        #print "Base Elements: " + str (base_elements)
+    while has_next:
+        # print "Base Elements: " + str (base_elements)
 
-        #Gets elements from base_elements-String not from URDF file
+        # Gets elements from base_elements-String not from URDF file
         if base_elements != []:
             next_element = base_elements.pop(0)
         else:
@@ -123,24 +131,25 @@ def get_urdf_parameters(urdf_file, base_elements=["base_link"], last_link_vector
 
         if node_type == "link":
             # Current element is a link, find child joint
-            (has_next, current_joint) = find_next_joint(root, current_link, next_element)
+            (has_next, current_joint) = find_next_joint(
+                root, current_link, next_element
+            )
             node_type = "joint"
-            if(has_next):
-                print "Current Joint: " + str(current_joint.attrib["name"])
+            if has_next:
+                print("Current Joint: " + str(current_joint.attrib["name"]))
                 joints.append(current_joint)
-		if (current_joint.attrib["name"]==last_link):
-			print "\n Last link appeared: " + last_link
-			has_next=False
- 		
+            if current_joint.attrib["name"] == last_link:
+                print("\n Last link appeared: " + last_link)
+                has_next = False
 
         elif node_type == "joint":
             # Current element is a joint, find child link
             (has_next, current_link) = find_next_link(root, current_joint, next_element)
             node_type = "link"
-            if(has_next):
-                print "Current Link: " + str(current_link.attrib["name"])
+            if has_next:
+                print("Current Link: " + str(current_link.attrib["name"]))
                 links.append(current_link)
-        #print "Links: " + str(links)
+        # print "Links: " + str(links)
 
     parameters = []
 
@@ -148,24 +157,40 @@ def get_urdf_parameters(urdf_file, base_elements=["base_link"], last_link_vector
     for joint in joints:
         translation = joint.find("origin").attrib["xyz"].split()
         orientation = joint.find("origin").attrib["rpy"].split()
-        rotation = joint.find("axis").attrib['xyz'].split()
-        parameters.append(lib_link.URDFLink(
-            translation_vector=[float(translation[0]), float(translation[1]), float(translation[2])],
-            orientation=[float(orientation[0]), float(orientation[1]), float(orientation[2])],
-            rotation=[float(rotation[0]), float(rotation[1]), float(rotation[2])],
-            name=joint.attrib["name"],bounds=(float(joint.find("limit").attrib["lower"]), float(joint.find("limit").attrib["upper"]))
-        ))
+        rotation = joint.find("axis").attrib["xyz"].split()
+        parameters.append(
+            lib_link.URDFLink(
+                translation_vector=[
+                    float(translation[0]),
+                    float(translation[1]),
+                    float(translation[2]),
+                ],
+                orientation=[
+                    float(orientation[0]),
+                    float(orientation[1]),
+                    float(orientation[2]),
+                ],
+                rotation=[float(rotation[0]), float(rotation[1]), float(rotation[2])],
+                name=joint.attrib["name"],
+                bounds=(
+                    float(joint.find("limit").attrib["lower"]),
+                    float(joint.find("limit").attrib["upper"]),
+                ),
+            )
+        )
 
     # Add last_link_vector to parameters
     if last_link_vector is not None:
-        parameters.append(lib_link.URDFLink(
-            translation_vector=last_link_vector,
-            orientation=[0, 0, 0],
-            rotation=[0, 0, 0],
-            name="last_joint"
-        ))
+        parameters.append(
+            lib_link.URDFLink(
+                translation_vector=last_link_vector,
+                orientation=[0, 0, 0],
+                rotation=[0, 0, 0],
+                name="last_joint",
+            )
+        )
 
-    return(parameters)
+    return parameters
 
 
 def _get_motor_parameters(json_file):
@@ -186,7 +211,7 @@ def _get_motor_parameters(json_file):
 
 def _convert_angle_to_pypot(angle, joint, **kwargs):
     """Converts an angle to a PyPot-compatible format"""
-    angle_deg = (angle * 180 / (np.pi))
+    angle_deg = angle * 180 / (np.pi)
 
     if joint["orientation-convention"] == "indirect":
         angle_deg = -1 * angle_deg
@@ -211,7 +236,7 @@ def _convert_angle_from_pypot(angle, joint, **kwargs):
     if joint["name"].startswith("l_shoulder_x"):
         angle_internal = -1 * angle_internal
 
-    angle_internal = (angle_internal / 180 * (np.pi))
+    angle_internal = angle_internal / 180 * (np.pi)
 
     return angle_internal
 
