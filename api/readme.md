@@ -1,3 +1,16 @@
+Usage
+===
+To setup a virtualenv, install most required packages and build ros, use one of
+the two setup scripts.
+
+For Python 2.7:
+
+```source NICO-setup.bash```
+
+For Python 3:
+
+```source NICO-python3.bash```
+
 Prerequesits
 ===
 Most prerequesits are automatically installed by sourcing `NICO-setup.bash` or
