@@ -5,11 +5,15 @@ the two setup scripts.
 
 For Python 2.7:
 
-```source NICO-setup.bash```
+```
+source NICO-setup.bash
+```
 
 For Python 3:
 
-```source NICO-python3.bash```
+```
+source NICO-python3.bash
+```
 
 Prerequesits
 ===
