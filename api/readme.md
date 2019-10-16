@@ -15,7 +15,7 @@ For Python 3:
 source NICO-python3.bash
 ```
 
-Prerequesits
+Prerequisites
 ===
 Most prerequesits are automatically installed by sourcing `NICO-setup.bash` or
 `NICO-python3.bash`, however there are some apt packages that need to be
