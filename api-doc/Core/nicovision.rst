@@ -27,7 +27,7 @@ The ImageRecorder class enables the capturing of single images from a camera.
     :private-members:
 
 MultiCamRecorder
-#############
+################
 
 The MultiCamRecorder class enables synchronized capturing of single images from multiple cameras at once.
 

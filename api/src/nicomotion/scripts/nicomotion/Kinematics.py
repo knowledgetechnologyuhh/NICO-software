@@ -2,25 +2,24 @@
 
 import logging
 import math
-import random
 import time
 from os.path import abspath, dirname
 
-import math3d as m3d
 import matplotlib.pyplot as plt
 import numpy as np
-import transforms3d
+from mpl_toolkits.mplot3d import Axes3D  # needed for 3d projection
 
-import Motion
-from _nicomotion_internal.ikpy import chain, geometry_utils, plot_utils
+from nicomotion import Motion
+from ._nicomotion_internal.ikpy import chain, geometry_utils
 
 
 class Kinematics(object):
     """The Kinematics class can be used to control the arms of the NICO robot
     with inverse kinematics."""
 
-    def __init__(self, robot, urdf=(dirname(abspath(__file__)) +
-                                    "/../../../../../urdf/kinematics.urdf")):
+    def __init__(
+        self, robot, urdf=((dirname(abspath(__file__)) + "/urdf/kinematics.urdf"))
+    ):
         """
         The Kinematics class can be used to control the arms of the NICO robot
         with inverse kinematics.
@@ -31,32 +30,69 @@ class Kinematics(object):
         self.logger = logging.getLogger(__name__)
         self.rightchain = chain.Chain.from_urdf_file(
             urdf,
-            base_elements=["torso:11", "r_shoulder_z", "right_shoulder:11",
-                           "r_shoulder_y", "right_collarbone:11", "r_arm_x",
-                           "right_upper_arm:11", "r_elbow_y",
-                           "right_lower_arm:11", "r_wrist_z", "right_wrist:11",
-                           "r_wrist_x", "right_palm:11", "r_ringfingers_x"],
+            base_elements=[
+                "torso:11",
+                "r_shoulder_z",
+                "right_shoulder:11",
+                "r_shoulder_y",
+                "right_collarbone:11",
+                "r_arm_x",
+                "right_upper_arm:11",
+                "r_elbow_y",
+                "right_lower_arm:11",
+                "r_wrist_z",
+                "right_wrist:11",
+                "r_wrist_x",
+                "right_palm:11",
+                "r_ringfingers_x",
+            ],
             active_links_mask=[False, True, True, True, True, True, True],
-            name="right_arm", last_link="r_wrist_x")
+            name="right_arm",
+            last_link="r_wrist_x",
+        )
         self.leftchain = chain.Chain.from_urdf_file(
             urdf,
-            base_elements=["torso:11", "l_shoulder_z", "left_shoulder:11",
-                           "l_shoulder_y", "left_collarbone:11", "l_arm_x",
-                           "left_upper_arm:11", "l_elbow_y",
-                           "left_lower_arm:11", "l_wrist_z", "left_wrist:11",
-                           "l_wrist_x", "left_palm:11", "l_ringfingers_x"],
+            base_elements=[
+                "torso:11",
+                "l_shoulder_z",
+                "left_shoulder:11",
+                "l_shoulder_y",
+                "left_collarbone:11",
+                "l_arm_x",
+                "left_upper_arm:11",
+                "l_elbow_y",
+                "left_lower_arm:11",
+                "l_wrist_z",
+                "left_wrist:11",
+                "l_wrist_x",
+                "left_palm:11",
+                "l_ringfingers_x",
+            ],
             active_links_mask=[False, True, True, True, True, True, True],
-            name="left_arm", last_link="l_wrist_x")
+            name="left_arm",
+            last_link="l_wrist_x",
+        )
 
         self.robot = robot
 
         self.fig = plt.figure()
 
-    def calculate_target_angles(self, arm_name, pos_x, pos_y, pos_z, roll,
-                                pitch, yaw, origin_matrix=None,
-                                visualize=True, distance_acc=.01,
-                                orientation_acc=.1, orientation_weight=.3,
-                                num_generations=100):
+    def calculate_target_angles(
+        self,
+        arm_name,
+        pos_x,
+        pos_y,
+        pos_z,
+        roll,
+        pitch,
+        yaw,
+        origin_matrix=None,
+        visualize=True,
+        distance_acc=0.01,
+        orientation_acc=0.1,
+        orientation_weight=0.3,
+        num_generations=100,
+    ):
         """
         Computes the motor angles for the given goal position and orientation
         of the end effector using a genetic algorithm
@@ -103,25 +139,28 @@ class Kinematics(object):
         elif prefix == "r":
             active_chain = self.rightchain
         else:
-            self._logger.error("Unknown arm name '{}'".format(arm_name))
+            self.logger.error("Unknown arm name '%s'", arm_name)
             exit(1)
 
         if origin_matrix is not None:
             origin_pos, origin_rot = geometry_utils.from_transformation_matrix(
-                origin_matrix)
+                origin_matrix
+            )
         else:
             origin_pos = np.array([0, 0, 0])
             origin_rot = np.eye(3)
 
-        start_angles = [0,
-                        self.robot.getAngle(prefix + "_shoulder_z"),
-                        self.robot.getAngle(prefix + "_shoulder_y"),
-                        self.robot.getAngle(prefix + "_arm_x"),
-                        self.robot.getAngle(prefix + "_elbow_y"),
-                        self.robot.getAngle(prefix + "_wrist_z"),
-                        self.robot.getAngle(prefix + "_wrist_x")]
+        start_angles = [
+            0,
+            self.robot.getAngle(prefix + "_shoulder_z"),
+            self.robot.getAngle(prefix + "_shoulder_y"),
+            self.robot.getAngle(prefix + "_arm_x"),
+            self.robot.getAngle(prefix + "_elbow_y"),
+            self.robot.getAngle(prefix + "_wrist_z"),
+            self.robot.getAngle(prefix + "_wrist_x"),
+        ]
         if not self.robot._vrep:
-            start_angles[5] = start_angles[5] / 2.
+            start_angles[5] = start_angles[5] / 2.0
         start_angles = map(math.radians, start_angles)
 
         # orientation
@@ -132,13 +171,18 @@ class Kinematics(object):
         pos_x, pos_y, pos_z = origin_pos + np.array([pos_x, pos_y, pos_z])
         # calculate target angles
         frame_target = geometry_utils.to_transformation_matrix(
-            [pos_x, pos_y, pos_z], rpyM)
+            [pos_x, pos_y, pos_z], rpyM
+        )
         target_angles = active_chain.inverse_kinematics(
-            frame_target, initial_position=start_angles, method="ga_simple",
+            frame_target,
+            initial_position=start_angles,
+            method="ga_simple",
             include_orientation=True,
-            distance_acc=distance_acc, orientation_acc=orientation_acc,
+            distance_acc=distance_acc,
+            orientation_acc=orientation_acc,
             orientation_weight=orientation_weight,
-            num_generations=num_generations)
+            num_generations=num_generations,
+        )
         if visualize:
             self.plot_angles(arm_name, target_angles, (pos_x, pos_y, pos_z))
         return map(math.degrees, target_angles)
@@ -163,21 +207,33 @@ class Kinematics(object):
             active_chain = self.rightchain
             inactive_chain = self.leftchain
         else:
-            self._logger.error("Unknown arm name '{}'".format(arm_name))
+            self.logger.error("Unknown arm name '{}'".format(arm_name))
             exit(1)
 
         joints = [0] * len(inactive_chain.links)
         plt.ion()
         plt.clf()
-        ax = self.fig.add_subplot(111, projection='3d')
+        ax = self.fig.add_subplot(111, projection="3d")
         inactive_chain.plot(joints, ax)
         active_chain.plot(joint_angles, ax, target=target_positions)
         plt.draw()
-        plt.pause(.1)
+        plt.pause(0.1)
 
-    def visualize_pose(self, arm_name, pos_x, pos_y, pos_z, roll, pitch, yaw,
-                       origin_file=None, distance_acc=.01, orientation_acc=.1,
-                       orientation_weight=.3, num_generations=100):
+    def visualize_pose(
+        self,
+        arm_name,
+        pos_x,
+        pos_y,
+        pos_z,
+        roll,
+        pitch,
+        yaw,
+        origin_file=None,
+        distance_acc=0.01,
+        orientation_acc=0.1,
+        orientation_weight=0.3,
+        num_generations=100,
+    ):
         """
         Computes and visualizes the inverse kinematics without executing the
         movement on the robot
@@ -217,33 +273,70 @@ class Kinematics(object):
             origin_matrix = self.load_end_effector_origin(origin_file)
         else:
             origin_matrix = np.eye(4)
-        target_angles = self.calculate_target_angles(arm_name, pos_x, pos_y,
-                                                     pos_z, roll, pitch, yaw,
-                                                     origin_matrix, True,
-                                                     distance_acc,
-                                                     orientation_acc,
-                                                     orientation_weight,
-                                                     num_generations)
+        self.calculate_target_angles(
+            arm_name,
+            pos_x,
+            pos_y,
+            pos_z,
+            roll,
+            pitch,
+            yaw,
+            origin_matrix,
+            True,
+            distance_acc,
+            orientation_acc,
+            orientation_weight,
+            num_generations,
+        )
 
-    def move_relative_to_origin_matrix(self, arm_name, pos_x, pos_y, pos_z,
-                                       roll, pitch, yaw, origin_matrix=None,
-                                       visualize=True, distance_acc=.01,
-                                       orientation_acc=.1,
-                                       orientation_weight=.3,
-                                       num_generations=100):
-        target_angles = self.calculate_target_angles(arm_name, pos_x, pos_y,
-                                                     pos_z, roll, pitch, yaw,
-                                                     origin_matrix, visualize,
-                                                     distance_acc,
-                                                     orientation_acc,
-                                                     orientation_weight,
-                                                     num_generations)
+    def move_relative_to_origin_matrix(
+        self,
+        arm_name,
+        pos_x,
+        pos_y,
+        pos_z,
+        roll,
+        pitch,
+        yaw,
+        origin_matrix=None,
+        visualize=True,
+        distance_acc=0.01,
+        orientation_acc=0.1,
+        orientation_weight=0.3,
+        num_generations=100,
+    ):
+        target_angles = self.calculate_target_angles(
+            arm_name,
+            pos_x,
+            pos_y,
+            pos_z,
+            roll,
+            pitch,
+            yaw,
+            origin_matrix,
+            visualize,
+            distance_acc,
+            orientation_acc,
+            orientation_weight,
+            num_generations,
+        )
         prefix = arm_name[0].lower()
-        self.logger.info("Setting motor angles of '{}': {}".format(
-            arm_name, zip([prefix + "_shoulder_z", prefix + "_shoulder_y",
-                           prefix + "_arm_x", prefix + "_elbow_y",
-                           prefix + "_wrist_z", prefix + "_wrist_x"],
-                          target_angles[1:])))
+        self.logger.info(
+            "Setting motor angles of '{}': {}".format(
+                arm_name,
+                zip(
+                    [
+                        prefix + "_shoulder_z",
+                        prefix + "_shoulder_y",
+                        prefix + "_arm_x",
+                        prefix + "_elbow_y",
+                        prefix + "_wrist_z",
+                        prefix + "_wrist_x",
+                    ],
+                    target_angles[1:],
+                ),
+            )
+        )
         # move motors
         vel = 0.02
         self.robot.setAngle(prefix + "_shoulder_z", target_angles[1], vel)
@@ -256,10 +349,22 @@ class Kinematics(object):
             self.robot.setAngle(prefix + "_wrist_z", target_angles[5] * 2, vel)
         self.robot.setAngle(prefix + "_wrist_x", target_angles[6], vel)
 
-    def move_to(self, arm_name, pos_x, pos_y, pos_z, roll, pitch, yaw,
-                origin_file=None, visualize=True, distance_acc=.01,
-                orientation_acc=.1, orientation_weight=.2,
-                num_generations=100):
+    def move_to(
+        self,
+        arm_name,
+        pos_x,
+        pos_y,
+        pos_z,
+        roll,
+        pitch,
+        yaw,
+        origin_file=None,
+        visualize=True,
+        distance_acc=0.01,
+        orientation_acc=0.1,
+        orientation_weight=0.2,
+        num_generations=100,
+    ):
         """
         Computes and executes inverse kinematics for the given arm to the given
         absolute position and orientation vectors. An origin file can be used
@@ -303,16 +408,37 @@ class Kinematics(object):
             origin_matrix = self.load_end_effector_origin(origin_file)
         else:
             origin_matrix = np.eye(4)
-        self.move_relative_to_origin_matrix(arm_name, pos_x, pos_y, pos_z,
-                                            roll, pitch, yaw, origin_matrix,
-                                            visualize, distance_acc,
-                                            orientation_acc,
-                                            orientation_weight, num_generations
-                                            )
+        self.move_relative_to_origin_matrix(
+            arm_name,
+            pos_x,
+            pos_y,
+            pos_z,
+            roll,
+            pitch,
+            yaw,
+            origin_matrix,
+            visualize,
+            distance_acc,
+            orientation_acc,
+            orientation_weight,
+            num_generations,
+        )
 
-    def move_relative(self, arm_name, pos_x, pos_y, pos_z, roll, pitch, yaw,
-                      visualize=True, distance_acc=.01, orientation_acc=.1,
-                      orientation_weight=.3, num_generations=100):
+    def move_relative(
+        self,
+        arm_name,
+        pos_x,
+        pos_y,
+        pos_z,
+        roll,
+        pitch,
+        yaw,
+        visualize=True,
+        distance_acc=0.01,
+        orientation_acc=0.1,
+        orientation_weight=0.3,
+        num_generations=100,
+    ):
         """
         Computes and executes inverse kinematics for the given arm to the given
         position and orientation vectors relative to its current end effector.
@@ -348,19 +474,28 @@ class Kinematics(object):
                                 algorithm is stopped if no solution is found
         :type num_generations: int
         """
-        self.logger.info("Moving position of '{}' by {} and changing " +
-                         "orientation by {}".format(arm_name, start_pos,
-                                                    [pos_x, pos_y, pos_z],
-                                                    start_rot,
-                                                    [roll, pitch, yaw])
-                         )
+        self.logger.info(
+            "Moving position of '%s' by %s and changing orientation by %s",
+            arm_name,
+            ", ".join([pos_x, pos_y, pos_z]),
+            ", ".join([roll, pitch, yaw]),
+        )
         origin_matrix = self.get_current_end_effector_transformation(arm_name)
-        self.move_relative_to_origin_matrix(arm_name, pos_x, pos_y, pos_z,
-                                            roll, pitch, yaw, origin_matrix,
-                                            visualize, distance_acc,
-                                            orientation_acc,
-                                            orientation_weight, num_generations
-                                            )
+        self.move_relative_to_origin_matrix(
+            arm_name,
+            pos_x,
+            pos_y,
+            pos_z,
+            roll,
+            pitch,
+            yaw,
+            origin_matrix,
+            visualize,
+            distance_acc,
+            orientation_acc,
+            orientation_weight,
+            num_generations,
+        )
 
     def get_current_end_effector_transformation(self, arm_name):
         """
@@ -379,22 +514,24 @@ class Kinematics(object):
         elif prefix == "r":
             active_chain = self.rightchain
         else:
-            self._logger.error("Unknown arm name '{}'".format(arm_name))
+            self.logger.error("Unknown arm name '%s'", arm_name)
             exit(1)
-        start_angles = [0,
-                        self.robot.getAngle(prefix + "_shoulder_z"),
-                        self.robot.getAngle(prefix + "_shoulder_y"),
-                        self.robot.getAngle(prefix + "_arm_x"),
-                        self.robot.getAngle(prefix + "_elbow_y"),
-                        self.robot.getAngle(prefix + "_wrist_z"),
-                        self.robot.getAngle(prefix + "_wrist_x")]
-        if not self.robot._vrep:
-            start_angles[5] = start_angles[5] / 2.
+        start_angles = [
+            0,
+            self.robot.getAngle(prefix + "_shoulder_z"),
+            self.robot.getAngle(prefix + "_shoulder_y"),
+            self.robot.getAngle(prefix + "_arm_x"),
+            self.robot.getAngle(prefix + "_elbow_y"),
+            self.robot.getAngle(prefix + "_wrist_z"),
+            self.robot.getAngle(prefix + "_wrist_x"),
+        ]
+        if not self.robot.getVrep:
+            start_angles[5] = start_angles[5] / 2.0
         start_angles = map(math.radians, start_angles)
-        fwk = active_chain.forward_kinematics(start_angles,
-                                              full_kinematics=False)
-        self.logger.info("Current end effector of '{}':\n{}".format(
-            active_chain.name, fwk))
+        fwk = active_chain.forward_kinematics(start_angles, full_kinematics=False)
+        self.logger.info(
+            "Current end effector of '{}':\n{}".format(active_chain.name, fwk)
+        )
         return fwk
 
     def save_end_effector_transformation(self, arm_name, path="position.npy"):
@@ -408,11 +545,12 @@ class Kinematics(object):
         :type path: str
         """
         trans_matrix = self.get_current_end_effector_transformation(arm_name)
-        self.logger.info(
-            "Saving end effector of '{}'...".format(arm_name))
+        self.logger.info("Saving end effector of '{}'...".format(arm_name))
         np.save(path, trans_matrix)
-        self.logger.info("Saved end effector transformation matrix of " +
-                         "'{}' as '{}'".format(arm_name, path))
+        self.logger.info(
+            "Saved end effector transformation matrix of "
+            + "'{}' as '{}'".format(arm_name, path)
+        )
 
     def load_end_effector_origin(self, path):
         """
@@ -433,12 +571,13 @@ class Kinematics(object):
         return trans_matrix
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.basicConfig(level=logging.WARNING)
 
-    robot = Motion.Motion(("../../../../../json/" +
-                           "nico_humanoid_legged_with_hands_mod-vrep.json"),
-                          vrep=True)
+    robot = Motion.Motion(
+        ("../../../../../json/" + "nico_humanoid_legged_with_hands_mod-vrep.json"),
+        vrep=True,
+    )
 
     kinematics = Kinematics(robot)
     kinematics.logger.setLevel(logging.DEBUG)
@@ -457,22 +596,19 @@ if __name__ == '__main__':
 
     kinematics.logger.info("Forward Kinematics: ")
     start_angles = [0] * 7
-    fwk = kinematics.leftchain.forward_kinematics(
-        start_angles, full_kinematics=False)
+    fwk = kinematics.leftchain.forward_kinematics(start_angles, full_kinematics=False)
     kinematics.logger.info(fwk)
-    start_rotation = geometry_utils.euler_angles_from_rotation_matrix(
-        fwk[:3, :3])
+    start_rotation = geometry_utils.euler_angles_from_rotation_matrix(fwk[:3, :3])
     start_rotation = map(math.degrees, start_rotation)
     kinematics.logger.info("start_rot = {}".format(start_rotation))
 
     raw_input("wait for movement to stop and press [enter]")
-    kinematics.move_relative("left_arm", .13, -.05, .2, 0, -90, 0)
+    kinematics.move_relative("left_arm", 0.13, -0.05, 0.2, 0, -90, 0)
     raw_input("wait for movement to stop and press [enter]")
-    kinematics.save_end_effector_position("left_arm", "test.csv")
+    kinematics.save_end_effector_transformation("left_arm", "test.csv")
     for n in range(11):
         # kinematics.move_relative("left_arm", .01, 0, 0, 0, 0, 0)
-        kinematics.move_to("left_arm", .01 * n, 0, 0, 0, 0, 0,
-                           origin_file="test.csv")
+        kinematics.move_to("left_arm", 0.01 * n, 0, 0, 0, 0, 0, origin_file="test.csv")
         raw_input("wait for movement to stop and press [enter]")
 
     time.sleep(10)
