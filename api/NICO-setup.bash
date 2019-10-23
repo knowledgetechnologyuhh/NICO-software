@@ -42,9 +42,7 @@ source ~/.$VIRTUALENVDIR/bin/activate
 
 #install python packages
 if [ $ONLINE ] && [ $VIRTUAL_ENV == ~/.$VIRTUALENVDIR ]; then
-  for api_package in nicoaudio nicoemotionrecognition nicoface nicomotion nicotouch nicovision; do
-    pip install $WORKDIR/src/$api_package/
-  done
+  
   echo "Checking python packages"
   pip install 'sphinx' # required inside virtualenv to find all modules
   pip install cffi
@@ -61,6 +59,9 @@ if [ $ONLINE ] && [ $VIRTUAL_ENV == ~/.$VIRTUALENVDIR ]; then
   else
     echo "Latest custom pypot already installed - skipping installation"
   fi
+  for api_package in nicoaudio nicoemotionrecognition nicoface nicomotion nicotouch nicovision; do
+    pip install $WORKDIR/src/$api_package/
+  done
 else
   if [ ! $ONLINE ]; then
     echo "Not connected to the internet - skipping python package installations"
