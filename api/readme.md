@@ -1,6 +1,23 @@
-Prerequesits
+Usage
 ===
-Most prerequesits are automatically installed by sourcing `NICO-setup.bash` or
+To setup a virtualenv, install most required packages and build ros, use one of
+the two setup scripts.
+
+For Python 2.7:
+
+```
+source NICO-setup.bash
+```
+
+For Python 3:
+
+```
+source NICO-python3.bash
+```
+
+Prerequisites
+===
+Most prerequesites are automatically installed by sourcing `NICO-setup.bash` or
 `NICO-python3.bash`, however there are some apt packages that need to be
 installed for the libraries to work.
 
