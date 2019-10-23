@@ -13,6 +13,8 @@ class CategoricaModel:
         path.dirname(path.abspath(__file__))
         + "/Trained Networks/Vision/FER2013Plus_Augmented_CNN/Model/CNN.h5"
     )
+    if sys.version_info >= (3,):
+        modelDirectory = modelDirectory.replace("CNN.h5", "CNN-python3.h5")
     modelType = "Categorical"
     classsesOrder = [
         "Neutral",

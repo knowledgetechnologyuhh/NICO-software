@@ -20,6 +20,6 @@ setup(
     description="NICO api package for Pablo Barros' emotion recognition",
     author="Connor Gaede",
     author_email="4gaede@informatik.uni-hamburg.de",
-    install_requires=["tensorflow", "keras==2.2.4", "dlib"],
+    install_requires=["tensorflow", "keras==2.1.6", "dlib"],
     **extra
 )
