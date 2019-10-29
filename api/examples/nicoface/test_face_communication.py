@@ -26,7 +26,7 @@ face.sendTrainedFaceExpression("Happy")
 time.sleep(1)
 
 motion = Motion("../../../json/nico_humanoid_upper.json")
-del(motion)
+del motion
 
 face.sendFaceExpression("happiness")
 

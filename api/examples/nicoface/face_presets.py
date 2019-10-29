@@ -1,9 +1,17 @@
 from time import sleep
+import argparse
 
 from nicoface.FaceExpression import faceExpression
 
-simulation = True
-if simulation:
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "-s",
+    action="store_true",
+    help="Enables simulated mode, where faces are shown as image instead",
+)
+args = parser.parse_args()
+
+if args.s:
     fe = faceExpression(simulation=True)
 else:
     fe = faceExpression()
@@ -23,7 +31,6 @@ else:
         sleep(1)
 
 # trained expressions
-for expression in ("Angry", "Happy", "Neutral", "Sad", "Surprise"):
-    print(expression)
+for expression in ("anger", "happiness", "neutral", "sadness", "surprise"):
     fe.sendTrainedFaceExpression(expression)
     sleep(1)

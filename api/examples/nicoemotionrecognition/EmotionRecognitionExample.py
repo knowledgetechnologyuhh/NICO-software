@@ -1,5 +1,5 @@
 # -*- coding: utf-8
-
+import sys
 import time
 import logging
 from os.path import abspath, dirname
@@ -10,6 +10,9 @@ from nicomotion import Motion
 from nicovision.VideoDevice import VideoDevice
 
 logging.basicConfig(level=logging.INFO)
+
+if sys.version_info >= (3,):
+    raw_input = input
 
 robot = Motion.Motion(
     dirname(abspath(__file__)) + "/../../../json/nico_humanoid_upper.json",

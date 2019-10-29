@@ -63,9 +63,9 @@ class EmotionRecognition:
         self._modelCategorical = modelLoader.modelLoader(
             modelDictionary.CategoricaModel
         )
-        self._modelDimensional = modelLoader.modelLoader(
-            modelDictionary.DimensionalModel
-        )
+        # self._modelDimensional = modelLoader.modelLoader(
+        #     modelDictionary.DimensionalModel
+        # )
         self._graph = tf.get_default_graph()
 
         self._faceDetectionDelta = faceDetectionDelta
@@ -256,7 +256,7 @@ class EmotionRecognition:
                 face = self._imageProcessing.preProcess(face, self._faceSize)
                 with self._graph.as_default():
                     self._categoricalRecognition = self._modelCategorical.classify(face)
-                    self._dimensionalRecognition = self._modelDimensional.classify(face)
+                    # self._dimensionalRecognition = self._modelDimensional.classify(face)
 
                 if self._mirrorEmotion and self._facialExpression is not None:
                     if self.last_exp != self.getHighestMatchingEmotion():
@@ -365,12 +365,12 @@ class EmotionRecognition:
                         self._modelCategorical.modelDictionary,
                         self._categoricalRecognition,
                     )
-                    frame = self._GUIController.createDimensionalEmotionGUI(
-                        self._dimensionalRecognition,
-                        frame,
-                        self._categoricalRecognition,
-                        self._modelCategorical.modelDictionary,
-                    )
+                    # frame = self._GUIController.createDimensionalEmotionGUI(
+                    #     self._dimensionalRecognition,
+                    #     frame,
+                    #     self._categoricalRecognition,
+                    #     self._modelCategorical.modelDictionary,
+                    # )
                     frame = self._GUIController.createCategoricalEmotionGUI(
                         self._categoricalRecognition,
                         frame,
@@ -392,7 +392,7 @@ class EmotionRecognition:
                                 "head_z", 0 + random.randint(-15, 15), 0.01
                             )
                             self._robot.setAngle(
-                                "head_y", -30 + random.randint(-10, 10), 0.01
+                                "head_y", random.randint(-10, 10), 0.01
                             )
                         else:
                             self._logger.warning(

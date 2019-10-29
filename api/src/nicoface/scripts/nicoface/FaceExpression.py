@@ -1,6 +1,4 @@
-# Author: Erik, Connor
-##
-# ToDos: - Object orientation is bad, please improve
+# Authors: Erik, Connor
 
 
 import logging
@@ -18,9 +16,60 @@ class faceExpression:
     expressions
     """
 
+    trained_presets = {
+        "anger": {
+            "mouth": (
+                (0.99945402, -0.07992669, 0.99940026, 0.01424949),
+                (-0.99829715, -0.11406033, 0.9997558, 0.04432757),
+            ),
+            "left": (-0.99951923, -0.00889372, 0.99983245, -0.14990053),
+            "right": (-0.99873191, 0.08545645, 0.99995756, -0.04182587),
+        },
+        "happiness": {
+            "mouth": (
+                (-0.96794784, -0.01458586, -0.9989453, 0.00975196),
+                (-0.95078206, -0.03179681, 1.0, 0.01479599),
+            ),
+            "left": (0.99983221, -0.07629592, 1.0, -0.04946393),
+            "right": (0.99992925, -0.03617397, 0.99996203, -0.01813084),
+        },
+        "neutral": {
+            "mouth": (
+                (-0.026799461, -0.50599956, 0.99360126, -0.01208178),
+                (-0.025511968, -0.50718502, 0.99981982, -0.07333233),
+            ),
+            "left": (0.03521928, 0.0601279, 0.99998277, -0.05035896),
+            "right": (0.01149672, 0.0500899, 0.99979389, -0.07785152),
+        },
+        "sadness": {
+            "mouth": (
+                (0.99979699, -0.902700145, 1.0, -0.002130153),
+                (0.99975657, -0.902467377, 1.0, -0.00777484),
+            ),
+            "left": (0.99999094, -0.03609413, 1.0, -0.05323452),
+            "right": (0.99998903, -0.06230563, 0.99999368, -0.01770263),
+        },
+        "surprise": {
+            "mouth": (
+                (0.99945402, -0.07992669, 0.99940026, 0.01424949),
+                (-0.99829715, -0.11406033, 0.9997558, 0.04432757),
+            ),
+            "left": (0.99999094, -0.03609413, 1.0, -0.05323452),
+            "right": (0.99998903, -0.06230563, 0.99999368, -0.01770263),
+        },
+    }
+
     def __init__(self, devicename=None, simulation=False):
         self._logger = logging.getLogger(__name__)
-
+        self._presets = (
+            "happiness",
+            "sadness",
+            "anger",
+            "disgust",
+            "surprise",
+            "fear",
+            "neutral",
+        )
         self.simulation = simulation
         self.comm_mode = 2
         self.left = self.gen_eyebrowse(type="l")
@@ -51,7 +100,7 @@ class faceExpression:
                 self._logger.info("Connecting to Arduino on port %s", p.device)
                 try:
                     self.ser = serial.Serial(p.device, baudrate, timeout=timeout)
-                    sleep(1)
+                    sleep(2)
 
                     if self.ser.is_open:
                         self._logger.debug("Trying to send neutral face expression")
@@ -76,14 +125,15 @@ class faceExpression:
 
         self._logger.fatal("No FaceExpression Arduino device found")
         self.ser = None
+        exit(1)
 
     def _send(self, message, expected_response):
         for _ in range(3):
-            self._logger.info("Sending '%s'", message)
+            self._logger.debug("Sending '%s'", message)
             self.ser.write(message.encode("utf-8"))
             response = self.ser.readline()
             if response == expected_response.encode("utf-8"):
-                self._logger.info(response[:-2])
+                self._logger.debug("Received '%s'", response[:-2])
                 return
             elif response == b"Unknown command. Will not show anything\r\n":
                 self._logger.warning("Unknown command %s", message)
@@ -115,14 +165,13 @@ class faceExpression:
         :param mode: communication mode
         :type mode: int
         """
+        self._logger.info("Setting communication mode to %i", mode)
         self.comm_mode = mode
         expression = "mod" + str(mode)
 
         # Convert the decimal number to ASCII then send it to the Arduino
         # Read the newest output from the Arduino
         self._send(str(expression), "Change Comm mode to  {} \r\n".format(mode))
-
-        sleep(0.2)  # Delay for one tenth of a second
 
     def sendFaceExpression(self, expression):
         """
@@ -134,73 +183,40 @@ class faceExpression:
         sadness,anger,disgust,surprise,fear,neutral,clear)
         :type expression: str
         """
-        # Convert the decimal number to ASCII then send it to the Arduino
+        self._logger.info("Showing expression: '%s'", expression)
         if expression == "clear":
             self._send(expression, "Clearing LCDs\r\n")
-        else:
+        elif expression in self._presets:
             self._send(expression, "Showing {}\r\n".format(expression))
-        sleep(0.2)  # Delay for one tenth of a second
+        else:
+            self._logger.warning("Unknown expression '%s'", expression)
 
     def sendTrainedFaceExpression(self, expression):
         """
         Changes NICO's facial expression to the given network predicted preset.
-        These consist of: 'Angry', 'Happy', 'Neutral', 'Sad', 'Surprise'
+        These consist of: 'anger', 'happiness', 'neutral', 'sadness', 'surprise'
 
-        :param expression: name of the desired facial expression ('Angry',
-        'Happy', 'Neutral', 'Sad', 'Surprise')
+        :param expression: name of the desired facial expression ('anger',
+        'happiness', 'neutral', 'sadness', 'surprise')
         :type expression: str
         """
-        presets = {
-            "Angry": {
-                "mouth": (
-                    (0.99945402, -0.07992669, 0.99940026, 0.01424949),
-                    (-0.99829715, -0.11406033, 0.9997558, 0.04432757),
-                ),
-                "left": (-0.99951923, -0.00889372, 0.99983245, -0.14990053),
-                "right": (-0.99873191, 0.08545645, 0.99995756, -0.04182587),
-            },
-            "Happy": {
-                "mouth": (
-                    (-0.96794784, -0.01458586, -0.9989453, 0.00975196),
-                    (-0.95078206, -0.03179681, 1.0, 0.01479599),
-                ),
-                "left": (0.99983221, -0.07629592, 1.0, -0.04946393),
-                "right": (0.99992925, -0.03617397, 0.99996203, -0.01813084),
-            },
-            "Neutral": {
-                "mouth": (
-                    (-0.026799461, -0.50599956, 0.99360126, -0.01208178),
-                    (-0.025511968, -0.50718502, 0.99981982, -0.07333233),
-                ),
-                "left": (0.03521928, 0.0601279, 0.99998277, -0.05035896),
-                "right": (0.01149672, 0.0500899, 0.99979389, -0.07785152),
-            },
-            "Sad": {
-                "mouth": (
-                    (0.99979699, -0.902700145, 1.0, -0.002130153),
-                    (0.99975657, -0.902467377, 1.0, -0.00777484),
-                ),
-                "left": (0.99999094, -0.03609413, 1.0, -0.05323452),
-                "right": (0.99998903, -0.06230563, 0.99999368, -0.01770263),
-            },
-            "Surprise": {
-                "mouth": (
-                    (0.99945402, -0.07992669, 0.99940026, 0.01424949),
-                    (-0.99829715, -0.11406033, 0.9997558, 0.04432757),
-                ),
-                "left": (0.99999094, -0.03609413, 1.0, -0.05323452),
-                "right": (0.99998903, -0.06230563, 0.99999368, -0.01770263),
-            },
-        }
-        if expression in presets.keys():
-            self.mouth = self.gen_mouth(*presets[expression]["mouth"])
-            self.left = self.gen_eyebrowse(presets[expression]["left"], type="l")
-            self.right = self.gen_eyebrowse(presets[expression]["right"], type="r")
+
+        if expression in self.trained_presets.keys():
+            self._logger.info("Showing trained expression: '%s'", expression)
+            self.mouth = self.gen_mouth(*self.trained_presets[expression]["mouth"])
+            self.left = self.gen_eyebrowse(
+                self.trained_presets[expression]["left"], type="l"
+            )
+            self.right = self.gen_eyebrowse(
+                self.trained_presets[expression]["right"], type="r"
+            )
 
             if self.simulation:
                 self.sim_show_face()
             else:
                 self.send()
+        else:
+            self._logger.warning("Unknown expression '%s'", expression)
 
     def sim_show_face(self):
         """
@@ -241,6 +257,10 @@ class faceExpression:
         :param address: part of face to send (all, l, r, m)
         :type address: str
         """
+        if address not in ("all", "l", "r", "m"):
+            self._logger.warning("Unknown display %s", address)
+            return
+        self._logger.info("Showing custom image on '%s'", address)
         if address == "all" or address == "m":
             self.send_PIL(self.mouth, "m")
         # If no comm handshake, waiting time is needed
