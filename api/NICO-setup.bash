@@ -18,6 +18,11 @@ echo Virtual environment directory: "$VIRTUALENVDIR"
 
 cd
 
+cleanup() {
+  echo "Cleanup"
+  rm -rf /tmp/pypot
+  cd "$CALLDIR"
+}
 # Test for network connection
 for interface in $(ls /sys/class/net/ | grep -v lo);
 do
@@ -42,7 +47,7 @@ source ~/.$VIRTUALENVDIR/bin/activate
 
 #install python packages
 if [ $ONLINE ] && [ $VIRTUAL_ENV == ~/.$VIRTUALENVDIR ]; then
-  
+
   echo "Checking python packages"
   pip install 'sphinx' # required inside virtualenv to find all modules
   pip install cffi
@@ -50,12 +55,24 @@ if [ $ONLINE ] && [ $VIRTUAL_ENV == ~/.$VIRTUALENVDIR ]; then
   CURRENT_GIT_COMMIT=`git ls-remote https://github.com/knowledgetechnologyuhh/pypot.git HEAD | awk '{ print $1}'`
   if [ ! -f ~/.$VIRTUALENVDIR/.current_git_commit ] || [ ! `cat ~/.$VIRTUALENVDIR/.current_git_commit` == $CURRENT_GIT_COMMIT ]; then
     echo "Custom pypot outdated - updating to commit $CURRENT_GIT_COMMIT"
+    pip uninstall pypot -y
     cd /tmp
     git clone https://github.com/knowledgetechnologyuhh/pypot.git
+    if [ ! $? -eq 0 ]; then
+        echo -e "\e[31mERROR: Could not clone pypot\e[0m"
+        cd $CALLDIR
+        return 1 2> /dev/null
+    fi
     cd pypot
-    rm -rf ~/.$VIRTUALENVDIR/lib/python*/site-packages/pypot/
     pip install .
-    echo $CURRENT_GIT_COMMIT >| ~/.$VIRTUALENVDIR/.current_git_commit
+    if [ ! -z "$(pip list --disable-pip-version-check | grep -F pypot)" ]
+    then
+      echo $CURRENT_GIT_COMMIT >| ~/.$VIRTUALENVDIR/.current_git_commit
+    else
+      cleanup
+      echo -e "\e[31mERROR: Could not install pypot\e[0m"
+      return 1 2> /dev/null
+    fi
   else
     echo "Latest custom pypot already installed - skipping installation"
   fi
@@ -114,10 +131,20 @@ if ! [ -x "$(command -v catkin_make)" ]; then
   echo "Catkin not found - skipping API building"
 fi
 
-#cleanup
-echo "Cleanup"
-rm -rf /tmp/pypot
-cd "$CALLDIR"
+# activation script
+echo "Generating 'activate.bash'"
+cat <<END > activate.bash
+#!/bin/bash
+
+source ~/.$VIRTUALENVDIR/bin/activate
+source $(realpath $WORKDIR/devel/setup.bash)
+BRIDGE_PATH=$(realpath $WORKDIR)/../cv_bridge_build_ws/devel/setup.bash
+if [ -f BRIDGE_PATH ]; then
+  source BRIDGE_PATH --extend
+fi
+END
+
+cleanup
 
 echo "done"
 echo

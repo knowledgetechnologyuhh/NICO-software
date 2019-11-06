@@ -21,6 +21,9 @@ rotation_images/
 _pages/
 _site/
 
+# generated activation script
+api/activate.bash
+
 # catkin generated files
 api/build
 api/devel
