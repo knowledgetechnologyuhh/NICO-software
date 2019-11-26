@@ -20,9 +20,77 @@ from ._nicoemotionrecognition_internal import (
 
 
 class EmotionRecognition:
+    _voice_reactions = {
+        "german": {
+            "happiness": (
+                "Ich bin froehlich, wenn Du es auch bist!",
+                "Was fuer ein schoener Tag heute ist, nicht wahr?",
+                "Du bist gerade gluecklich, stimmts?",
+            ),
+            "surprise": (
+                "Du siehst ueberrascht aus. Was ist denn los?",
+                "Bist Du ueberrascht, was fuer ein smarter Roboter ich bin?",
+                "Das ist eine Ueberraschung, nicht wahr?",
+            ),
+            "anger": (
+                "Du siehst so aergerlich aus, ist alles in Ordnung?",
+                "aeh Digga, ich bin auch sauer!",
+                "Was ist Dir denn ueber die Leber gelaufen?",
+            ),
+            "fear": (
+                "Hast Du vor etwas Angst? Was ist denn hier gefaehrlich?",
+                "Ich bin ganz harmlos! Du musst keine Angst vor mir haben!",
+                "Du siehst aus, als haettest Du einen Geist gesehen! "
+                "Da bekomme ich auch Angst",
+            ),
+            "sadness": (
+                "Sei nicht traurig, wir können so viel Spaß zusammen haben!",
+                "Ich würde ja auch weinen, aber ich habe keine Tränendrüsen.",
+                "Warum bist du traurig? Habe ich was falsches gesagt?",
+            ),
+            "disgust": (
+                "Hey! Ich finde dich auch nicht besonders hübsch!",
+                "Ich bin von deinem Ekel angewiedert!",
+                "Du siehst etwas blass aus. Ist alles in Ordnung?",
+            ),
+        },
+        "english": {
+            "happiness": (
+                "I am happy, if YOU are happy.",
+                "What a nice day, right?",
+                "You are happy right now, are you?",
+            ),
+            "surprise": (
+                "You look surprised. Is everything alright?",
+                "Are you surprised, what a smart robot I am?",
+                "This is a surprise, right?",
+            ),
+            "anger": (
+                "You look angry. Is everything alright?",
+                "I am angry as well!",
+                "What is wrong with you?",
+            ),
+            "fear": (
+                "Do you fear something?. What is dangerous here?",
+                "I am harmless! You do not have to fear me",
+                "You look like you have seen a ghost, but that is only me!",
+            ),
+            "sadness": (
+                "Don't be sad, we can have so much fun together!",
+                "I'd cry as well, but I don't have tears.",
+                "Why are you sad? Did I say something wrong?",
+            ),
+            "disgust": (
+                "Hey! I don't like the way you look either.",
+                "I'm disgusted by your disgust!",
+                "You look a bit pale. Is everything alright?",
+            ),
+        },
+    }
+
     def __init__(
         self,
-        device="",
+        device=None,
         robot=None,
         face=None,
         faceDetectionDelta=10,
@@ -47,8 +115,11 @@ class EmotionRecognition:
         self._categoricalInitialPosition = 260
         # Input size for both models: categorical and dimensional
         self._faceSize = (64, 64)
-        self._deviceName = device
-        self._device = None
+        if device is None:
+            device_name = VideoDevice.autodetect_nicoeyes()[0]
+            self._device = VideoDevice.from_device(device_name)
+        else:
+            self._device = device
         self._categoricalRecognition = None
         self._dimensionalRecognition = None
         self._running = False
@@ -80,7 +151,14 @@ class EmotionRecognition:
 
         self.last_exp = ""
 
-    def start(self, showGUI=True, faceTracking=False, mirrorEmotion=False):
+    def start(
+        self,
+        showGUI=True,
+        faceTracking=False,
+        mirrorEmotion=False,
+        trackingDelta=10,
+        mirrorEmotionDelta=10,
+    ):
         """
         Starts the emotion recognition
 
@@ -96,9 +174,10 @@ class EmotionRecognition:
             )
             return
         self._mirrorEmotion = mirrorEmotion
+        self._mirrorEmotionDelta = mirrorEmotionDelta
         self._faceTracking = faceTracking
-        self._trackingCounter = 0
-        self._device = VideoDevice.from_device(self._deviceName)
+        self._trackingDelta = trackingDelta
+        self._trackingCounter = trackingDelta
         self._device.add_callback(self._callback)
         self._device.open()
         self._showGUI = showGUI
@@ -159,7 +238,7 @@ class EmotionRecognition:
                 "Categorical data requested while emotion recognition not " + "running"
             )
             return None
-        if self._dimensionalRecognition is None:
+        if self._categoricalRecognition is None:
             self._logger.info("No face detected - Categorical data will be 'None'")
             return None
         return dict(
@@ -178,14 +257,6 @@ class EmotionRecognition:
                  Contempt (or None if no face detected)
         :rtype: String
         """
-        # if self._categoricalRecognition is not None:
-        #    max_index = numpy.argmax(self._categoricalRecognition[0])
-        #    max_classname = \
-        #    self._modelCategorical.modelDictionary.classsesOrder[max_index]
-        #    return self._modelCategorical.modelDictionary.classsesOrder[
-        #           numpy.argmax(self._categoricalRecognition[0])].lower()
-        # return None
-
         if self._categoricalRecognition is not None:
 
             if self._categoricalRecognition[0][6] > 15:
@@ -196,26 +267,75 @@ class EmotionRecognition:
                 return "sadness"
             elif self._categoricalRecognition[0][3] > 20:
                 return "happiness"
-            else:
-                max_index = numpy.argmax(self._categoricalRecognition[0])
-                max_classname = self._modelCategorical.modelDictionary.classsesOrder[
-                    max_index
-                ]
             return self._modelCategorical.modelDictionary.classsesOrder[
                 numpy.argmax(self._categoricalRecognition[0])
             ].lower()
         return None
 
-    def say(self, sen):
-        if time.time() < self._tts_end:
-            time.sleep(self._tts_end - time.time())
+    def say(self, sen, delay=5):
         if self._german:
             duration = self._tts.say(
                 sen, language="de", blocking=False, pitch=0.2, speed=2 ** -0.2
             )
         else:
             duration = self._tts.say(sen, blocking=False, pitch=0.2, speed=2 ** -0.2)
-        self._tts_end = time.time() + duration
+        self._tts_end = time.time() + duration + delay
+
+    def voice_reaction(self, emotion):
+        language = "german" if self._german else "english"
+        if emotion in self._voice_reactions[language]:
+            sentences = self._voice_reactions[language][emotion]
+            self.say(random.choice(sentences))
+
+    def follow_face_with_head(self, facePoints):
+        if self._robot is not None:
+            if self._trackingCounter == self._trackingDelta:
+                # (width - center_x)/width * FOV - FOV/2
+                # horizontal
+                angle_z = (640 - facePoints["center"].x) / 640.0 * 60 - 60 / 2.0
+                # vertikal
+                angle_y = (480 - facePoints["center"].y) / 480.0 * 50 - 50 / 2.0
+                self._robot.changeAngle("head_z", angle_z, 0.02)
+                self._robot.changeAngle("head_y", -angle_y, 0.02)
+                self._trackingCounter = 0
+            else:
+                self._trackingCounter += 1
+        else:
+            self._logger.warning(
+                "No robot given on initialisation - skipping face tracking"
+            )
+
+    def show_emotion(self, emotion):
+        if self.last_exp != emotion:
+            self._same_emotion_counter = 0
+            self.last_exp = emotion
+        else:
+            self._same_emotion_counter += 1
+            if self._same_emotion_counter > self._mirrorEmotionDelta:
+                self._facialExpression.sendFaceExpression(self.last_exp)
+                if self._voiceEnabled and time.time() > self._tts_end:
+                    self.voice_reaction(emotion)
+
+    def update_GUI(self, frame, facePoints):
+        frame = self._GUIController.createDetectedFacGUI(
+            frame,
+            facePoints,
+            self._modelCategorical.modelDictionary,
+            self._categoricalRecognition,
+        )
+        # frame = self._GUIController.createDimensionalEmotionGUI(
+        #     self._dimensionalRecognition,
+        #     frame,
+        #     self._categoricalRecognition,
+        #     self._modelCategorical.modelDictionary,
+        # )
+        frame = self._GUIController.createCategoricalEmotionGUI(
+            self._categoricalRecognition,
+            frame,
+            self._modelCategorical.modelDictionary,
+            initialPosition=self._categoricalInitialPosition,
+        )
+        return frame
 
     def _callback(self, rval, frame):
         if frame is not None:
@@ -228,161 +348,31 @@ class EmotionRecognition:
                 image[0:480, 0:640] = frame
                 frame = image
 
-            if not len(face) == 0:
+            if face is not None and len(face) > 0:
                 self._not_found_counter = 0
-                if self._faceTracking and self._trackingCounter == 0:
-                    if self._robot is not None:
-                        # (width - center_x)/width * FOV - FOV/2
-                        # horizontal
-                        angle_z = (
-                            640 - facePoints[0].center().x
-                        ) / 640.0 * 60 - 60 / 2.0
-                        # vertikal
-                        angle_y = (
-                            480 - facePoints[0].center().y
-                        ) / 480.0 * 50 - 50 / 2.0
-                        self._robot.changeAngle("head_z", angle_z, 0.03)
-                        self._robot.changeAngle("head_y", -angle_y, 0.03)
-                        time.sleep(0.8)
-                    else:
-                        self._logger.warning(
-                            "No robot given on initialisation - skipping "
-                            + "face tracking"
-                        )
-                if self._trackingCounter == self._faceDetectionDelta:
-                    self._trackingCounter = 0
-                else:
-                    self._trackingCounter += 1
+
+                if self._faceTracking:
+                    self.follow_face_with_head(facePoints)
+
                 face = self._imageProcessing.preProcess(face, self._faceSize)
                 with self._graph.as_default():
                     self._categoricalRecognition = self._modelCategorical.classify(face)
                     # self._dimensionalRecognition = self._modelDimensional.classify(face)
 
                 if self._mirrorEmotion and self._facialExpression is not None:
-                    if self.last_exp != self.getHighestMatchingEmotion():
-                        self._same_emotion_counter = 0
-                        self.last_exp = self.getHighestMatchingEmotion()
-                        self._facialExpression.sendFaceExpression(self.last_exp)
-                    else:
-                        self._same_emotion_counter += 1
-
-                        if self._voiceEnabled and self._same_emotion_counter == 3:
-                            if self.last_exp == "happiness":
-                                if self._german:
-                                    sents = [
-                                        (
-                                            "Ich bin froehlich, "
-                                            + "wenn Du es auch bist!"
-                                        ),
-                                        (
-                                            "Was fuer ein schoener Tag heute "
-                                            + "ist, nicht wahr?"
-                                        ),
-                                        "Du bist gerade gluecklich, stimmts?",
-                                    ]
-                                else:
-                                    sents = [
-                                        "I am happy, if YOU are happy.",
-                                        "What a nice day, right?",
-                                        "You are happy right now, are you?",
-                                    ]
-                                self.say(random.choice(sents))
-                            if self.last_exp == "surprise":
-                                if self._german:
-                                    sents = [
-                                        (
-                                            "Du siehst ueberrascht aus. "
-                                            + "Was ist denn los?"
-                                        ),
-                                        (
-                                            "Bist Du ueberrascht, was fuer ein "
-                                            + "smarter Roboter ich bin?"
-                                        ),
-                                        (
-                                            "Das ist eine Ueberraschung, "
-                                            + "nicht wahr?"
-                                        ),
-                                    ]
-                                else:
-                                    sents = [
-                                        (
-                                            "You look surprised. Is everything"
-                                            + " alright?"
-                                        ),
-                                        (
-                                            "Are you surprised, what a smart "
-                                            + "robot I am?"
-                                        ),
-                                        "This is a surprise, right?",
-                                    ]
-                                self.say(random.choice(sents))
-                            if self.last_exp == "anger":
-                                if self._german:
-                                    sents = [
-                                        (
-                                            "Du siehst so aergerlich aus, ist "
-                                            + "alles in Ordnung?"
-                                        ),
-                                        "aeh Digga, ich bin auch sauer!",
-                                        (
-                                            "Was ist Dir denn ueber die Leber "
-                                            + "gelaufen?"
-                                        ),
-                                    ]
-                                else:
-                                    sents = [
-                                        ("You look angry. Is everything alright?"),
-                                        "I am angry as well!",
-                                        "What went wrong?",
-                                    ]
-                                self.say(random.choice(sents))
-                            if self.last_exp == "fear":
-                                if self._german:
-                                    sents = [
-                                        "Hast Du vor etwas Angst? "
-                                        "Was ist denn hier gefaehrlich?",
-                                        "Ich bin ganz harmlos! "
-                                        "Du musst keine Angst vor mir haben!",
-                                        "Du siehst aus, als haettest Du "
-                                        "einen Geist gesehen! "
-                                        "Da bekomme ich auch Angst",
-                                    ]
-                                else:
-                                    sents = [
-                                        "Do you fear something?. "
-                                        "What is dangerous here?",
-                                        "I am harmless! "
-                                        + "You do not have to fear me",
-                                        "You look like you have seen a "
-                                        "ghost, but that is only me!",
-                                    ]
-                                self.say(random.choice(sents))
+                    expression = self.getHighestMatchingEmotion()
+                    self.show_emotion(expression)
 
                 if self._showGUI:
-                    frame = self._GUIController.createDetectedFacGUI(
-                        frame,
-                        facePoints,
-                        self._modelCategorical.modelDictionary,
-                        self._categoricalRecognition,
-                    )
-                    # frame = self._GUIController.createDimensionalEmotionGUI(
-                    #     self._dimensionalRecognition,
-                    #     frame,
-                    #     self._categoricalRecognition,
-                    #     self._modelCategorical.modelDictionary,
-                    # )
-                    frame = self._GUIController.createCategoricalEmotionGUI(
-                        self._categoricalRecognition,
-                        frame,
-                        self._modelCategorical.modelDictionary,
-                        initialPosition=self._categoricalInitialPosition,
-                    )
+                    frame = self.update_GUI(frame, facePoints)
             else:
                 self._categoricalRecognition = None
                 self._dimensionalRecognition = None
+                if self._mirrorEmotion and self._facialExpression:
+                    self._facialExpression.sendFaceExpression("neutral")
                 if self._faceTracking:
                     self._not_found_counter += 1
-                    print("Saw nothing: {}".format(self._not_found_counter))
+                    self._logger.info("Saw nothing: %i", self._not_found_counter)
                     if self._not_found_counter > 50:
                         # After frames of not detecting something, return to
                         # mid position

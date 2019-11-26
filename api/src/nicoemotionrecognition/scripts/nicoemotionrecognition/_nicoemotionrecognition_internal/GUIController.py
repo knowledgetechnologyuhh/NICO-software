@@ -18,12 +18,13 @@ class GUIController:
             faceColor = modelDictionary.classesColor[mainClassification]
 
         # Draw Detected Face
-
-        for k, d in enumerate(detectedFace):
-            cv2.rectangle(
-                frame, (d.left(), d.top()), (d.right(), d.bottom()), faceColor, 2
-            )
-            break
+        cv2.rectangle(
+            frame,
+            (detectedFace["left"], detectedFace["top"]),
+            (detectedFace["right"], detectedFace["bottom"]),
+            faceColor,
+            2,
+        )
 
         return frame
 
