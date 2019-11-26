@@ -29,9 +29,7 @@ parser.add_argument(
     "--motor-config",
     dest="json_file",
     type=str,
-    default=abspath(
-        dirname(abspath(__file__)) + "/../../../json/nico_humanoid_upper_rh7d.json"
-    ),
+    default=default_config,
     help="Location of json file with motor definitions. (Default: {})".format(
         default_config
     ),
