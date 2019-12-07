@@ -14,7 +14,6 @@
 #define _VSARDUINO_H_
 #define __ARM_mkl26z64__
 #define __ARM_MKL26Z64__
-#define _VMDEBUG 1
 #define ARDUINO 106
 #define ARDUINO_MAIN
 #define __AVR__

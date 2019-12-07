@@ -45,10 +45,10 @@ it will also terminate with error.
    time and decreased range.   
    */
 
-#define REFCHRG	4 /* 4 = 8 microamps*/
-#define EXTCHRG	3 // 0 to 15 - current to use, value is 2*(current+1)
-#define PRESCALE 5 // prescaler, 0 to 7 - value is 2^(prescaler+1)
-#define NRSCANS 9 // number of times to scan/sample, 0 to 31, value is nscan+1
+#define REFCHRG	4 /* T32=4 (8 microamps) */
+#define EXTCHRG	3 /* T32=3 0 to 15 - current to use, value is 2*(current+1) */
+#define PRESCALE 2 /* T32=5 prescaler, 0 to 7 - value is 2^(prescaler+1) */
+#define NRSCANS 9 /* T32=9  number of times to scan/sample, 0 to 31, value is nscan+1 */
 
 
 /* Parameters for the software filters on the readings
@@ -63,16 +63,18 @@ it will also terminate with error.
    if you need a re callibration
 */
 
-#define TSI_SHORT_AVG_MUL 2
-#define TSI_SHORT_AVG_DIV 3
+#define TSI_SHORT_AVG_MUL 0
+#define TSI_SHORT_AVG_DIV 1
 
-#define TSI_DEEP_AVG_MUL 9999
-#define TSI_DEEP_AVG_DIV 10000
+#define TSI_DEEP_AVG_MUL 999
+#define TSI_DEEP_AVG_DIV 1000
+
+#define TSI_DELAY_BETWEEN_SCANS_MILLIS 100
 
 #define NO_PAD_SCANNING 0xFF
 
-/* Correspondence between Pin Nr and capacitive channel */
-static const uint8_t pin2tsi[] = {
+/* Correspondence between Pin Nr and capacitive channel for Teensy LC */
+static const uint8_t TLC_pin2tsi[] = {
 	//0    1    2    3    4    5    6    7    8    9
 	9,  10, 255,   2,   3, 255, 255, 255, 255, 255,
 	255, 255, 255, 255, 255,  13,   0,   6,   8,   7,
@@ -82,19 +84,13 @@ static const uint8_t pin2tsi[] = {
 class clsTouch {
 public:
 	clsTouch();
-	int* getTouchValues();
-
-#ifndef __MKL26Z64__
-	// define empty functions to avoid board crashes if the processor is
-	// is not the expected one
-	void init() { initialized = false; }
-	void callibrateCapacitivePads() { ; }
-	void scanCapacitivePads() { ;  }
-#else
 	void init();
 	void callibrateCapacitivePads();
 	void scanCapacitivePads();
-#endif
+	int* getTouchValues();
+	unsigned long getNrScansPerformed() { return nr_scans_performed_;  }
+
+	byte current_pad_scanning_ = NO_PAD_SCANNING;
 
 private:
 	int tsi_scan_sync(byte ch);
@@ -102,15 +98,17 @@ private:
 	bool tsi_is_scan_complete();
 	int tsi_get_scan_result();
 
-	int* output_readings; // used to output readings to user space program
-	int* short_avg_readings;
-	int* deep_avg_readings;
+	int* output_readings_; // used to output readings to user space program
+	int* short_avg_readings_;
+	int* deep_avg_readings_;
 
-	byte* tsi_channel;
+	byte* tsi_channel_;
 
-	bool initialized = false;
+	bool tsi_module_enabled_ = false;
 
-	byte current_pad_scanning = NO_PAD_SCANNING;
+	//byte current_pad_scanning_ = NO_PAD_SCANNING;
+	unsigned long nr_scans_performed_ = 0;
+	byte tsi_async_scan_in_progress_ = false;
 };
 
 #endif

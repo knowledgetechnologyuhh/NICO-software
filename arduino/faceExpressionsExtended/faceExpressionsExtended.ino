@@ -430,7 +430,7 @@ void loop() {
 
 	if (millis() - last_print > 1000) {
 		scan_results = touch_pads.getTouchValues();
-		Serial.printf("Touch values: %d %d %d %d\n", scan_results[0], scan_results[1], scan_results[2], scan_results[3]);
+		Serial.printf("Touch values: %d %d %d %d, Nr scans: %d, Scanning pad: %d\n", scan_results[0], scan_results[1], scan_results[2], scan_results[3], touch_pads.getNrScansPerformed(), touch_pads.current_pad_scanning_);
 		last_print = millis();
 	}
 	
