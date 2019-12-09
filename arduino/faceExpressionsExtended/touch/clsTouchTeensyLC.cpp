@@ -47,19 +47,21 @@ void clsTouch::callibrateCapacitivePads() {
 	
 	int tsi_reading;
 	/* first scan to initalize filters */
-	for (byte b = 0; b < NR_CAPACITIVE_PADS; b++) {
+	/*for (byte b = 0; b < NR_CAPACITIVE_PADS; b++) {
 		tsi_reading = tsi_scan_sync(tsi_channel_[b]);
 		short_avg_readings_[b] = tsi_reading;
 		deep_avg_readings_[b] = tsi_reading;
-	}
+	}*/
 
 	/* take sequential scans to get a more stable baseline value for filtering */
-	for (byte c = 0; c < 10; c++) {
-		for (byte b = 0; b < NR_CAPACITIVE_PADS; b++) {
+	for (byte b = 0; b < NR_CAPACITIVE_PADS; b++) {
+		for (byte c = 0; c < 10; c++) {
 			tsi_reading = tsi_scan_sync(tsi_channel_[b]);
-			short_avg_readings_[b] = (tsi_reading + short_avg_readings_[b] * TSI_SHORT_AVG_MUL) / TSI_SHORT_AVG_DIV;
-			deep_avg_readings_[b] = (tsi_reading + deep_avg_readings_[b] * TSI_DEEP_AVG_MUL) / TSI_DEEP_AVG_DIV;
+			/*short_avg_readings_[b] = (tsi_reading + short_avg_readings_[b] * TSI_SHORT_AVG_MUL) / TSI_SHORT_AVG_DIV;
+			deep_avg_readings_[b] = (tsi_reading + deep_avg_readings_[b] * TSI_DEEP_AVG_MUL) / TSI_DEEP_AVG_DIV;*/
 		}
+		short_avg_readings_[b] = tsi_reading;
+		deep_avg_readings_[b] = tsi_reading;
 	}
 }
 
@@ -67,8 +69,8 @@ void clsTouch::scanCapacitivePads() {
 	if (!tsi_module_enabled_) return;
 
 	if (current_pad_scanning_ == NO_PAD_SCANNING) {
-		tsi_init_scan_async(0);
 		current_pad_scanning_ = 0;
+		tsi_init_scan_async(tsi_channel_[current_pad_scanning_]);
 	}
 	else if (tsi_is_scan_complete()) {
 		//delay(1);
@@ -79,7 +81,7 @@ void clsTouch::scanCapacitivePads() {
 		nr_scans_performed_++;
 
 		current_pad_scanning_ = ((current_pad_scanning_ + 1) % NR_CAPACITIVE_PADS);
-		tsi_init_scan_async(current_pad_scanning_);
+		tsi_init_scan_async(tsi_channel_[current_pad_scanning_]);
 	} /* else {
 	  do nothing; wait for the scan to complete and check for that on the next function call
 	  }  */
@@ -113,6 +115,7 @@ int clsTouch::tsi_scan_sync(byte channel) {
 }
 
 void clsTouch::tsi_init_scan_async(byte channel) {
+	TSI0_GENCS |= TSI_GENCS_EOSF;
 	TSI0_DATA = TSI_DATA_TSICH(channel) | TSI_DATA_SWTS;
 	delayMicroseconds(10);	
 }

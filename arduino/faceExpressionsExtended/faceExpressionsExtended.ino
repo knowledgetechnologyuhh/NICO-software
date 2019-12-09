@@ -48,14 +48,14 @@ BSD license, all text above must be included in any redistribution
   to the appropriate sensitivity and implement functions that allow asyncronous operation.
   
   --
-  If do not want Touch support, #undefine TOUCH_SUPPORT
+  If do not want Touch support, #undefine COMPILE_TOUCH_SUPPORT
   If you attempt to compile Touch support and the board is not a Teensy LC
   it will also terminate with error.
 **/
 
 // For touch support
 // comment the define below to disable or compile without touch
-#define TOUCH_SUPPORT
+#define COMPILE_TOUCH_SUPPORT
 
 #include <SPI.h>
 #include "touch/clsTouchTeensyLC.h"
@@ -78,7 +78,7 @@ Adafruit_8x16matrix mouth = Adafruit_8x16matrix();
 #include <avr/power.h>
 #endif
 
-#if (defined(TOUCH_SUPPORT) && !defined(__MKL26Z64__) )
+#if (defined(COMPILE_TOUCH_SUPPORT) && !defined(__MKL26Z64__) )
 #error Touch support can only be compiled for a Teensy LC processor board. Either set your board correctly or comment '#define TOUCH_SUPPORT' so that the sketch compiles without touch.
 #else
 clsTouch touch_pads;
@@ -109,8 +109,6 @@ void setup() {
 	//Serial.println("NICO Face Expressions");
 	//Serial.println("Type in a face expressions: ");
 
-	delay(3000);
-
 	int brightness = 11;
 
 	left.begin(0x70);  // pass in the address
@@ -139,7 +137,7 @@ void setup() {
 
 	}
 
-#ifdef TOUCH_SUPPORT
+#ifdef COMPILE_TOUCH_SUPPORT
 	touch_pads.init();
 #endif
 }
@@ -416,9 +414,6 @@ long x2l(char *s)
 
 
 void loop() {
-	int* scan_results;
-	static unsigned long last_print = 0;
-
 	// protocol-mode
 	// 2 - Full data communication between Arduino and controller
 	// 1 - Reduced communication, only handshake
@@ -426,13 +421,9 @@ void loop() {
 	int prot_mode;
 	prot_mode = 2;
 
+#ifdef COMPILE_TOUCH_SUPPORT
 	touch_pads.scanCapacitivePads();
-
-	if (millis() - last_print > 1000) {
-		scan_results = touch_pads.getTouchValues();
-		Serial.printf("Touch values: %d %d %d %d, Nr scans: %d, Scanning pad: %d\n", scan_results[0], scan_results[1], scan_results[2], scan_results[3], touch_pads.getNrScansPerformed(), touch_pads.current_pad_scanning_);
-		last_print = millis();
-	}
+#endif
 	
 	if (Serial.available()) {
 		String str = Serial.readString();
@@ -639,6 +630,43 @@ void loop() {
 
 
 		}
+
+#ifdef COMPILE_TOUCH_SUPPORT
+		else if (str == "caprt") { // capacitive readings exported as text. Separated by space, terminated by NEWLINE
+
+			int *readings = touch_pads.getTouchValues();
+			for (byte b = 0; b < (NR_CAPACITIVE_PADS - 1); b++) {
+				Serial.printf("%d ", readings[b]);
+			}
+			Serial.println(readings[NR_CAPACITIVE_PADS - 1]);
+			Serial.send_now(); // force USB stack to flush immediately. Function is available on Teensy boards
+
+		}
+		else if (str == "caprr") {  // capacitive readings exported as RAW. Provides a more efficient way to transfer data.
+									// Byte 0=Nr capacitive pads
+									// Byte 1=size of each reading (in nr of bytes). This to account for systems where an INT can be 2 or 4 bytes...
+									// the values in a sequence
+									// Last byte=checksum is calculated in the same way as Dynamixel 1: add all data bytes and then negate the result
+			int *readings = touch_pads.getTouchValues();
+
+			byte checksum = 0;
+			for (byte b = 0; b < (NR_CAPACITIVE_PADS * sizeof(int)); b++) {
+				checksum = (byte)(checksum + ((byte*)readings)[b]);
+			}
+			checksum = (byte)(~checksum);
+
+			Serial.write(NR_CAPACITIVE_PADS);
+			Serial.write(sizeof(int));
+			Serial.write((byte *)readings, NR_CAPACITIVE_PADS * sizeof(int));
+			Serial.write(checksum);
+			Serial.send_now(); // force USB stack to flush immediately. Function is available on Teensy boards
+		}
+		else if (str == "capca") { // capacitive sensor calibration: forces a re callibration of the sensors (note: sensors are automatically callibrated in initialization)
+			touch_pads.callibrateCapacitivePads();
+			Serial.println("Capacitive pads callibrated");
+			Serial.send_now(); // force USB stack to flush immediately. Function is available on Teensy boards
+		}
+#endif
 
 		else {
 			Serial.println("Unknown command. Will not show anything");

@@ -16,7 +16,7 @@ Therefore, we use our own custom functions that set up the processor registers
 to the appropriate sensitivity.
 
 --
-If do not want Touch support, #undefine TOUCH_SUPPORT
+If do not want Touch support, #undefine COMPILE_TOUCH_SUPPORT
 If you attempt to compike Touch support nad the board is not a Teensy LC
 it will also terminate with error.
 
@@ -30,25 +30,24 @@ it will also terminate with error.
 
 #define NR_CAPACITIVE_PADS 4
 
-#define CAP_PAD0_PIN 3
-#define CAP_PAD1_PIN 4 
-#define CAP_PAD2_PIN 22
-#define CAP_PAD3_PIN 23
+#define CAP_PAD0_PIN 22
+#define CAP_PAD1_PIN 23 
+#define CAP_PAD2_PIN 4
+#define CAP_PAD3_PIN 3
 
 /* Parameters to tune the TSI module sensisitivity and precision
    If you need to change this, do it carefuly.
    The meaning of each parameter can be found on the processor datasheet (Teensy LC)
    section covering register TSIx_GENCS 
    
-   Generally, Lower current, higher number of scans, and higher prescaler
-   increase sensitivity, but the trade-off is longer measurement
-   time and decreased range.   
+   Generally, a higher prescaler increases sensitivity, but the trade-off 
+   is longer measurement time
    */
 
-#define REFCHRG	4 /* T32=4 (8 microamps) */
-#define EXTCHRG	3 /* T32=3 0 to 15 - current to use, value is 2*(current+1) */
-#define PRESCALE 2 /* T32=5 prescaler, 0 to 7 - value is 2^(prescaler+1) */
-#define NRSCANS 9 /* T32=9  number of times to scan/sample, 0 to 31, value is nscan+1 */
+#define REFCHRG	4 /* Default=4 (8 microamps) */
+#define EXTCHRG	3 /* Default=3 0 to 15 - current to use, value is 2*(current+1) */
+#define PRESCALE 3 /* Default=2: prescaler, 0 to 7 - value is 2^(prescaler+1) */
+#define NRSCANS 9 /* Default=9  number of times to scan/sample, 0 to 31, value is nscan+1 */
 
 
 /* Parameters for the software filters on the readings
@@ -63,13 +62,11 @@ it will also terminate with error.
    if you need a re callibration
 */
 
-#define TSI_SHORT_AVG_MUL 0
-#define TSI_SHORT_AVG_DIV 1
+#define TSI_SHORT_AVG_MUL 2
+#define TSI_SHORT_AVG_DIV 3
 
-#define TSI_DEEP_AVG_MUL 999
-#define TSI_DEEP_AVG_DIV 1000
-
-#define TSI_DELAY_BETWEEN_SCANS_MILLIS 100
+#define TSI_DEEP_AVG_MUL 9999
+#define TSI_DEEP_AVG_DIV 10000
 
 #define NO_PAD_SCANNING 0xFF
 
@@ -90,8 +87,6 @@ public:
 	int* getTouchValues();
 	unsigned long getNrScansPerformed() { return nr_scans_performed_;  }
 
-	byte current_pad_scanning_ = NO_PAD_SCANNING;
-
 private:
 	int tsi_scan_sync(byte ch);
 	void tsi_init_scan_async(byte ch);
@@ -106,7 +101,7 @@ private:
 
 	bool tsi_module_enabled_ = false;
 
-	//byte current_pad_scanning_ = NO_PAD_SCANNING;
+	byte current_pad_scanning_ = NO_PAD_SCANNING;
 	unsigned long nr_scans_performed_ = 0;
 	byte tsi_async_scan_in_progress_ = false;
 };
