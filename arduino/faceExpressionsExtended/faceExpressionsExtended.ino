@@ -24,11 +24,16 @@ BSD license, all text above must be included in any redistribution
   under the original NICo license.
 
   Added commands: 
-	- "capr" to query the readings of capacitive touch channels.
+	- "caprt" to query the readings of capacitive touch channels in text format
 			returns a sequence of numbers with the capacitive reading (as text;
-			needs to be parsed with somethign like sscanf("%d %d %d %d"...) to
+			can be parsed with somethign like sscanf("%d %d %d %d"...) to
 			convert to INTs (2 byte values);
-	- "capc" to force recallibration (re-zero'ing) of capacitive pad readings
+
+	- "caprr" to query the readings of capacitive touch in raw format
+			returns a sequence of bytes with the capacitive readings.
+                        see the command below for detailed documentation on the output format.
+
+	- "capca" to force recallibration (re-zero'ing) of capacitive pad readings
 
   Capacitive touch channels are enabled via the custom Seed Robotics board
   which is based on the Teensy LC board.

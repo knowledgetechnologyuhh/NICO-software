@@ -19,8 +19,53 @@
   BSD license, all text above must be included in any redistribution
  ****************************************************/
 
+ /****
+ 4 Dec 2018 - Contribution by Seed Robotics (www.seedrobotics.com)
+ under the original NICo license.
+
+ Added commands:
+ - "caprt" to query the readings of capacitive touch channels in text format
+ returns a sequence of numbers with the capacitive reading (as text;
+ can be parsed with somethign like sscanf("%d %d %d %d"...) to
+ convert to INTs (2 byte values);
+
+ - "caprr" to query the readings of capacitive touch in raw format
+ returns a sequence of bytes with the capacitive readings.
+ see the command below for detailed documentation on the output format.
+
+ - "capca" to force recallibration (re-zero'ing) of capacitive pad readings
+
+ Capacitive touch channels are enabled via the custom Seed Robotics board
+ which is based on the Teensy LC board.
+
+ Pads are connected to processor pins 2, 3, 22 and 23.
+
+ Compiled with Arduino 1.0.6 and Teensyduino 1.45.
+ You need to download those to compile the sample with touch support.
+ Newer versions of Arduno/Teensiduino /should/ also compile properly.
+
+ CAPACITIVE SENSITIVITY: the Teensyduino library function touchRead does not
+ work properly with the NICo head pads. This is because the chip can be set up
+ for different sensitivity but touchRead sets it up to a fixed
+ (lower) sensitivity.
+ Furtermore touchRead is syncronous which blocks execution while read is in progres..
+ Therefore, we use our own custom functions that set up the processor registers
+ to the appropriate sensitivity and implement functions that allow asyncronous operation.
+
+ --
+ If do not want Touch support, #undefine COMPILE_TOUCH_SUPPORT
+ If you attempt to compile Touch support and the board is not a Teensy LC
+ it will also terminate with error.
+ **/
+
+ // For touch support
+ // comment the define below to disable or compile without touch
+#define COMPILE_TOUCH_SUPPORT
+
+#include "touch/clsTouchTeensyLC.h"
 #include <SoftwareSerial.h>
 
+#include <SPI.h>
 #include <Wire.h>
 #include "Adafruit_LEDBackpack.h"
 #include "Adafruit_GFX.h"
@@ -28,6 +73,12 @@
 Adafruit_8x8matrix left = Adafruit_8x8matrix();
 Adafruit_8x8matrix right = Adafruit_8x8matrix();
 Adafruit_8x16matrix mouth = Adafruit_8x16matrix();
+
+#if (defined(COMPILE_TOUCH_SUPPORT) && !defined(__MKL26Z64__) )
+#error Touch support can only be compiled for a Teensy LC processor board. Either set your board correctly or comment '#define TOUCH_SUPPORT' so that the sketch compiles without touch.
+#else
+clsTouch touch_pads;
+#endif
 
 void setup() {
   
@@ -46,6 +97,10 @@ void setup() {
   mouth.begin(0x72);  // pass in the address
 
   mouth.setBrightness(brightness+4);
+
+#ifdef COMPILE_TOUCH_SUPPORT
+  touch_pads.init();
+#endif
 }
 
 static const uint8_t PROGMEM
@@ -265,6 +320,10 @@ void neutral()
 
 void loop() {
 
+#ifdef COMPILE_TOUCH_SUPPORT
+	touch_pads.scanCapacitivePads();
+#endif
+
     if (Serial.available()) {
       String str = Serial.readString();
 
@@ -310,7 +369,46 @@ void loop() {
 
 
 
-      } else {
+      } 
+	   
+#ifdef COMPILE_TOUCH_SUPPORT
+	   else if (str == "caprt") { // capacitive readings exported as text. Separated by space, terminated by NEWLINE
+
+		   int *readings = touch_pads.getTouchValues();
+		   for (byte b = 0; b < (NR_CAPACITIVE_PADS - 1); b++) {
+			   Serial.printf("%d ", readings[b]);
+		   }
+		   Serial.println(readings[NR_CAPACITIVE_PADS - 1]);
+		   Serial.send_now(); // force USB stack to flush immediately. Function is available on Teensy boards
+
+	   }
+	   else if (str == "caprr") {  // capacitive readings exported as RAW. Provides a more efficient way to transfer data.
+								   // Byte 0=Nr capacitive pads
+								   // Byte 1=size of each reading (in nr of bytes). This to account for systems where an INT can be 2 or 4 bytes...
+								   // the values in a sequence
+								   // Last byte=checksum is calculated in the same way as Dynamixel 1: add all data bytes and then negate the result
+		   int *readings = touch_pads.getTouchValues();
+
+		   byte checksum = 0;
+		   for (byte b = 0; b < (NR_CAPACITIVE_PADS * sizeof(int)); b++) {
+			   checksum = (byte)(checksum + ((byte*)readings)[b]);
+		   }
+		   checksum = (byte)(~checksum);
+
+		   Serial.write(NR_CAPACITIVE_PADS);
+		   Serial.write(sizeof(int));
+		   Serial.write((byte *)readings, NR_CAPACITIVE_PADS * sizeof(int));
+		   Serial.write(checksum);
+		   Serial.send_now(); // force USB stack to flush immediately. Function is available on Teensy boards
+	   }
+	   else if (str == "capca") { // capacitive sensor calibration: forces a re callibration of the sensors (note: sensors are automatically callibrated in initialization)
+		   touch_pads.callibrateCapacitivePads();
+		   Serial.println("Capacitive pads callibrated");
+		   Serial.send_now(); // force USB stack to flush immediately. Function is available on Teensy boards
+	   }
+#endif	   
+	   
+	   else {
           Serial.println("Unknown command. Will not show anything");
       }
   }

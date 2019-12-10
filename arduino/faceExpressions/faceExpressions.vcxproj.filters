@@ -15,18 +15,18 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="faceExpressionsTouch.ino" />
+    <None Include="faceExpressions.ino" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="__vm\.faceExpressionsTouch.vsarduino.h">
+    <ClInclude Include="__vm\.faceExpressions.vsarduino.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TouchSampling.h">
+    <ClInclude Include="touch\clsTouchTeensyLC.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="TouchSampling.cpp">
+    <ClCompile Include="touch\clsTouchTeensyLC.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

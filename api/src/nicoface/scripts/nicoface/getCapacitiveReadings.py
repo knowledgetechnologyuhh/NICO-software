@@ -7,7 +7,7 @@ import logging
 def printCapacitiveReadings():	
 	
 	readings = myFace.getCapacitiveReadings()
-	print("{} pads. Values:".format(len(readings))),
+	print("\r{} pads. Values:".format(len(readings))),
 	print readings
 	
 	# if readings need to be recallibrated, call
@@ -23,4 +23,5 @@ if __name__ == "__main__":
 	myFace = faceExpression("COM14", "real")
 
 	while(1):
+		#print("iteration {}".format(b))
 		printCapacitiveReadings()

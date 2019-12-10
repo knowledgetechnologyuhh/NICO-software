@@ -598,12 +598,7 @@ class faceExpression:
         self.ser.flushInput() # clear all buffered data to ensure we only get the data for our command
         self.ser.write("caprr")
         response = self.ser.readline()
-        
-        if (response == ""):
-            self._logger.warning(
-                "No response to Capacitive Query")
-            return
-
+      
         # Format of the Serial measage, matched to the Arduino skecth:
         # Byte 0=Nr capacitive pads
 		# Byte 1=size of each reading (in nr of bytes). This to account for systems where an INT can be 2 or 4 bytes...
@@ -620,6 +615,7 @@ class faceExpression:
                 barray_readings = bytearray(response) # rebuild array
                 read_attempts = read_attempts+1
             else:
+                print "Less than 3 bytes"
                 self._logger.warning(
                     "Invalid response to Capacitive Query. Less than 3 bytes")
             return
@@ -632,15 +628,15 @@ class faceExpression:
         read_attempts = 0
         while (len(barray_readings) < nr_pads * data_size + 3):
             if read_attempts < 2:
+                #print "not enough data yet"
                 response = response + self.ser.readline()  # see if there's more data to pull which arrived in the meantime
                 barray_readings = bytearray(response) # rebuild array
                 read_attempts = read_attempts+1
             else:
-                print "invalid repsonse"
                 self._logger.warning(
                     "Invalid response to Capacitive Query. nr_pads={} and data_size={} don't match barray_len={}".format(
                                                                                         nr_pads,data_size,len(barray_readings)))
-            return
+                return
 
         # reconstruct the values from the bytes sent        
         for b in range(0, nr_pads):
@@ -654,8 +650,6 @@ class faceExpression:
         # we are not verifying the checksum in this implementation but we should.
         # for now, because we communicate over USB, the usb stack should ensure data integrity
         # nevertheless the face controller sends a checksum in the last byte that can/should be verified to validate data
-
-        print("finished compiling readings. len is {}".format(len(out_readings)))
 
         return out_readings
 
