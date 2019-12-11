@@ -593,6 +593,79 @@ class faceExpression:
             self.send_PIL(imb, "l")
             self.send_PIL(imb, "r")
 
+    def getCapacitiveReadings(self):
+        self._logger.info("Querying capacitive readings using command 'cprr'")
+        self.ser.flushInput() # clear all buffered data to ensure we only get the data for our command
+        self.ser.write("caprr")
+        response = self.ser.readline()
+      
+        # Format of the Serial measage, matched to the Arduino skecth:
+        # Byte 0=Nr capacitive pads
+		# Byte 1=size of each reading (in nr of bytes). This to account for systems where an INT can be 2 or 4 bytes...
+		# the values in a sequence
+		# Last byte=checksum is calculated in the same way as Dynamixel 1: add all data bytes and then negate the result        
+
+        out_readings = []
+        barray_readings = bytearray(response)
+
+        read_attempts = 0
+        while (len(barray_readings) < 3):
+            if read_attempts < 2:
+                response = response + self.ser.readline()  # see if there's more data to pull which arrived in the meantime
+                barray_readings = bytearray(response) # rebuild array
+                read_attempts = read_attempts+1
+            else:
+                print "Less than 3 bytes"
+                self._logger.warning(
+                    "Invalid response to Capacitive Query. Less than 3 bytes")
+            return
+
+        nr_pads = barray_readings[0]
+        data_size = barray_readings[1]
+
+        #print("Nr pads={}, data size={}".format(nr_pads, data_size));
+
+        read_attempts = 0
+        while (len(barray_readings) < nr_pads * data_size + 3):
+            if read_attempts < 2:
+                #print "not enough data yet"
+                response = response + self.ser.readline()  # see if there's more data to pull which arrived in the meantime
+                barray_readings = bytearray(response) # rebuild array
+                read_attempts = read_attempts+1
+            else:
+                self._logger.warning(
+                    "Invalid response to Capacitive Query. nr_pads={} and data_size={} don't match barray_len={}".format(
+                                                                                        nr_pads,data_size,len(barray_readings)))
+                return
+
+        # reconstruct the values from the bytes sent        
+        for b in range(0, nr_pads):
+            accum_value = 0;
+            for c in range(0, data_size):
+                curr_value = barray_readings[2 + b * data_size + c]; # "2 +" bc the first 2 bytes are status bytes (data len, nr pads)
+                accum_value += (curr_value * (256**c))  # note the '**' is the "power" operator (same as math.pow)
+                #print("b={}, c={}, barray_ix={}, barray value={}, temp_value={}".format(b, c, 2 + b * data_size + c, curr_value, accum_value))
+            out_readings.append(accum_value)
+
+        # we are not verifying the checksum in this implementation but we should.
+        # for now, because we communicate over USB, the usb stack should ensure data integrity
+        # nevertheless the face controller sends a checksum in the last byte that can/should be verified to validate data
+
+        return out_readings
+
+    def recallibrateCapacitivePads(self):
+        self._logger.info("Reacallibrating capacitive pads using command 'capca'")
+        self.ser.flushInput() # clear all buffered data to ensure we only get the data for our command
+        self.ser.write("capca")
+        response = self.ser.readline()
+        
+        if (response == ""):
+            self._logger.warning(
+                "No response to Capacitive Query")
+            return
+        else:
+            self._logger.info("Re callibration result: {}".format(response))
+
 
 if __name__ == "__main__":
 
