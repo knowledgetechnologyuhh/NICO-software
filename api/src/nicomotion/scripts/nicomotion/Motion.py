@@ -109,13 +109,6 @@ class Motion:
 
         if vrep:
             self._logger.info("Using VREP")
-            to_remove = ["l_virtualhand_x", "r_virtualhand_x"]
-            for motor in to_remove:
-                config["motors"].pop(motor)
-                for group in config["motorgroups"].keys():
-                    config["motorgroups"][group] = [
-                        x for x in config["motorgroups"][group] if x != motor
-                    ]
             if self._pyrep:
                 try:
                     from pypot import pyrep
@@ -550,6 +543,24 @@ class Motion:
         else:
             hand.closeHand(min(fractionMaxSpeed, self._maximumSpeed), percentage)
 
+    def getPalmSensorReading(self, handName):
+        """
+        Returns current reading of the palm IR sensor of the specified hand.
+
+        :param handName: Name of the hand (RHand, LHand)
+        :type handName: str
+        :return: Raw IR sensor value
+        :rtype: int
+        """
+        if handName.lower().startswith("l"):
+            hand = self._leftHand
+        elif handName.lower().startswith("r"):
+            hand = self._rightHand
+        else:
+            self._logger.warning("Unknown hand name {}".format(handName))
+
+        return hand.getPalmSensorReading()
+
     def enableForceControlAll(self, goalForce=500):
         """
         Enables force control for all joints which support this feature
@@ -675,7 +686,7 @@ class Motion:
             if handMotor:
                 hand.setAngle(
                     jointName,
-                    change + motor.present_position,
+                    change + hand.getAngle(jointName),
                     min(fractionMaxSpeed, self._maximumSpeed),
                 )
             else:
@@ -696,8 +707,19 @@ class Motion:
         :rtype: float
         """
         if hasattr(self._robot, jointName):
-            motor = getattr(self._robot, jointName)
-            return motor.present_position
+            handMotor = False
+            if hasattr(self, "_leftHand") and self._leftHand.isHandMotor(jointName):
+                hand = self._leftHand
+                handMotor = True
+            elif hasattr(self, "_rightHand") and self._rightHand.isHandMotor(jointName):
+                hand = self._rightHand
+                handMotor = True
+
+            if handMotor:
+                return hand.getAngle(jointName)
+            else:
+                motor = getattr(self._robot, jointName)
+                return motor.present_position
         else:
             self._logger.warning('No joint "%s" found' % jointName)
             return 0.0
@@ -711,7 +733,8 @@ class Motion:
         """
         jointNames = []
         for motor in self._robot.motors:
-            jointNames += [motor.name]
+            if "virtualhand" not in motor.name:
+                jointNames += [motor.name]
         return jointNames
 
     def getSensorNames(self):

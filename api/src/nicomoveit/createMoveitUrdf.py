@@ -6,7 +6,7 @@ This script is used to generate an URDF from the original URDF that can be used 
 For MoveIt! to properly work it needs a fixed frame, therefore a 'world link'
 connecting the world with the torso is put into the original urdf.
 MoveIt! has problems working with collision geometry meshes with a high number of vertices
-thats why simplified meshes are used. 
+thats why simplified meshes are used.
 I use these simplified meshes for visual geometry aswell to reduce computation time
 """
 
@@ -46,8 +46,7 @@ for line in original:
     mesh = re.match(r"(.*//)NICO-models/meshes/(.*)", line)
     if 'finger_segment_ipt_50d2a7f4' in line or 'fingertip_ipt_8417b8a9' in line or 'left_upper_arm_iam_49d50008' in line or 'left_wrist_iam_c75e4b6f' in line or 'right_upper_arm_iam_e3e9c979' in line or 'right_wrist_iam_81504746' in line: # this can be removed once ROS indigo is not used anymore
       moveiturdf.write(mesh.group(1)+'moveitmeshes/meshes/'+mesh.group(2)+'\n')
-    else:      
-      moveiturdf.write(mesh.group(1)+'nicomotion/../../../urdf/meshes/'+mesh.group(2)+'\n')
+    else:
+      moveiturdf.write(mesh.group(1)+'nicoros/../../../urdf/meshes/'+mesh.group(2)+'\n')
   else:
     moveiturdf.write(line)
-

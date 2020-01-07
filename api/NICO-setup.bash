@@ -11,8 +11,8 @@ echo Running at: "$WORKDIR"
 : ${PYTHON="/usr/bin/python2.7"}
 : ${VIRTUALENVDIR="NICO"}
 if [ $# -eq 1 ]
-  then
-    VIRTUALENVDIR="$1"
+then
+  VIRTUALENVDIR="$1"
 fi
 echo Virtual environment directory: "$VIRTUALENVDIR"
 
@@ -32,7 +32,7 @@ done
 #virtualenv setup
 echo "Checking for virtualenv"
 if [ -d ".$VIRTUALENVDIR/" ]; then
-    echo "Existing virtualenv found"
+  echo "Existing virtualenv found"
 else
   echo "No virtualenv found - setting up new virtualenv"
   # Test for virtualenv
@@ -107,10 +107,13 @@ else
   echo "To use MoveIt! with visualization run: roslaunch nicoros nicoros_moveit_visual.launch"
   echo "To use MoveIt! without visualization run: roslaunch nicoros nicoros_moveit.launch"
   pip install 'pyassimp==4.1.3' #FIXME version 4.1.4 causes segmentation faults while loading stl files
+  pip install defusedxml
+  pip install netifaces
+  pip install pyside2
 fi
 
 #ROS + catkin
-echo "Setting up API"
+echo "Building ROS packages"
 cd $WORKDIR
 if [ -e /opt/ros/indigo/setup.bash ]; then
   ROS_VERSION="indigo"
@@ -128,19 +131,22 @@ if [ -x "$(command -v catkin_make)" ]; then
   source $WORKDIR/devel/setup.bash
 fi
 if ! [ -x "$(command -v catkin_make)" ]; then
-  echo "Catkin not found - skipping API building"
+  echo "Catkin not found - skipping ROS packages"
 fi
 
 # activation script
 echo "Generating 'activate.bash'"
+BRIDGE_PATH=$(realpath $WORKDIR/..)/cv_bridge_build_ws/devel/setup.bash
 cat <<END > activate.bash
 #!/bin/bash
 
+if [ ! -z $ROS_DISTRO ]; then
+  source /opt/ros/${ROS_DISTRO}/setup.bash
+fi
 source ~/.$VIRTUALENVDIR/bin/activate
 source $(realpath $WORKDIR/devel/setup.bash)
-BRIDGE_PATH=$(realpath $WORKDIR)/../cv_bridge_build_ws/devel/setup.bash
-if [ -f BRIDGE_PATH ]; then
-  source BRIDGE_PATH --extend
+if [ -f $BRIDGE_PATH ]; then
+  source $BRIDGE_PATH --extend
 fi
 END
 
