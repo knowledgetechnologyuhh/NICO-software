@@ -54,3 +54,4 @@ else
 fi
 
 cleanup_vars
+cd "$CALLDIR"
