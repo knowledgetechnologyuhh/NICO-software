@@ -2,9 +2,10 @@
 """
 Created on Wed Sep  7 19:25:08 2016
 
-@author: cruz
+@author: cruz, gaede
 """
 
+import argparse
 import cv2
 import numpy as np
 import signal
@@ -12,42 +13,54 @@ import sys
 import time
 import threading
 from nicomotion import Motion
+from nicovision import VideoDevice
 from os.path import abspath, dirname
+from nicoface.FaceExpression import faceExpression
+import random
 
 
 class Demo(object):
-    def __init__(self):
+    def __init__(self, vrep=False):
         self.area = 0
         self.xPosition = 0
         self.yPosition = 0
-        self.SPEED = 0.015  # motors speed
+        self.SPEED = 0.02  # motors speed
         self.SAMPLE_TIME = 0.3  # time to sample a new image (in seconds)
         self.ANGLE_STEP = 5  # angle to turn the motors
-        self.MIN_AREA = (
-            60000
-        )  # 120000      #minimal area to identify a color, the bigger the less noise is consider but the object has to be closer then
+        self.ANGLE_STEP_BIG = 7.5  # angle to turn the motors
+        self.MIN_AREA = 40000  # 120000      #minimal area to identify a color, the bigger the less noise is consider but the object has to be closer then
         self.MAX_X = 640  # camera resolution in x axis
         self.MAX_Y = 480  # camera resolution in y axis
+        self.ZOOM = 200
         self.TOLERANCE = 40  # tolerance to be consider in the middle of the image
 
-        # Uncomment the following line to use the simulated NICO in v-rep
-        # self.nico = Motion.Motion('json/nico_humanoid_upper_with_hands.json', True, '127.0.0.1', 19997, 'v-rep/NICO-seated.ttt')
-        # Uncomment the following line to use de real NICO with grippers
-        config = Motion.Motion.vrepRemoteConfig()
-        config["vrep_scene"] = (
-            dirname(abspath(__file__)) + "/../../../../v-rep/NICO-seated.ttt"
-        )
-        self.nico = Motion.Motion(
-            dirname(abspath(__file__)) + "/../../../../json/nico_humanoid_vrep.json",
-            vrep=True,
-            vrepConfig=config,
-        )
+        if vrep:
+            config = Motion.Motion.vrepRemoteConfig()
+            config["vrep_scene"] = (
+                dirname(abspath(__file__)) + "/../../../../v-rep/NICO-seated.ttt"
+            )
+            self.nico = Motion.Motion(
+                dirname(abspath(__file__))
+                + "/../../../../json/nico_humanoid_vrep.json",
+                vrep=True,
+                vrepConfig=config,
+            )
+
+        else:
+            self.nico = Motion.Motion(
+                dirname(abspath(__file__))
+                + "/../../../../json/nico_humanoid_upper_rh7d.json",
+            )
+            self.face = faceExpression()
 
         def signal_handler(sig, frame):
             self.cleanup()
             sys.exit(0)
 
         signal.signal(signal.SIGINT, signal_handler)
+
+        self.running = True
+        self.last_detection = 0
 
         threads = list()
 
@@ -63,6 +76,12 @@ class Demo(object):
         threads.append(t)
         t.start()
 
+        t = threading.Thread(target=self.face_expression)
+        threads.append(t)
+        t.start()
+
+        self.threads = threads
+
     # end of __init__ method
 
     def __del__(self):
@@ -70,27 +89,29 @@ class Demo(object):
 
     def cleanup(self):
         print("Cleanup")
+        self.running = False
+        for t in self.threads:
+            t.join()
         self.nico.disableTorqueAll()
+        time.sleep(1)
 
     def color_detection(self):
         # Camara initialization
-        capture = cv2.VideoCapture(0)
+        device_name = VideoDevice.VideoDevice.autodetect_nicoeyes()[0]
+        device = VideoDevice.VideoDevice.from_device(
+            device_name, width=self.MAX_X, height=self.MAX_Y, zoom=self.ZOOM
+        )
 
-        cv2.namedWindow("mask", 1)
-        cv2.moveWindow("mask", 1880, 0)
-
-        cv2.namedWindow("Camera", 1)
-        cv2.moveWindow("Camera", 2520, 0)
-
-        while 1:
-
+        def callback(rval, image):
             # Image capture and conversion from RGB -> HSV
-            _, image = capture.read()
             hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
-            # range of color (pink in this case)
-            low_color = np.array([160, 80, 80], dtype=np.uint8)
-            high_color = np.array([190, 255, 255], dtype=np.uint8)
+            # range of color (light green in this case)
+            # low_color = np.array([50, 64, 100], dtype=np.uint8)
+            # high_color = np.array([70, 191, 255], dtype=np.uint8)
+            # range of color (yellow in this case)
+            low_color = np.array([20, 100, 100], dtype=np.uint8)
+            high_color = np.array([40, 255, 255], dtype=np.uint8)
 
             # Mask in range color
             mask = cv2.inRange(hsv, low_color, high_color)
@@ -100,6 +121,8 @@ class Demo(object):
             self.area = moments["m00"]
 
             if self.area > self.MIN_AREA:
+                # print("detected")
+                self.last_detection = time.time()
 
                 # Center of the object
                 x = int(moments["m10"] / moments["m00"])
@@ -110,15 +133,23 @@ class Demo(object):
 
                 # Sign at the center of the object
                 cv2.rectangle(image, (x, y), (x + 2, y + 2), (0, 0, 255), 2)
+            else:
+                # print("not detected")
+                pass
 
             # Show original image with the sign and the mask
             cv2.imshow("mask", mask)
             cv2.imshow("Camera", image)
-
-            key = cv2.waitKey(5) & 0xFF
-            if key == 27:
-                break
+            cv2.waitKey(1)
             # time.sleep(0.3)
+
+        device.add_callback(callback)
+        print("Camera started")
+
+        while self.running:
+            time.sleep(0.1)
+
+        device.close()
 
         cv2.destroyAllWindows()
 
@@ -132,7 +163,7 @@ class Demo(object):
         self.nico.setAngle(joint_x, pos_x, self.SPEED)
         self.nico.setAngle(joint_y, pos_y, self.SPEED)
 
-        while 1:
+        while self.running:
             if self.area > self.MIN_AREA:
 
                 if (
@@ -140,7 +171,10 @@ class Demo(object):
                     and self.xPosition < (self.MAX_X / 2 - self.TOLERANCE)
                     and pos_x < 65
                 ):
-                    pos_x = pos_x + self.ANGLE_STEP
+                    if self.xPosition < self.MAX_X / 3:
+                        pos_x += self.ANGLE_STEP_BIG
+                    else:
+                        pos_x += self.ANGLE_STEP
                     self.nico.setAngle(joint_x, pos_x, self.SPEED)
 
                 if (
@@ -148,7 +182,10 @@ class Demo(object):
                     and self.xPosition < self.MAX_X
                     and pos_x > -65
                 ):
-                    pos_x = pos_x - self.ANGLE_STEP
+                    if self.xPosition > self.MAX_X * 2 / 3:
+                        pos_x -= self.ANGLE_STEP_BIG
+                    else:
+                        pos_x -= self.ANGLE_STEP
                     self.nico.setAngle(joint_x, pos_x, self.SPEED)
 
                 if (
@@ -156,7 +193,10 @@ class Demo(object):
                     and self.yPosition < (self.MAX_Y / 2 - self.TOLERANCE)
                     and pos_y > -45
                 ):
-                    pos_y = pos_y - self.ANGLE_STEP
+                    if self.yPosition < self.MAX_Y / 3:
+                        pos_y -= self.ANGLE_STEP_BIG
+                    else:
+                        pos_y -= self.ANGLE_STEP
                     self.nico.setAngle(joint_y, pos_y, self.SPEED)
 
                 if (
@@ -164,8 +204,14 @@ class Demo(object):
                     and self.yPosition < self.MAX_Y
                     and pos_y < 25
                 ):
-                    pos_y = pos_y + self.ANGLE_STEP
+                    if self.yPosition > self.MAX_X * 2 / 3:
+                        pos_y += self.ANGLE_STEP_BIG
+                    else:
+                        pos_y += self.ANGLE_STEP
                     self.nico.setAngle(joint_y, pos_y, self.SPEED)
+            elif time.time() - self.last_detection > 2:
+                self.nico.setAngle(joint_x, 0, self.SPEED)
+                self.nico.setAngle(joint_y, 0, self.SPEED)
 
             time.sleep(self.SAMPLE_TIME)
 
@@ -177,41 +223,58 @@ class Demo(object):
         self.nico.setAngle("r_arm_x", pos[2], self.SPEED)
         self.nico.setAngle("r_elbow_y", pos[3], self.SPEED)
         self.nico.setAngle("r_wrist_z", pos[4], self.SPEED)
-        # self.nico.setAngle("r_gripper_x", pos[5], self.SPEED)  # FIXME joint
+        self.nico.setHandPose("RHand", pos[5], self.SPEED, pos[6])
 
     # end of amr_position method
 
     def arm_movement(self):
-        self.arm_position([0, 0, -15, 0, 0, 0])
+        # r_shoulder_z, r_shoulder_y, r_arm_x, r_elbow_y, r_wrist_z, hand_pose, hand_percentage
+        positions = [
+            [0, 55, -15, -45, 150, "closeHand", 0.4],
+            [22.5, 55, -15, -45, 150, "closeHand", 0.4],
+            [45, 55, -15, -45, 150, "closeHand", 0.4],
+            [0, 90, -15, -35, 150, "closeHand", 0.4],
+            [22.5, 90, -15, -35, 150, "closeHand", 0.4],
+            [45, 90, -15, -35, 150, "closeHand", 0.4],
+        ]
+        while self.running:
+            self.arm_position([0, 55, -15, -45, 150, "prepareGrab", 1.0])
+            time.sleep(5)
+            self.arm_position([0, 55, -15, -45, 150, "closeHand", 0.4])
+            time.sleep(3)
+            prev_pos = -1
+            pos = -1
+            for _ in range(5):
+                if not self.running:
+                    break
+                while pos == prev_pos:
+                    pos = random.randint(0, len(positions) - 1)
+                prev_pos = pos
+                self.arm_position(positions[random.randint(0, len(positions) - 1)])
+                time.sleep(4)
+
+        self.arm_position([0, 55, -15, -45, 150, "prepareGrab", 1.0])
         time.sleep(5)
-
-        while True:
-            self.arm_position([0, 15, 0, -90, -90, -30])
-            time.sleep(5)
-            self.arm_position([45, 90, 0, -60, -90, -30])
-            time.sleep(5)
-            self.arm_position([45, 90, 0, -60, 90, -30])
-            time.sleep(3)
-            self.arm_position([45, 90, 0, -60, -90, -30])
-            time.sleep(3)
-            self.arm_position([90, 90, 0, -60, -90, -30])
-            time.sleep(5)
-            self.arm_position([90, 15, 0, -90, -90, -30])
-            time.sleep(5)
-            self.arm_position([0, 15, 0, -90, -90, -30])
-            time.sleep(5)
-            self.arm_position([0, 120, 30, 0, -90, -30])
-            time.sleep(10)
-
-            self.arm_position([45, 90, 0, -60, -90, -30])
-            time.sleep(5)
-            self.arm_position([0, 0, -15, 0, 0, 0])
-            time.sleep(5)
-
-            # self.arm_position([45, 90, 0, -60, -90, -30])
+        self.arm_position([0, 0, -15, 0, 0, "openHand", 1.0])
+        time.sleep(5)
 
     # end of arm_movement method
 
+    def face_expression(self):
+        if self.face:
+            while self.running:
+                delta_time = time.time() - self.last_detection
+                if delta_time < 2:
+                    self.face.sendFaceExpression("happiness")
+                elif delta_time < 4:
+                    self.face.sendFaceExpression("sadness")
+                else:
+                    self.face.sendFaceExpression("neutral")
+
 
 # run the demo
-demo = Demo()
+parser = argparse.ArgumentParser()
+parser.add_argument("-v", "--vrep", help="use vrep simulation", action="store_true")
+args = parser.parse_args()
+
+demo = Demo(args.vrep)
