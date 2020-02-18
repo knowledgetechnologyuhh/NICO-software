@@ -369,9 +369,7 @@ class faceExpression:
         :return: Tuple: time_axis, function_values
         :rtype: tuple
         """
-        t = np.linspace(
-            -length / 2 * xstr + xoff, (length - dt) / 2 * xstr + xoff, length / dt
-        )
+        t = np.linspace(-length / 2, (length - dt) / 2, int(length / dt))
         y = (1.0 - 2.0 * (np.pi ** 2) * (f ** 2) * (t ** 2)) * np.exp(
             -(np.pi ** 2) * (f ** 2) * (t ** 2)
         )
