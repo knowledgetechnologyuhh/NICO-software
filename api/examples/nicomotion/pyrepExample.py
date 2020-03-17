@@ -4,7 +4,7 @@ from os.path import abspath, dirname
 from nicomotion.Motion import Motion
 
 parent_dir = dirname(dirname(dirname(dirname(abspath(__file__)))))
-config = "{}/json/nico_humanoid_upper.json".format(parent_dir)
+config = "{}/json/nico_humanoid_vrep.json".format(parent_dir)
 scene = "{}/v-rep/NICO-seated.ttt".format(parent_dir)
 
 # robot = pyrep.from_vrep(
