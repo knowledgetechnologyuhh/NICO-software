@@ -118,7 +118,7 @@ class Motion:
                         "using Python 3."
                     )
                     raise e
-                self._robot = pyrep.from_vrep(
+                self._robot = pyrep.from_pyrep(
                     config,
                     vrepConfig["vrep_scene"],
                     vrepConfig["start"],
