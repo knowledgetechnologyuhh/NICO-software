@@ -5,14 +5,15 @@ import logging
 import textwrap
 from time import sleep
 import numpy as np
-import serial
-import serial.tools.list_ports
+from serial import SerialException
+from SerialConnectionManager import SerialDevice
 from PIL import Image, ImageDraw
+import cv2
 
 
 class faceExpression:
     """
-    The faceExpression class provides an interface to manipulate NICO's facial
+    The FaceExpression class provides an interface to manipulate NICO's facial
     expressions
     """
 
@@ -59,6 +60,50 @@ class faceExpression:
         },
     }
 
+    polynomial_presets = {
+        "happiness": {
+            "mouth": [[7, 0, -0.11, 0, 0], [7, 0, -0.11, 0, 0], 7.45, 2, 2],
+            "left": [[4.75, -0.25, 0, 0, 0], 0, 0, 0],
+            "right": [[3, 0.25, 0, 0, 0], 0, 0, 0],
+        },
+        "sadness": {
+            "mouth": [[5, 0, 0.075, 0, 0], [5, 0, 0.075, 0, 0], 7.45, 2, 2],
+            "left": [[5, -0.4, 0, 0, 0], 0, 0, 0],
+            "right": [[2.2, 0.4, 0, 0, 0], 0, 0, 0],
+        },
+        "anger": {
+            "mouth": [[2, 0, 0.005, 0, 0.002], [8, 0, -0.005, 0, -0.002], 7.45, 2, 2],
+            "left": [[2.5, 0.7, 0, 0, 0], 0, 0, 0],
+            "right": [[7.4, -0.7, 0, 0, 0], 0, 0, 0],
+        },
+        "disgust": {
+            "mouth": [[4, 0, -0.39, 0, 0.0385], [7, 0, 0.39, 0, -0.0385], 7.45, 4, 4],
+            "left": [[8.75, -0.25, 0, 0, 0], 0, 0, 0],
+            "right": [[7, 0.25, 0, 0, 0], 0, 0, 0],
+        },
+        "surprise": {
+            "mouth": [[2, 0, 0.005, 0, 0.0045], [8, 0, -0.005, 0, -0.0045], 7.45, 3, 3],
+            "left": [[5, -1, 0.125, 0, 0], 0, 0, 0],
+            "right": [[4, -0.5, 0.095, 0, 0], 0, 0, 0],
+        },
+        "fear": {
+            "mouth": [
+                [3, 0, -0.005, 0.0, 0.00075],
+                [7, 0, 0.005, 0.0, -0.00075],
+                7.45,
+                1,
+                1,
+            ],
+            "left": [[3, -0.25, 0, 0, 0], 0, 0, 0],
+            "right": [[1.25, 0.25, 0, 0, 0], 0, 0, 0],
+        },
+        "neutral": {
+            "mouth": [[5, 0, 0, 0, 0], [5, 0, 0, 0, 0], 7.45, 2, 2],
+            "left": [[4, 0, 0, 0, 0], 0, 0, 0],
+            "right": [[4, 0, 0, 0, 0], 0, 0, 0],
+        },
+    }
+
     def __init__(self, devicename=None, simulation=False):
         self._logger = logging.getLogger(__name__)
         self._presets = (
@@ -72,9 +117,13 @@ class faceExpression:
         )
         self.simulation = simulation
         self.comm_mode = 2
-        self.left = self.gen_eyebrowse(type="l")
-        self.right = self.gen_eyebrowse(type="r")
-        self.mouth = self.gen_mouth()
+        self._parameters = {}
+        self._basis_functions = ["", "", ""]
+        self.generate_polynomial_eyebrow(*self.polynomial_presets["neutral"]["left"])
+        self.generate_polynomial_eyebrow(
+            *self.polynomial_presets["neutral"]["right"], left=False
+        )
+        self.generate_polynomial_mouth(*self.polynomial_presets["neutral"]["mouth"])
 
         if not simulation:
             baudrate = 115200
@@ -84,44 +133,40 @@ class faceExpression:
                 self._scan_ports(baudrate, timeout)
             else:
                 # Establish the connection on a specific port
-                self.ser = serial.Serial(devicename, baudrate, timeout=timeout)
-                sleep(2)
+                self.ser = SerialDevice(devicename, baudrate, timeout=timeout)
+                self.sendFaceExpression("neutral")
+            self.is_morphable = True
         else:
             self.ser = None
+            self.is_morphable = False
+            self.send()
 
     def _scan_ports(self, baudrate, timeout):
         """
         Automatically detects and establishes a connection with the
         FaceExpression Arduino
         """
-        ports = serial.tools.list_ports.comports()
-        for p in ports:
-            if p.manufacturer and "Arduino" in p.manufacturer:
-                self._logger.info("Connecting to Arduino on port %s", p.device)
-                try:
-                    self.ser = serial.Serial(p.device, baudrate, timeout=timeout)
-                    sleep(2)
+        devices = SerialDevice.get_devices_by_manufacturer("duino")
+        for device in devices:
+            self._logger.info("Connecting to Arduino on port %s", device)
+            try:
+                self.ser = SerialDevice(device, baudrate, timeout=timeout)
 
-                    if self.ser.is_open:
-                        self._logger.debug("Trying to send neutral face expression")
-                        self.ser.write(b"neutral")
-                        response = self.ser.readline()
-                        self._logger.debug('Received response: "%s"', repr(response))
-                        if response == b"Showing neutral\r\n":
-                            self._logger.info(
-                                "Successfully connected to FaceExpression "
-                                + "device on port %s",
-                                p.device,
-                            )
-                            return
-                        self.ser.close()
-
-                except serial.SerialException as e:
-                    self._logger.warning(
-                        ("Connection to Arduino on port %s failed due to %s"),
-                        p.device,
-                        e,
+                self._logger.debug("Trying to send neutral face expression")
+                response = self.ser.send("neutral")
+                if response == b"Showing neutral\r\n":
+                    self._logger.info(
+                        "Successfully connected to FaceExpression "
+                        + "device on port %s",
+                        device,
                     )
+                    return
+                self.ser.close()
+
+            except SerialException as e:
+                self._logger.warning(
+                    ("Connection to Arduino on port %s failed due to %s"), device, e
+                )
 
         self._logger.fatal("No FaceExpression Arduino device found")
         self.ser = None
@@ -129,11 +174,9 @@ class faceExpression:
 
     def _send(self, message, expected_response):
         for _ in range(3):
-            self._logger.debug("Sending '%s'", message)
-            self.ser.write(message.encode("utf-8"))
-            response = self.ser.readline()
+            response = self.ser.send(message)
             if response == expected_response.encode("utf-8"):
-                self._logger.debug("Received '%s'", response[:-2])
+                self._logger.debug("Received expected response %s", repr(response))
                 return
             elif response == b"Unknown command. Will not show anything\r\n":
                 self._logger.warning("Unknown command %s", message)
@@ -146,11 +189,9 @@ class faceExpression:
             self._logger.warning(
                 "Failed to send '%s' - resetting serial connection", message
             )
-            self.ser.close()
-            self.ser.open()
-            sleep(1)
+            self.ser.reset()
         self._logger.critical("Failed to send '%s' after 3 retries", message)
-        raise serial.SerialException(
+        raise SerialException(
             "Expected response {} but received {}".format(
                 repr(expected_response), repr(response)
             )
@@ -190,6 +231,7 @@ class faceExpression:
             self._send(expression, "Showing {}\r\n".format(expression))
         else:
             self._logger.warning("Unknown expression '%s'", expression)
+        self.is_morphable = True
 
     def sendTrainedFaceExpression(self, expression):
         """
@@ -203,18 +245,11 @@ class faceExpression:
 
         if expression in self.trained_presets.keys():
             self._logger.info("Showing trained expression: '%s'", expression)
-            self.mouth = self.gen_mouth(*self.trained_presets[expression]["mouth"])
-            self.left = self.gen_eyebrowse(
-                self.trained_presets[expression]["left"], type="l"
-            )
-            self.right = self.gen_eyebrowse(
-                self.trained_presets[expression]["right"], type="r"
-            )
+            self.gen_mouth(*self.trained_presets[expression]["mouth"])
+            self.gen_eyebrowse(self.trained_presets[expression]["left"], type="l")
+            self.gen_eyebrowse(self.trained_presets[expression]["right"], type="r")
 
-            if self.simulation:
-                self.sim_show_face()
-            else:
-                self.send()
+            self.send()
         else:
             self._logger.warning("Unknown expression '%s'", expression)
 
@@ -222,15 +257,15 @@ class faceExpression:
         """
         Displays current face as image
         """
-        face = Image.new("L", (24, 16))
+        face = Image.new("L", (24, 18))
         draw = ImageDraw.Draw(face)
-        draw.ellipse((9, 1, 13, 5), fill=255)
-        draw.ellipse((9, 10, 13, 14), fill=255)
+        draw.ellipse((9, 2, 13, 6), fill=255)
+        draw.ellipse((9, 11, 13, 15), fill=255)
 
-        face.paste(self.left, (0, 8))
+        face.paste(self.left, (0, 10))
         face.paste(self.right, (0, 0))
         face = face.rotate(180)
-        face.paste(self.mouth, (0, 0))
+        face.paste(self.mouth, (0, 1))
 
         self.show_PIL(face.rotate(90, expand=1))
 
@@ -257,21 +292,25 @@ class faceExpression:
         :param address: part of face to send (all, l, r, m)
         :type address: str
         """
-        if address not in ("all", "l", "r", "m"):
-            self._logger.warning("Unknown display %s", address)
-            return
-        self._logger.info("Showing custom image on '%s'", address)
-        if address == "all" or address == "m":
-            self.send_PIL(self.mouth, "m")
-        # If no comm handshake, waiting time is needed
-        if address == "all" and self.comm_mode < 1:
-            sleep(0.01)
-        if address == "all" or address == "l":
-            self.send_PIL(self.left, "l")
-        if address == "all" and self.comm_mode < 1:
-            sleep(0.01)
-        if address == "all" or address == "r":
-            self.send_PIL(self.right, "r")
+        if self.simulation:
+            self.sim_show_face()
+        else:
+            if address not in ("all", "l", "r", "m"):
+                self._logger.warning("Unknown display %s", address)
+                return
+            self._logger.info("Showing custom image on '%s'", address)
+            if address == "all" or address == "m":
+                self.send_PIL(self.mouth, "m")
+            # If no comm handshake, waiting time is needed
+            if address == "all" and self.comm_mode < 1:
+                sleep(0.01)
+            if address == "all" or address == "l":
+                self.send_PIL(self.left, "l")
+            if address == "all" and self.comm_mode < 1:
+                sleep(0.01)
+            if address == "all" or address == "r":
+                self.send_PIL(self.right, "r")
+        self.is_morphable = False
 
     def show_PIL(self, img, scale=25):
         """
@@ -281,7 +320,9 @@ class faceExpression:
         :type Img: PIL.Image
         """
         img_res = img.resize((img.size[0] * scale, img.size[1] * scale))
-        img_res.show()
+        img_cv = np.array(img_res, dtype=np.uint8)
+        cv2.imshow("Simulated Face Expression", img_cv)
+        cv2.waitKey(40)
 
     def send_PIL(self, Img, disp):
         """
@@ -328,11 +369,13 @@ class faceExpression:
         :return: Tuple: time_axis, function_values
         :rtype: tuple
         """
-        t = np.linspace(-length / 2, (length - dt) / 2, length / dt)
+        t = np.linspace(
+            -length / 2 * xstr + xoff, (length - dt) / 2 * xstr + xoff, length / dt
+        )
         y = (1.0 - 2.0 * (np.pi ** 2) * (f ** 2) * (t ** 2)) * np.exp(
             -(np.pi ** 2) * (f ** 2) * (t ** 2)
         )
-        return t * xstr + xoff, y * ystr + yoff
+        return t, y * ystr + yoff
 
     def draw_wavelet(self, length, ystr1, yoff1, xstr1, xoff1, image):
         """
@@ -399,7 +442,9 @@ class faceExpression:
         if file_name:
             image.save(file_name)
 
-        return image
+        self._basis_functions[0] = "wavelet"
+        self._parameters["mouth"] = ml1, ml2
+        self.mouth = image
 
     def gen_eyebrowse(self, ml1=(0.1, 0.4, 1, -0.55), file_name=None, type="l"):
         """
@@ -418,16 +463,432 @@ class faceExpression:
         ystr1, yoff1, xstr1, xoff1 = ml1
         if type == "r":
             ystr1 *= -1
+            yoff1 *= -1
 
         image = Image.new("L", (8, 8))
         self.draw_wavelet(2, ystr1, yoff1, xstr1, xoff1, image)
 
         if type == "r":
             image = image.rotate(90)
+            self._basis_functions[2] = "wavelet"
+            self._parameters["right"] = ml1
+            self.right = image
         else:
             image = image.rotate(270)
+            self._basis_functions[1] = "wavelet"
+            self._parameters["left"] = ml1
+            self.left = image
 
         if file_name:
             image.save(file_name)
 
-        return image
+    def send_bitmap_face(self, brow_left=None, brow_right=None, mouth=None):
+        """
+        Displays given bitmaps on the face
+
+        :param brow_left: 8x8 bitmap to display as the left brow
+        :type brow_left: np.array (shape=(8,8))
+        :param brow_right: 8x8 bitmap to display as the right brow
+        :type brow_right: np.array (shape=(8,8))
+        :param mouth: 16x8 bitmap to display as the mouth
+        :type brow_left: np.array (shape=(8,16))
+        """
+        if brow_left is not None:
+            self._basis_functions[1] = "bitmap"
+            if type(brow_left) != np.ndarray or brow_left.shape != (8, 8):
+                self._logger.error(
+                    "'brow_left' needs to be an np.array with shape (8,8)"
+                )
+                raise ValueError("'brow_left' needs to be an np.array with shape (8,8)")
+            else:
+                self.left = Image.fromarray(brow_left * 255).rotate(90)
+        if brow_right is not None:
+            self._basis_functions[2] = "bitmap"
+            if type(brow_right) != np.ndarray or brow_right.shape != (8, 8):
+                self._logger.error(
+                    "'brow_right' needs to be an np.array with shape (8,8)"
+                )
+                raise ValueError(
+                    "'brow_right' needs to be an np.array with shape (8,8)"
+                )
+            else:
+                self.right = Image.fromarray(brow_right * 255).rotate(90)
+        if mouth is not None:
+            self._basis_functions[0] = "bitmap"
+            if type(mouth) != np.ndarray or mouth.shape != (8, 16):
+                self._logger.error("'mouth' needs to be an np.array with shape (8,16)")
+                raise ValueError("'mouth' needs to be an np.array with shape (8,16)")
+            else:
+                self.mouth = Image.fromarray(mouth * 255).rotate(270, expand=1)
+
+        self.send()
+
+    def polynomial(self, x, degs):
+        """
+        Calculates y values for given x values using an n-degree polynomial:
+        y = sum(degs[i] * x ** i)
+        :param x: x values to calculate y for
+        :type x: list
+        :param degs: factor for each degree of the polynomial
+        :type degs: list
+        """
+        return sum([degs[i] * (x ** i) for i in range(len(degs))])
+
+    def generate_polynomial_mouth(
+        self, degs1, degs2, x_shift=7.45, crop_left=0, crop_right=0
+    ):
+        """
+        Generates mouth curves using two n-degree polynomial y = sum(degs[i] * x ** i).
+        The origin point can be shifted with x_shift, the crop_left and crop_right
+        parameters allow creating black borders at either side of the image to reduce
+        size of the mouth.
+        :param degs1: factor for each degree of the first polynomial mouth line
+        :type degs1: list
+        :param degs2: factor for each degree of the second polynomial mouth line
+        :type degs2: list
+        :param x_shift: reduces x values and therefore shifts curve to the right (x = -x_shift + i)
+        :type x_shift: float
+        :param crop_left: black border in pixels on the left of the resulting image
+        :type crop_left: int
+        :param crop_right: black border in pixels on the right of the resulting image
+        :type crop_right: int
+        """
+        x = np.arange(16)
+        y1 = self.polynomial(x - x_shift, degs1)
+        y2 = self.polynomial(x - x_shift, degs2)
+
+        img = Image.new("L", (16, 8))
+        ImageDraw.Draw(img).line(list(zip(x, y1)), fill=255)
+        ImageDraw.Draw(img).line(list(zip(x, y2)), fill=255)
+        generated = img.rotate(270, expand=1)
+
+        generated.paste(Image.new("L", (8, crop_left)), (0, 0))
+        generated.paste(Image.new("L", (8, crop_right)), (0, 16 - crop_right))
+
+        self.mouth = generated
+        self._parameters["mouth"] = degs1, degs2, x_shift, crop_left, crop_right
+        self._basis_functions[0] = "polynomial"
+
+    def generate_polynomial_eyebrow(
+        self, degs, x_shift=0, crop_left=0, crop_right=0, left=True
+    ):
+        """
+        Generates eyebrow curve using an n-degree polynomial y = sum(degs[i] * x ** i).
+        The origin point can be shifted with x_shift, the crop_left and crop_right
+        parameters allow creating black borders at either side of the image to reduce
+        size of the eyebrow.
+        :param degs: factor for each degree of the polynomial
+        :type degs: list
+        :param x_shift: reduces x values and therefore shifts curve to the right (x = -x_shift + i)
+        :type x_shift: float
+        :param crop_left: black border in pixels on the left of the resulting image
+        :type crop_left: int
+        :param crop_right: black border in pixels on the right of the resulting image
+        :type crop_right: int
+        :param left: whether left or right eyebrow is generated
+        :type left: bool
+        """
+        x = np.arange(8)
+        y = self.polynomial(x - x_shift, degs)
+
+        img = Image.new("L", (8, 8))
+        ImageDraw.Draw(img).line(list(zip(x, y)), fill=255)
+        generated = img.rotate(90)
+
+        generated.paste(Image.new("L", (8, crop_left)), (0, 0))
+        generated.paste(Image.new("L", (8, crop_right)), (0, 8 - crop_right))
+
+        if left:
+            self.left = generated
+            self._parameters["left"] = degs, x_shift, crop_left, crop_right
+            self._basis_functions[1] = "polynomial"
+        else:
+            self.right = generated
+            self._parameters["right"] = degs, x_shift, crop_left, crop_right
+            self._basis_functions[2] = "polynomial"
+
+    def send_morphable_face_expression(self, expression):
+        """
+        Changes NICO's facial expression to the given preset. The presets
+        consist of:
+        'happiness','sadness','anger','disgust','surprise','fear','neutral'
+
+        These presets are used for morph_face_expression. They are slightly altered
+        versions of the regular face expressions.
+
+        :param expression: name of the desired facial expression (happiness,
+        sadness,anger,disgust,surprise,fear,neutral)
+        :type expression: str
+        """
+        self.generate_polynomial_mouth(*self.polynomial_presets[expression]["mouth"])
+        self.generate_polynomial_eyebrow(
+            *self.polynomial_presets[expression]["left"], left=True
+        )
+        self.generate_polynomial_eyebrow(
+            *self.polynomial_presets[expression]["right"], left=False
+        )
+        self.send()
+
+    def morph_face_expression(self, target_preset, steps=3, delay=0.0):
+        if self._basis_functions[0] == "polynomial":
+            self.morph_polynomial_face(
+                *self.polynomial_presets[target_preset]["mouth"],
+                *self.polynomial_presets[target_preset]["left"],
+                *self.polynomial_presets[target_preset]["right"],
+                steps,
+                delay
+            )
+        else:
+            self.morph_wavelet_face(
+                *self.trained_presets[target_preset]["mouth"],
+                self.trained_presets[target_preset]["left"],
+                self.trained_presets[target_preset]["right"],
+                steps,
+                delay
+            )
+
+    def morph_polynomial_face(
+        self,
+        m1_target,
+        m2_target,
+        m_x_shift_target,
+        m_crop_left_target,
+        m_crop_right_target,
+        left_target,
+        l_x_shift_target,
+        l_crop_left_target,
+        l_crop_right_target,
+        right_target,
+        r_x_shift_target,
+        r_crop_left_target,
+        r_crop_right_target,
+        steps=3,
+        delay=0.0,
+    ):
+        # check if current face is polynomial based
+        if self.is_morphable:
+            self._logger.error("Current face expression does not support morphing")
+            raise ValueError("Current face expression does not support morphing")
+        if "bitmap" in self._basis_functions:
+            self._logger.error("Face contains images generated directly from a bitmap.")
+            raise ValueError("Face contains images generated directly from a bitmap.")
+        if "wavelet" in self._basis_functions:
+            self._logger.error(
+                "Missmatched basis functions, face contains both 'polynomial' "
+                "and 'wavelet' based images"
+            )
+            raise ValueError(
+                "Missmatched basis functions, face contains both 'polynomial' "
+                "and 'wavelet' based images"
+            )
+
+        mouth_start = self._parameters["mouth"]
+        left_start = self._parameters["left"]
+        right_start = self._parameters["right"]
+
+        # mouth
+        self._logger.debug("Calculating mouth transitions")
+        m1 = self._calculate_transition(mouth_start[0], m1_target)
+        m2 = self._calculate_transition(mouth_start[1], m2_target)
+        m_x_shift, m_crop_left, m_crop_right = zip(
+            *self._calculate_transition(
+                mouth_start[2:],
+                (m_x_shift_target, m_crop_left_target, m_crop_right_target),
+            )
+        )
+        # left
+        self._logger.debug("Calculating left eyebrow transitions")
+        left = self._calculate_transition(left_start[0], left_target)
+        l_x_shift, l_crop_left, l_crop_right = zip(
+            *self._calculate_transition(
+                left_start[1:],
+                (l_x_shift_target, l_crop_left_target, l_crop_right_target),
+            )
+        )
+        # right
+        self._logger.debug("Calculating right eyebrow transitions")
+        right = self._calculate_transition(right_start[0], right_target)
+        r_x_shift, r_crop_left, r_crop_right = zip(
+            *self._calculate_transition(
+                right_start[1:],
+                (r_x_shift_target, r_crop_left_target, r_crop_right_target),
+            )
+        )
+
+        # show intermediate faces
+        self._logger.debug("Displaying transition faces")
+        for step in range(steps):
+            self.generate_polynomial_mouth(
+                m1[step],
+                m2[step],
+                m_x_shift[step],
+                int(m_crop_left[step]),
+                int(m_crop_right[step]),
+            )
+            self.generate_polynomial_eyebrow(
+                left[step],
+                l_x_shift[step],
+                int(l_crop_left[step]),
+                int(l_crop_right[step]),
+            )
+            self.generate_polynomial_eyebrow(
+                right[step],
+                r_x_shift[step],
+                int(r_crop_left[step]),
+                int(r_crop_right[step]),
+                False,
+            )
+            self.send()
+            sleep(delay)
+        # show final face
+        self._logger.debug("Displaying target face")
+        self.generate_polynomial_mouth(
+            m1_target,
+            m2_target,
+            m_x_shift_target,
+            m_crop_left_target,
+            m_crop_right_target,
+        )
+        self.generate_polynomial_eyebrow(
+            left_target, l_x_shift_target, l_crop_left_target, l_crop_right_target
+        )
+        self.generate_polynomial_eyebrow(
+            right_target,
+            r_x_shift_target,
+            r_crop_left_target,
+            r_crop_right_target,
+            False,
+        )
+        self.send()
+
+    def morph_wavelet_face(
+        self, m1_target, m2_target, left_target, right_target, steps=3, delay=0.0
+    ):
+        # check if current face is polynomial based
+        if self.is_morphable:
+            self._logger.error("Current face expression does not support morphing")
+            raise ValueError("Current face expression does not support morphing")
+        if "bitmap" in self._basis_functions:
+            self._logger.error("Face contains images generated directly from a bitmap.")
+            raise ValueError("Face contains images generated directly from a bitmap.")
+        if "polynomial" in self._basis_functions:
+            self._logger.error(
+                "Missmatched basis functions, face contains both 'polynomial' "
+                "and 'wavelet' based images"
+            )
+            raise ValueError(
+                "Missmatched basis functions, face contains both 'polynomial' "
+                "and 'wavelet' based images"
+            )
+
+        mouth_start = self._parameters["mouth"]
+        left_start = self._parameters["left"]
+        right_start = self._parameters["right"]
+
+        # mouth
+        self._logger.debug("Calculating mouth transitions")
+        m1 = self._calculate_transition(mouth_start[0], m1_target)
+        m2 = self._calculate_transition(mouth_start[1], m2_target)
+        # m_x_shift, m_crop_left, m_crop_right = zip(
+        #     *self._calculate_transition(
+        #         mouth_start[2:],
+        #         (m_x_shift_target, m_crop_left_target, m_crop_right_target),
+        #     )
+        # )
+        # left
+        self._logger.debug("Calculating left eyebrow transitions")
+        left = self._calculate_transition(
+            left_start, left_target
+        )  # FIXME add [0] if more parameters added
+        # l_x_shift, l_crop_left, l_crop_right = zip(
+        #     *self._calculate_transition(
+        #         left_start[1:],
+        #         (l_x_shift_target, l_crop_left_target, l_crop_right_target),
+        #     )
+        # )
+        # right
+        self._logger.debug("Calculating right eyebrow transitions")
+        right = self._calculate_transition(
+            right_start, right_target
+        )  # FIXME add [0] if more parameters added
+        # r_x_shift, r_crop_left, r_crop_right = zip(
+        #     *self._calculate_transition(
+        #         right_start[1:],
+        #         (r_x_shift_target, r_crop_left_target, r_crop_right_target),
+        #     )
+        # )
+
+        # show intermediate faces
+        self._logger.debug("Displaying transition faces")
+        for step in range(steps):
+            self.gen_mouth(
+                m1[step],
+                m2[step],
+                # int(m_crop_left[step]),
+                # int(m_crop_right[step]),
+            )
+            self.gen_eyebrowse(
+                left[step],
+                # int(l_crop_left[step]),
+                # int(l_crop_right[step]),
+                type="l",
+            )
+            self.gen_eyebrowse(
+                right[step],
+                # int(r_crop_left[step]),
+                # int(r_crop_right[step]),
+                type="r",
+            )
+            self.send()
+            sleep(delay)
+        # show final face
+        self._logger.debug("Displaying target face")
+        self.gen_mouth(
+            m1_target,
+            m2_target,
+            # m_crop_left_target,
+            # m_crop_right_target,
+        )
+        self.gen_eyebrowse(
+            left_target, type="l"
+        )  # l_crop_left_target, l_crop_right_target
+        self.gen_eyebrowse(
+            right_target, type="r"
+        )  # r_crop_left_target, r_crop_right_target
+        self.send()
+
+    def _calculate_transition(self, start, target, steps=3, padding=False):
+        """
+        Interpolates between start and target values.
+
+        :param start: initial list
+        :type start: list
+        :param target: target list
+        :type target: list
+        :param steps: Number of interpolation steps
+        :type steps: int
+        :param padding: Number of interpolation steps
+        :type padding: whether lists with missmatched sizes should be zero padded
+        """
+        # check if lengths match
+        if len(start) != len(target):
+            if padding:
+                diff = len(start) - len(target)
+                if diff < 0:
+                    start += [0] * -diff
+                else:
+                    target += [0] * diff
+            else:
+                self._logger.error(
+                    "Missmatched size (%i != %i)", len(start), len(target)
+                )
+                raise ValueError
+
+        # calculate intermediate steps
+        return [
+            [
+                start[i] + step * (target[i] - start[i]) / (steps + 1.0)
+                for i in range(len(start))
+            ]
+            for step in range(1, steps + 1)
+        ]

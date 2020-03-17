@@ -21,7 +21,7 @@ face.sendFaceExpression("clear")
 
 time.sleep(1)
 
-face.sendTrainedFaceExpression("Happy")
+face.sendTrainedFaceExpression("happiness")
 
 time.sleep(1)
 
