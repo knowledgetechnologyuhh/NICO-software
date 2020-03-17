@@ -30,6 +30,20 @@ else:
         fe.sendFaceExpression(expression)  # only works with a real robot
         sleep(1)
 
+# morphable face presets
+# 'happiness','sadness','anger','disgust','surprise','fear','neutral'
+for expression in (
+    "happiness",
+    "sadness",
+    "anger",
+    "disgust",
+    "surprise",
+    "fear",
+    "neutral",
+):
+    fe.send_morphable_face_expression(expression)
+    sleep(1)
+
 # trained expressions
 for expression in ("anger", "happiness", "neutral", "sadness", "surprise"):
     fe.sendTrainedFaceExpression(expression)
