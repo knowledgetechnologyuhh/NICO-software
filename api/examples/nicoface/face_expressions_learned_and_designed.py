@@ -5,6 +5,9 @@ from nicoface.FaceExpression import faceExpression
 from time import sleep
 from random import choice
 import sys
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 if sys.version_info >= (3,):
     raw_input = input

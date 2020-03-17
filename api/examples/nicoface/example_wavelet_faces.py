@@ -4,22 +4,30 @@
 #
 from nicoface.FaceExpression import faceExpression
 import time
+import argparse
 
-# Change your interface here
-fe = faceExpression()
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "-s",
+    action="store_true",
+    help="Enables simulated mode, where faces are shown as image instead",
+)
+args = parser.parse_args()
+
+fe = faceExpression(simulation=args.s)
 
 # Generate the mouth form and eyebrowse
 # Using the standard values
-fe.mouth = fe.gen_mouth()
-fe.left = fe.gen_eyebrowse()
-fe.right = fe.gen_eyebrowse()
+fe.gen_mouth()
+fe.gen_eyebrowse()
+fe.gen_eyebrowse(type="r")
 fe.send()
 
 time.sleep(1.5)
 
 # Mouth Generator contain 1 tuple for each mouth wavelet
 # (ystretch,yoffset,xstretch,xoffset)
-fe.mouth = fe.gen_mouth((-0.2, -0.2, 1.0, 0), (None, None, None, None))
+fe.gen_mouth((-0.2, -0.2, 1.0, 0), (None, None, None, None))
 
 # This can be displayed on the screen
 # fe.show_PIL(fe.mouth)
@@ -30,20 +38,17 @@ fe.send()
 time.sleep(1.5)
 
 # Using both tuples for two mouth lines
-fe.mouth = fe.gen_mouth((-1.0, 0.2, 1.0, 0), (0.4, 0.1, 1.0, 0))
+fe.gen_mouth((-1.0, 0.2, 1.0, 0), (0.4, 0.1, 1.0, 0))
 
 fe.send()
 
 time.sleep(1.5)
 
 # Using both tuples for two mouth lines
-fe.mouth = fe.gen_mouth((1.0, -0.8, 1.0, 0), (None, None, None, None))
-fe.left = fe.gen_eyebrowse((-1.2, 0.2, 1.0, 0), type="l")
-fe.right = fe.gen_eyebrowse(type="r")
-fe.show_PIL(fe.left)
-
+fe.gen_mouth((1.0, -0.8, 1.0, 0), (None, None, None, None))
 # And using the eyebrowse
-
+fe.gen_eyebrowse((-1.2, 0.2, 1.0, 0), type="l")
+fe.gen_eyebrowse(type="r")
 
 fe.send()
 
