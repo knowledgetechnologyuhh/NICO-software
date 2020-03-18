@@ -53,3 +53,17 @@ fe.gen_eyebrowse(type="r")
 fe.send()
 
 time.sleep(1.5)
+
+# combined CALLDIR
+
+fe.send_wavelet_face(
+    # mouth
+    (0.6, 0.1, 1.0, 0.025),
+    (-1.1, 0.2, 0.95, 0.025),
+    # left eyebrow
+    (1.2, -0.5, 1.0, 0.0),
+    # right eyebrow
+    (1.2, -0.5, 1.0, 0.0),
+)
+
+time.sleep(1.5)
