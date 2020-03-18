@@ -105,6 +105,16 @@ class faceExpression:
     }
 
     def __init__(self, devicename=None, simulation=False):
+        """
+        faceExpression provides an interface to generate and display face
+        expressions on the NICO head
+
+        :param devicename: serial device to connect to (autodetected if None)
+        :type devicename: str
+        :param simulation: If enabled, faces will be displayed as images instead
+                           of sending them to the serial device
+        :type simulation: bool
+        """
         self._logger = logging.getLogger(__name__)
         self._presets = (
             "happiness",
@@ -173,6 +183,15 @@ class faceExpression:
         exit(1)
 
     def _send(self, message, expected_response):
+        """
+        Sends message to serial device and verifies if expected_response was
+        returned
+
+        :param message: message to send
+        :type message: str
+        :param expected_response: response the serial device is expected to return
+        :type expected_response: str
+        """
         for _ in range(3):
             response = self.ser.send(message)
             if response == expected_response.encode("utf-8"):
@@ -245,11 +264,11 @@ class faceExpression:
 
         if expression in self.trained_presets.keys():
             self._logger.info("Showing trained expression: '%s'", expression)
-            self.gen_mouth(*self.trained_presets[expression]["mouth"])
-            self.gen_eyebrowse(self.trained_presets[expression]["left"], type="l")
-            self.gen_eyebrowse(self.trained_presets[expression]["right"], type="r")
-
-            self.send()
+            self.send_wavelet_face(
+                *self.trained_presets[expression]["mouth"],
+                self.trained_presets[expression]["left"],
+                self.trained_presets[expression]["right"],
+            )
         else:
             self._logger.warning("Unknown expression '%s'", expression)
 
@@ -370,7 +389,7 @@ class faceExpression:
         :rtype: tuple
         """
         t = np.linspace(
-            -length / 2 * xstr + xoff, (length - dt) / 2 * xstr + xoff, length / dt
+            -length / 2 * xstr + xoff, (length - dt) / 2 * xstr + xoff, int(length / dt)
         )
         y = (1.0 - 2.0 * (np.pi ** 2) * (f ** 2) * (t ** 2)) * np.exp(
             -(np.pi ** 2) * (f ** 2) * (t ** 2)
@@ -527,6 +546,7 @@ class faceExpression:
         """
         Calculates y values for given x values using an n-degree polynomial:
         y = sum(degs[i] * x ** i)
+
         :param x: x values to calculate y for
         :type x: list
         :param degs: factor for each degree of the polynomial
@@ -542,6 +562,7 @@ class faceExpression:
         The origin point can be shifted with x_shift, the crop_left and crop_right
         parameters allow creating black borders at either side of the image to reduce
         size of the mouth.
+
         :param degs1: factor for each degree of the first polynomial mouth line
         :type degs1: list
         :param degs2: factor for each degree of the second polynomial mouth line
@@ -577,6 +598,7 @@ class faceExpression:
         The origin point can be shifted with x_shift, the crop_left and crop_right
         parameters allow creating black borders at either side of the image to reduce
         size of the eyebrow.
+
         :param degs: factor for each degree of the polynomial
         :type degs: list
         :param x_shift: reduces x values and therefore shifts curve to the right (x = -x_shift + i)
@@ -620,23 +642,115 @@ class faceExpression:
         sadness,anger,disgust,surprise,fear,neutral)
         :type expression: str
         """
-        self.generate_polynomial_mouth(*self.polynomial_presets[expression]["mouth"])
-        self.generate_polynomial_eyebrow(
-            *self.polynomial_presets[expression]["left"], left=True
+        self.send_polynomial_face(
+            *self.polynomial_presets[expression]["mouth"],
+            *self.polynomial_presets[expression]["left"],
+            *self.polynomial_presets[expression]["right"],
         )
+
+    def send_wavelet_face(self, m1, m2, left, right):
+        """
+        Generates and displays face expression with given wavelet paramters.
+
+        :param m1: wavelet parameters for first mouth line (stretch_in_y_position,
+                          offset_y_position, stretch_in_x_position , offset_x_position)
+        :type m1: tuple(float, float, float, float)
+        :param m2: wavelet parameters for second mouth line
+        :type m2: tuple(float, float, float, float)
+        :param left: wavelet parameters for left eyebrow
+        :type left: tuple(float, float, float, float)
+        :param right: wavelet paramters for right eyebrow
+        :type right: tuple(float, float, float, float)
+        """
+        self._logger.debug("Displaying wavelet face")
+        # show mouth
+        self.gen_mouth(m1, m2)
+        # show left
+        self.gen_eyebrowse(left, type="l")
+        # show right
+        self.gen_eyebrowse(right, type="r")
+        self.send()
+
+    def send_polynomial_face(
+        self,
+        m1,
+        m2,
+        m_x_shift,
+        m_crop_left,
+        m_crop_right,
+        left,
+        l_x_shift,
+        l_crop_left,
+        l_crop_right,
+        right,
+        r_x_shift,
+        r_crop_left,
+        r_crop_right,
+    ):
+        """
+        Generates and displays face with the given polynomials.
+
+        :param m1: factor for each degree of the first polynomial mouth line
+        :type m1: list
+        :param m2: factor for each degree of the second polynomial mouth line
+        :type m2: list
+        :param m_x_shift: reduces x values and therefore shifts curve to the right (x = -x_shift + i)
+        :type m_x_shift: float
+        :param m_crop_left: black border in pixels on the left of the resulting mouth image
+        :type m_crop_left: int
+        :param m_crop_right: black border in pixels on the right of the resulting mouth image
+        :type m_crop_right: int
+        :param left: factor for each degree of the left eyebrow polynomial
+        :type left: list
+        :param l_x_shift: reduces x values and therefore shifts curve to the right (x = -x_shift + i)
+        :type l_x_shift: float
+        :param l_crop_left: black border in pixels on the left of the resulting eyebrow image
+        :type l_crop_left: int
+        :param l_crop_right: black border in pixels on the right of the resulting eyebrow image
+        :type l_crop_right: int
+        :param right: factor for each degree of the right eyebrow polynomial
+        :type right: list
+        :param r_x_shift: reduces x values and therefore shifts curve to the right (x = -x_shift + i)
+        :type r_x_shift: float
+        :param r_crop_left: black border in pixels on the left of the resulting eyebrow image
+        :type r_crop_left: int
+        :param r_crop_right: black border in pixels on the right of the resulting eyebrow image
+        :type r_crop_right: int
+        """
+        self._logger.debug("Displaying polynomial face")
+        # show mouth
+        self.generate_polynomial_mouth(m1, m2, m_x_shift, m_crop_left, m_crop_right)
+        # show left
+        self.generate_polynomial_eyebrow(left, l_x_shift, l_crop_left, l_crop_right)
+        # show right
         self.generate_polynomial_eyebrow(
-            *self.polynomial_presets[expression]["right"], left=False
+            right, r_x_shift, r_crop_left, r_crop_right, False
         )
         self.send()
 
     def morph_face_expression(self, target_preset, steps=3, delay=0.0):
+        """
+        Morphs displayed face to given preset. This requires the displayed face
+        expression to be fully polynomial or fully wavelet based.
+
+        Known presets: 'happiness', 'sadness', 'anger', 'disgust', 'surprise',
+                       'fear', 'neutral'
+
+        :param target_preset: name of the target expression ('happiness', 'sadness',
+                              'anger', 'disgust', 'surprise', 'fear', 'neutral')
+        :type target_preset: str
+        :param steps: number of transition steps
+        :type steps: int
+        :param delay: delay between transition steps
+        :type delay: float
+        """
         if self._basis_functions[0] == "polynomial":
             self.morph_polynomial_face(
                 *self.polynomial_presets[target_preset]["mouth"],
                 *self.polynomial_presets[target_preset]["left"],
                 *self.polynomial_presets[target_preset]["right"],
                 steps,
-                delay
+                delay,
             )
         else:
             self.morph_wavelet_face(
@@ -644,7 +758,7 @@ class faceExpression:
                 self.trained_presets[target_preset]["left"],
                 self.trained_presets[target_preset]["right"],
                 steps,
-                delay
+                delay,
             )
 
     def morph_polynomial_face(
@@ -665,6 +779,41 @@ class faceExpression:
         steps=3,
         delay=0.0,
     ):
+        """
+        Morphs displayed face into the given target face in the given number of
+        transition steps. This requires all face images to be polynomial based.
+
+        :param m1_target: factor for each degree of the first polynomial mouth line
+        :type m1_target: list
+        :param m2_target: factor for each degree of the second polynomial mouth line
+        :type m2_target: list
+        :param m_x_shift_target: reduces x values and therefore shifts curve to the right (x = -x_shift + i)
+        :type m_x_shift_target: float
+        :param m_crop_left_target: black border in pixels on the left of the resulting mouth image
+        :type m_crop_left_target: int
+        :param m_crop_right_target: black border in pixels on the right of the resulting mouth image
+        :type m_crop_right_target: int
+        :param left_target: factor for each degree of the left eyebrow polynomial
+        :type left_target: list
+        :param l_x_shift_target: reduces x values and therefore shifts curve to the right (x = -x_shift + i)
+        :type l_x_shift_target: float
+        :param l_crop_left_target: black border in pixels on the left of the resulting eyebrow image
+        :type l_crop_left_target: int
+        :param l_crop_right_target: black border in pixels on the right of the resulting eyebrow image
+        :type l_crop_right_target: int
+        :param right_target: factor for each degree of the right eyebrow polynomial
+        :type right_target: list
+        :param r_x_shift_target: reduces x values and therefore shifts curve to the right (x = -x_shift + i)
+        :type r_x_shift_target: float
+        :param r_crop_left_target: black border in pixels on the left of the resulting eyebrow image
+        :type r_crop_left_target: int
+        :param r_crop_right_target: black border in pixels on the right of the resulting eyebrow image
+        :type r_crop_right_target: int
+        :param steps: number of transition steps
+        :type steps: int
+        :param delay: delay between transition steps
+        :type delay: float
+        """
         # check if current face is polynomial based
         if self.is_morphable:
             self._logger.error("Current face expression does not support morphing")
@@ -718,52 +867,61 @@ class faceExpression:
         # show intermediate faces
         self._logger.debug("Displaying transition faces")
         for step in range(steps):
-            self.generate_polynomial_mouth(
+            self.send_polynomial_face(
                 m1[step],
                 m2[step],
                 m_x_shift[step],
                 int(m_crop_left[step]),
                 int(m_crop_right[step]),
-            )
-            self.generate_polynomial_eyebrow(
                 left[step],
                 l_x_shift[step],
                 int(l_crop_left[step]),
                 int(l_crop_right[step]),
-            )
-            self.generate_polynomial_eyebrow(
                 right[step],
                 r_x_shift[step],
                 int(r_crop_left[step]),
                 int(r_crop_right[step]),
-                False,
             )
-            self.send()
             sleep(delay)
         # show final face
         self._logger.debug("Displaying target face")
-        self.generate_polynomial_mouth(
+        self.send_polynomial_face(
             m1_target,
             m2_target,
             m_x_shift_target,
             m_crop_left_target,
             m_crop_right_target,
-        )
-        self.generate_polynomial_eyebrow(
-            left_target, l_x_shift_target, l_crop_left_target, l_crop_right_target
-        )
-        self.generate_polynomial_eyebrow(
+            left_target,
+            l_x_shift_target,
+            l_crop_left_target,
+            l_crop_right_target,
             right_target,
             r_x_shift_target,
             r_crop_left_target,
             r_crop_right_target,
-            False,
         )
-        self.send()
 
     def morph_wavelet_face(
         self, m1_target, m2_target, left_target, right_target, steps=3, delay=0.0
     ):
+        """
+        Morphs displayed face into the given target face in the given number of
+        transition steps. This requires all face images to be wavelet based.
+
+        :param m1_target: wavelet parameters for first mouth line (stretch_in_y_position,
+                          offset_y_position, stretch_in_x_position , offset_x_position)
+        :type m1_target: tuple(float, float, float, float)
+        :param m2_target: wavelet parameters for second mouth line
+        :type m2_target: tuple(float, float, float, float)
+        :param left_target: wavelet parameters for left eyebrow
+        :type left_target: tuple(float, float, float, float)
+        :param right_target: wavelet paramters for right eyebrow
+        :type right_target: tuple(float, float, float, float)
+        :param steps: number of transition steps
+        :type steps: int
+        :param delay: delay between transition steps
+        :type delay: float
+        """
         # check if current face is polynomial based
         if self.is_morphable:
             self._logger.error("Current face expression does not support morphing")
@@ -789,73 +947,23 @@ class faceExpression:
         self._logger.debug("Calculating mouth transitions")
         m1 = self._calculate_transition(mouth_start[0], m1_target)
         m2 = self._calculate_transition(mouth_start[1], m2_target)
-        # m_x_shift, m_crop_left, m_crop_right = zip(
-        #     *self._calculate_transition(
-        #         mouth_start[2:],
-        #         (m_x_shift_target, m_crop_left_target, m_crop_right_target),
-        #     )
-        # )
+
         # left
         self._logger.debug("Calculating left eyebrow transitions")
-        left = self._calculate_transition(
-            left_start, left_target
-        )  # FIXME add [0] if more parameters added
-        # l_x_shift, l_crop_left, l_crop_right = zip(
-        #     *self._calculate_transition(
-        #         left_start[1:],
-        #         (l_x_shift_target, l_crop_left_target, l_crop_right_target),
-        #     )
-        # )
+        left = self._calculate_transition(left_start, left_target)
+
         # right
         self._logger.debug("Calculating right eyebrow transitions")
-        right = self._calculate_transition(
-            right_start, right_target
-        )  # FIXME add [0] if more parameters added
-        # r_x_shift, r_crop_left, r_crop_right = zip(
-        #     *self._calculate_transition(
-        #         right_start[1:],
-        #         (r_x_shift_target, r_crop_left_target, r_crop_right_target),
-        #     )
-        # )
+        right = self._calculate_transition(right_start, right_target)
 
         # show intermediate faces
         self._logger.debug("Displaying transition faces")
         for step in range(steps):
-            self.gen_mouth(
-                m1[step],
-                m2[step],
-                # int(m_crop_left[step]),
-                # int(m_crop_right[step]),
-            )
-            self.gen_eyebrowse(
-                left[step],
-                # int(l_crop_left[step]),
-                # int(l_crop_right[step]),
-                type="l",
-            )
-            self.gen_eyebrowse(
-                right[step],
-                # int(r_crop_left[step]),
-                # int(r_crop_right[step]),
-                type="r",
-            )
-            self.send()
+            self.send_wavelet_face(m1[step], m2[step], left[step], right[step])
             sleep(delay)
         # show final face
         self._logger.debug("Displaying target face")
-        self.gen_mouth(
-            m1_target,
-            m2_target,
-            # m_crop_left_target,
-            # m_crop_right_target,
-        )
-        self.gen_eyebrowse(
-            left_target, type="l"
-        )  # l_crop_left_target, l_crop_right_target
-        self.gen_eyebrowse(
-            right_target, type="r"
-        )  # r_crop_left_target, r_crop_right_target
-        self.send()
+        self.send_wavelet_face(m1_target, m2_target, left_target, right_target)
 
     def _calculate_transition(self, start, target, steps=3, padding=False):
         """
