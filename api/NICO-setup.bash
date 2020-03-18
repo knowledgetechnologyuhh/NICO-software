@@ -142,12 +142,12 @@ cat <<END > activate.bash
 
 if [ ! -z $ROS_DISTRO ]; then
   source /opt/ros/${ROS_DISTRO}/setup.bash
+  source $(realpath $WORKDIR/devel/setup.bash)
+  if [ -f $BRIDGE_PATH ]; then
+    source $BRIDGE_PATH --extend
+  fi
 fi
 source ~/.$VIRTUALENVDIR/bin/activate
-source $(realpath $WORKDIR/devel/setup.bash)
-if [ -f $BRIDGE_PATH ]; then
-  source $BRIDGE_PATH --extend
-fi
 END
 
 cleanup
