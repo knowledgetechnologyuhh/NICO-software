@@ -365,20 +365,45 @@ class Motion:
 
     def setSimulationDeltatime(self, dt):
         """
-        Sets the timeframe which one simulation step represents. Only works
-        while the simulation is stopped and dt is set to custom in V-REP.
+        Sets the timeframe which one simulation step represents.
 
-        :param dt: timeframe of one simulation step
-        :type dt: int
+        Only works while the simulation is stopped and dt is set
+        to custom.
+
+
+        :param dt: timeframe of one simulation step in seconds
+        :type dt: float
         """
         if self._vrep:
-            self._vrepIO.call_remote_api(
-                "simxSetFloatingParameter",
-                remote_api.sim_floatparam_simulation_time_step,
-                dt,
-            )
+            if self._pyrep:
+                self._robot.set_simulation_timestep(dt)
+            else:
+                self._vrepIO.call_remote_api(
+                    "simxSetFloatingParameter",
+                    remote_api.sim_floatparam_simulation_time_step,
+                    dt,
+                )
         else:
-            self._logger.warning("nextSimulationStep() has no effect on a real robot")
+            self._logger.warning("Robot is not simulated.")
+
+    def getSimulationDeltatime(self):
+        """
+        Gets the timeframe which one simulation step represents.
+
+        :return: timeframe of one simulation step in seconds
+        :rtype: float
+        """
+        if self._vrep:
+            if self._pyrep:
+                return self._robot.get_simulation_timestep()
+            else:
+                return self._vrepIO.call_remote_api(
+                    "simxGetFloatingParameter",
+                    remote_api.sim_floatparam_simulation_time_step,
+                )
+        else:
+            self._logger.warning("Robot is not simulated.")
+            return 0.0
 
     def nextSimulationStep(self):
         """
