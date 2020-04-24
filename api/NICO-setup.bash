@@ -20,6 +20,8 @@ cd
 
 cleanup() {
   echo "Cleanup"
+  unset PYTHON
+  unset VIRTUALENVDIR
   rm -rf /tmp/pypot
   cd "$CALLDIR"
 }

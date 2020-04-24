@@ -43,6 +43,7 @@ class StepListener:
         Registers an weak-referenced object as a listener. The object needs to
         have a step() method, which is called each time a simulation step is
         executed.
+
         :param obj_wref: weakref to register as listener. Needs to have a step
                          method.
         :type obj_wref: weakref.ref
@@ -61,6 +62,7 @@ class StepListener:
     def unregister(obj_wref):
         """
         Removes a registered object from listeners
+
         :param obj_wref: weakref to remove as listener
         :type obj_wref: weakref.ref
         """
