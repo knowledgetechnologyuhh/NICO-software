@@ -6,7 +6,7 @@ The **nicoface** package contains classes to control the facial expressions of t
 faceExpression
 ##############
 
-The faceExpression class allows manipulation of the facial expressions of the NICO robot via wavelets and preset expressions.
+The faceExpression class allows manipulation and generation of the facial expressions of the NICO robot
 
 .. automodule:: nicoface.FaceExpression
     :members:
@@ -14,13 +14,27 @@ The faceExpression class allows manipulation of the facial expressions of the NI
     :show-inheritance:
     :private-members:
 
-**Update 4/Dec/2019: contribution by Seed Robotics (www.seedorobotics.com)**
+CapacitiveSensors
+#################
 
-Extended the Arduino skecthes of the board contolling the head LED matrixes, to support reading of capacitive channels installed in the NICo head.
+The CapacitiveSensors class handles communication with the capacitive sensors inside the head of the NICO.
 
-Extended the _faceExpression_ class with accompanying methods:
+.. automodule:: nicoface.CapacitiveSensors
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :private-members:
 
-* getCapacitiveReadings() - returns a list with the capacitive readings. Use the /len()/ python operator to determine the size of the list. An empty object is returned if there is a communication failure or the feature is not suppported on the Arduino skecth running in the head.
-* recallibrateCapacitivePads() - re-callibrates the zero/baseline reading on the capacitivePads. By default pads are callibrated on power up of the head board. Use this function only if you find significant deviations during operation.
+Helper Classes
+##############
 
-For further information refer to the Arduino sketches.
+SerialConnectionManager
+=======================
+
+The SerialConnectionManager class allows shared access to the same serial device
+
+.. automodule:: nicoface.SerialConnectionManager
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :private-members:

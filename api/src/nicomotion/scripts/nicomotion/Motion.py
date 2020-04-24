@@ -453,8 +453,7 @@ class Motion:
 
         .. note:: You can add an extra keyword to specify if you want to use
                   the streaming or sending mode. The oneshot_wait mode is used
-                  by default (see `here <
-                  http://www.coppeliarobotics.com/helpFiles/en/remoteApiConstants.htm#operationModes>`_
+                  by default (see `here <http://www.coppeliarobotics.com/helpFiles/en/remoteApiConstants.htm#operationModes>`_
                   for details about possible modes).
 
         .. warning:: You should not pass the clientId and the operationMode as
