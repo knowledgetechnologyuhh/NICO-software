@@ -4,9 +4,20 @@ from SerialConnectionManager import SerialDevice
 
 
 class CapacitiveSensors(object):
-    """docstring for CapacitiveSensors."""
+    """
+    CapacitiveSensors handles communication with the capacitive sensors
+    inside the head.
+    """
 
     def __init__(self, devicename=None):
+        """
+        Connect to serial device with the given name
+        (autodetected if left out).
+
+        :param devicename: Name of the serial device
+        :type devicename: str
+        """
+
         self._logger = logging.getLogger(__name__)
 
         baudrate = 115200
@@ -22,6 +33,11 @@ class CapacitiveSensors(object):
         """
         Automatically detects and establishes a connection with the
         FaceExpression Arduino
+
+        :param baudrate: Baud rate of the connection
+        :type baudrate: int
+        :param timeout: Read timeout value
+        :type timeout: float
         """
         devices = SerialDevice.get_devices_by_manufacturer("duino")
         for device in devices:
@@ -49,6 +65,7 @@ class CapacitiveSensors(object):
         exit(1)
 
     def getCapacitiveReadings(self):
+
         self._logger.info("Querying capacitive readings using command 'cprr'")
         # clear all buffered data to ensure we only get the data for our command
         self.ser.flushInput()
@@ -78,16 +95,14 @@ class CapacitiveSensors(object):
                 accum_value += curr_value * (
                     256 ** c
                 )  # note the '**' is the "power" operator (same as math.pow)
-                # print("b={}, c={}, barray_ix={}, barray value={}, temp_value={}".format(b, c, 2 + b * data_size + c, curr_value, accum_value))
             out_readings.append(accum_value)
-
-        # we are not verifying the checksum in this implementation but we should.
-        # for now, because we communicate over USB, the usb stack should ensure data integrity
-        # nevertheless the face controller sends a checksum in the last byte that can/should be verified to validate data
 
         return out_readings
 
     def recallibrateCapacitivePads(self):
+        """
+        Recalibrates the capacitive pads
+        """
         self._logger.info("Reacallibrating capacitive pads using command 'capca'")
         # clear all buffered data to ensure we only get the data for our command
         self.ser.flushInput()
@@ -100,6 +115,15 @@ class CapacitiveSensors(object):
             self._logger.info("Re callibration result: {}".format(response))
 
     def validResponse(self, barray_readings):
+        """
+        Checks validity of received response
+
+        :param barray_readings: response to verify
+        :type barray_readings: bytearray
+
+        :return: validity of the response
+        :rtype: bool
+        """
         if len(barray_readings) < 3:
             self._logger.warning(
                 "Invalid response to Capacitive Query. Less than 3 bytes"

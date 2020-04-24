@@ -20,6 +20,8 @@ cd
 
 cleanup() {
   echo "Cleanup"
+  unset PYTHON
+  unset VIRTUALENVDIR
   rm -rf /tmp/pypot
   cd "$CALLDIR"
 }
@@ -56,7 +58,7 @@ if [ $ONLINE ] && [ $VIRTUAL_ENV == ~/.$VIRTUALENVDIR ]; then
   git clone https://git.informatik.uni-hamburg.de/wtm-robots-and-equipment/pypot.git
   if [ ! $? -eq 0 ]; then
     echo -e "\e[31mERROR: Could not clone pypot\e[0m"
-    cd $CALLDIR
+    cleanup
     return 1 2> /dev/null
   fi
   cd pypot

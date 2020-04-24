@@ -100,11 +100,19 @@ class EmotionRecognition:
         """
         Initialises the EmotionRecognition
 
-        :param device: Target video capture unit
-        :type device: str
+        :param device: Video capture unit
+        :type device: nicovision.VideoDevice
+        :param robot: Motion object for face tracking
+        :type robot: nicomotion.Motion
+        :param face: FaceExpression object to mirror emotions
+        :type face: nicoface.FaceExpression
         :param faceDetectionDelta: Number of frames until face detection is
                                    refreshed
         :type faceDetectionDelta: int
+        :param voiceEnabled: enables voice feedback based on detected emotions
+        :type voiceEnabled: bool
+        :param german: switch audio from english to german
+        :type german: bool
         """
         self._logger = logging.getLogger(__name__)
         self._finalImageSize = (
@@ -164,9 +172,17 @@ class EmotionRecognition:
 
         :param showGUI: Whether or not the GUI should be displayed
         :type showGUI: bool
+        :param faceTracking: Lets the robot follow the detected face with its
+                             head (requires motion)
+        :type faceTracking: bool
         :param mirrorEmotion: Whether or not the robot should mirror the
                               detected emotion
         :type mirrorEmotion: bool
+        :param trackingDelta: Frames before updating face tracking
+        :type trackingDelta: int
+        :param mirrorEmotionDelta: Consecutive frames with the same emotion
+                                   required to update mirrored emotion
+        :type mirrorEmotionDelta: int
         """
         if self._running:
             self._logger.warning(
@@ -273,6 +289,15 @@ class EmotionRecognition:
         return None
 
     def say(self, sen, delay=5):
+        """
+        Triggers tts module to play the given sentence and updates internal
+        delay until a new voice line is played
+
+        :param sen: the next sentence
+        :type sen: str
+        :param delay: delay in seconds until another voice line will be played
+        :type delay: float
+        """
         if self._german:
             duration = self._tts.say(
                 sen, language="de", blocking=False, pitch=0.2, speed=2 ** -0.2
@@ -282,12 +307,24 @@ class EmotionRecognition:
         self._tts_end = time.time() + duration + delay
 
     def voice_reaction(self, emotion):
+        """
+        Plays random voice feedback for the given emotion
+
+        :param emotion: detected emotion
+        :type emotion: str
+        """
         language = "german" if self._german else "english"
         if emotion in self._voice_reactions[language]:
             sentences = self._voice_reactions[language][emotion]
             self.say(random.choice(sentences))
 
     def follow_face_with_head(self, facePoints):
+        """
+        Moves head towards center of the given facepoints
+
+        :param facePoints: dict containing "center" point of the face
+        :type facePoints: dict
+        """
         if self._robot is not None:
             if self._trackingCounter == self._trackingDelta:
                 # (width - center_x)/width * FOV - FOV/2
@@ -306,17 +343,33 @@ class EmotionRecognition:
             )
 
     def show_emotion(self, emotion):
+        """
+        Updates emotion and plays voice reaction if called enough consecutive
+        times with the same emotion.
+
+        :param emotion: detected emotion
+        :type emotion: str
+        """
         if self.last_exp != emotion:
             self._same_emotion_counter = 0
             self.last_exp = emotion
         else:
             self._same_emotion_counter += 1
             if self._same_emotion_counter > self._mirrorEmotionDelta:
-                self._facialExpression.sendFaceExpression(self.last_exp)
+                self._facialExpression.sendFaceExpression(emotion)
                 if self._voiceEnabled and time.time() > self._tts_end:
                     self.voice_reaction(emotion)
 
     def update_GUI(self, frame, facePoints):
+        """
+        Updates gui with the detected face and corresponding emotion
+
+        :param frame: Current frame from the camera
+        :type frame: cv2.image
+        :param facePoints: dict containing "top", "left", "bottom", "right"
+                           points of the detected face
+        :type facePoints: dict
+        """
         frame = self._GUIController.createDetectedFacGUI(
             frame,
             facePoints,
@@ -338,6 +391,12 @@ class EmotionRecognition:
         return frame
 
     def _callback(self, rval, frame):
+        """
+        Callback for the video device.
+
+        :param rval: rval
+        :param frame: frame
+        """
         if frame is not None:
             facePoints, face = self._imageProcessing.detectFace(frame)
 

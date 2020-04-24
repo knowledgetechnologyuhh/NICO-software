@@ -1,14 +1,9 @@
 #!/bin/bash
-export PYTHON=/usr/bin/python3
-export VIRTUALENVDIR=NICO-python3
+: ${PYTHON="/usr/bin/python3"}
+: ${VIRTUALENVDIR="NICO-python3"}
 CALLDIR=$(pwd)
 WORKDIR="`dirname "$BASH_SOURCE"`"
 INSTALL_PYREP=1
-
-cleanup_vars() {
-  unset PYTHON
-  unset VIRTUALENVDIR
-}
 
 : ${IGNORE_MISSING_VREP=0}
 # check if VREP_ROOT is set properly
@@ -34,7 +29,6 @@ fi
 
 source $WORKDIR/NICO-setup.bash
 if ! [ $? -eq 0 ]; then
-  cleanup_vars
   return 1 2> /dev/null
 fi
 
@@ -56,5 +50,4 @@ else
   echo -e "\e[33mWARNING: Custom cv_bridge not found - cv_bridge won't work under python 3\e[0m"
 fi
 
-cleanup_vars
 cd "$CALLDIR"

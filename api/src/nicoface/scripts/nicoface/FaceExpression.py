@@ -240,7 +240,7 @@ class faceExpression:
         'happiness','sadness','anger','disgust','surprise','fear','neutral','clear'
 
         :param expression: name of the desired facial expression (happiness,
-        sadness,anger,disgust,surprise,fear,neutral,clear)
+                           sadness,anger,disgust,surprise,fear,neutral,clear)
         :type expression: str
         """
         self._logger.info("Showing expression: '%s'", expression)
@@ -258,7 +258,7 @@ class faceExpression:
         These consist of: 'anger', 'happiness', 'neutral', 'sadness', 'surprise'
 
         :param expression: name of the desired facial expression ('anger',
-        'happiness', 'neutral', 'sadness', 'surprise')
+                           'happiness', 'neutral', 'sadness', 'surprise')
         :type expression: str
         """
 
@@ -400,6 +400,7 @@ class faceExpression:
         """
         Generates a ricker wavelet for given parameters and draws them
         into the given PIL image.
+
         :param length: timeframe
         :type length: float
         :param dt: samplerate
@@ -441,13 +442,13 @@ class faceExpression:
         Generation of the mouth. One or two lines can be generated.
 
         :param ml1: first line of the mouth (stretch_in_y_position,
-        offset_y_position, stretch_in_x_position , offset_x_position)
+                    offset_y_position, stretch_in_x_position , offset_x_position)
         :type ml1: tuple(float,float,float,float)
         :param ml2: second line of the mouth (stretch_in_y_position,
-        offset_y_position, stretch_in_x_position , offset_x_position)
+                    offset_y_position, stretch_in_x_position , offset_x_position)
         :type ml2: tuple
         :param file_name: name of the file to save the resulting plot to
-        (if desired)
+                          (if desired)
         :type file_name: str
         :return: PIL image of the mouth
         :rtype: PIL.Image
@@ -471,10 +472,10 @@ class faceExpression:
         setting type to "l" or "r" for left or right eyebrow.
 
         :param ml1: line of the eyebrow (stretch_in_y_position,
-        offset_y_position, stretch_in_x_position , offset_x_position)
+                    offset_y_position, stretch_in_x_position , offset_x_position)
         :type ml1: tuple(float,float,float,float)
         :param file_name: name of the file to save the resulting plot to
-        (if desired)
+                          (if desired)
         :type file_name: str
         :param type: specifies which eyebrow to generate ("l", "r")
         :type type: str
@@ -639,7 +640,7 @@ class faceExpression:
         versions of the regular face expressions.
 
         :param expression: name of the desired facial expression (happiness,
-        sadness,anger,disgust,surprise,fear,neutral)
+                           sadness,anger,disgust,surprise,fear,neutral)
         :type expression: str
         """
         self.send_polynomial_face(
