@@ -4,7 +4,6 @@ import nicomsg.msg as msg
 import rospy
 import threading
 from nicoface.FaceExpression import faceExpression
-from nicoface.CapacitiveSensors import CapacitiveSensors
 
 
 class NicoRosFaceExpression:
@@ -13,7 +12,7 @@ class NicoRosFaceExpression:
     :class:`nicoface.FaceExpression` to ROS
     """
 
-    def __init__(self, devicename=None, simulation=False, sensor_rate=10):
+    def __init__(self, devicename=None, simulation=False):
         """
         NicoRosFaceExpression provides :class:`nicoface.FaceExpression`
         functions over ROS
@@ -21,24 +20,14 @@ class NicoRosFaceExpression:
         :param devicename: name of the device on the serial
                            (e.g. '/dev/ttyACM0', autodetected if None)
         :type devicename: str
-        :param sensor_rate: publish rate of the capacitive readings
-        :type devicename: int
+        :param simulation: whether to use simulated or real face
+        :type simulation: bool
         """
         # init face
         self.face = faceExpression(devicename, simulation)
-        self.cap_sensor = CapacitiveSensors(devicename)
 
         # init ROS
         rospy.init_node("faceexpression", anonymous=True)
-
-        # setup publisher for CapacitiveSensors
-        if self.cap_sensor.getCapacitiveReadings() and not simulation:
-            self.cap_thread = threading.Thread(
-                target=self._capacitive_publisher, args=(sensor_rate,)
-            )
-            self.cap_thread.start()
-        else:
-            rospy.loginfo("No capacitive pads detected, skipping publisher")
 
         # setup subscriber
         rospy.Subscriber(
@@ -90,16 +79,6 @@ class NicoRosFaceExpression:
         )
 
         rospy.spin()
-
-    def _capacitive_publisher(self, rate):
-        pub = rospy.Publisher(
-            "nico/faceExpression/capacitive_readings", msg.ffff, queue_size=1
-        )
-        publish_rate = rospy.Rate(rate)  # 10hz
-        while not rospy.is_shutdown():
-            sensor_readings = self.cap_sensor.getCapacitiveReadings()
-            pub.publish(sensor_readings)
-            publish_rate.sleep()
 
     def _ROSPY_sendMouth(self, message):
         """
@@ -285,7 +264,12 @@ if __name__ == "__main__":
             + "(e.g. /dev/ttyACM0), autodetected if not set"
         ),
     )
+    parser.add_argument(
+        "-s",
+        action="store_true",
+        help="Enables simulated mode, where faces are shown as image instead",
+    )
 
     args = parser.parse_args()
 
-    NicoRosFaceExpression(args.device)
+    NicoRosFaceExpression(args.device, args.s)
