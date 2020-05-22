@@ -60,6 +60,10 @@ add_message_files(
    sffff.msg
    ffff.msg
    affffa.msg
+   bitmap_face.msg
+   polynomial_eyebrow.msg
+   polynomial_face.msg
+   polynomial_mouth.msg
  )
 
 ## Generate services in the 'srv' folder
