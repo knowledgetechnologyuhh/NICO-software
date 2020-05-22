@@ -145,10 +145,10 @@ class faceExpression:
                 # Establish the connection on a specific port
                 self.ser = SerialDevice(devicename, baudrate, timeout=timeout)
                 self.sendFaceExpression("neutral")
-            self.is_morphable = True
+            self.is_morphable = False
         else:
             self.ser = None
-            self.is_morphable = False
+            self.is_morphable = True
             self.send()
 
     def _scan_ports(self, baudrate, timeout):
@@ -250,7 +250,7 @@ class faceExpression:
             self._send(expression, "Showing {}\r\n".format(expression))
         else:
             self._logger.warning("Unknown expression '%s'", expression)
-        self.is_morphable = True
+        self.is_morphable = False
 
     def sendTrainedFaceExpression(self, expression):
         """
@@ -329,7 +329,7 @@ class faceExpression:
                 sleep(0.01)
             if address == "all" or address == "r":
                 self.send_PIL(self.right, "r")
-        self.is_morphable = False
+        self.is_morphable = True
 
     def show_PIL(self, img, scale=25):
         """
@@ -816,7 +816,7 @@ class faceExpression:
         :type delay: float
         """
         # check if current face is polynomial based
-        if self.is_morphable:
+        if not self.is_morphable:
             self._logger.error("Current face expression does not support morphing")
             raise ValueError("Current face expression does not support morphing")
         if "bitmap" in self._basis_functions:
@@ -924,7 +924,7 @@ class faceExpression:
         :type delay: float
         """
         # check if current face is polynomial based
-        if self.is_morphable:
+        if not self.is_morphable:
             self._logger.error("Current face expression does not support morphing")
             raise ValueError("Current face expression does not support morphing")
         if "bitmap" in self._basis_functions:
