@@ -1,7 +1,7 @@
 import logging
+import posix_ipc
 import serial
 import serial.tools.list_ports
-import threading
 import time
 
 
@@ -70,7 +70,9 @@ class SerialDevice(object):
             self._serial_connections[device] = [
                 serial.Serial(device, baudrate, timeout=timeout),
                 {str(self)},
-                threading.Semaphore(),
+                posix_ipc.Semaphore(
+                    device.split("/")[-1], posix_ipc.O_CREAT, initial_value=1
+                ),
             ]
             time.sleep(2)  # delay to wait for arduino to reset
 
