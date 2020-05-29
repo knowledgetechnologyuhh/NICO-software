@@ -32,22 +32,24 @@ if ! [ $? -eq 0 ]; then
   return 1 2> /dev/null
 fi
 
-if [ -x "$(command -v catkin)" ] && ! [ -f $WORKDIR/../cv_bridge_build_ws/devel/setup.bash ]; then
-  echo "Building cv_bridge for python 3"
-  mkdir $WORKDIR/../cv_bridge_build_ws
-  cd $WORKDIR/../cv_bridge_build_ws
-  mkdir src
-  catkin config -DPYTHON_EXECUTABLE=~/.$VIRTUALENVDIR/bin/python3 -DPYTHON_INCLUDE_DIR=/usr/include/python3.6m -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.6m.so
-  catkin config --install
-  cd src
-  git clone -b melodic https://github.com/ros-perception/vision_opencv.git
-  cd $WORKDIR/../cv_bridge_build_ws
-  catkin build cv_bridge
-fi
-if [ -f $WORKDIR/../cv_bridge_build_ws/devel/setup.bash ]; then
-  source $WORKDIR/../cv_bridge_build_ws/devel/setup.bash --extend
-else
-  echo -e "\e[33mWARNING: Custom cv_bridge not found - cv_bridge won't work under python 3\e[0m"
+if [ ! -z $ROS_DISTRO ] && [ $ROS_DISTRO != noetic ]; then
+  if [ -x "$(command -v catkin)" ] && ! [ -f $WORKDIR/../cv_bridge_build_ws/devel/setup.bash ]; then
+    echo "Building cv_bridge for python 3"
+    mkdir $WORKDIR/../cv_bridge_build_ws
+    cd $WORKDIR/../cv_bridge_build_ws
+    mkdir src
+    catkin config -DPYTHON_EXECUTABLE=~/.$VIRTUALENVDIR/bin/python3 -DPYTHON_INCLUDE_DIR=/usr/include/python3.6m -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.6m.so
+    catkin config --install
+    cd src
+    git clone -b melodic https://github.com/ros-perception/vision_opencv.git
+    cd $WORKDIR/../cv_bridge_build_ws
+    catkin build cv_bridge
+  fi
+  if [ -f $WORKDIR/../cv_bridge_build_ws/devel/setup.bash ]; then
+    source $WORKDIR/../cv_bridge_build_ws/devel/setup.bash --extend
+  else
+    echo -e "\e[33mWARNING: Custom cv_bridge not found - cv_bridge won't work under python 3\e[0m"
+  fi
 fi
 
 cd "$CALLDIR"
