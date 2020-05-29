@@ -14,6 +14,6 @@ setup(
     description="NICO api package for face expressions",
     author="Connor Gaede",
     author_email="4gaede@informatik.uni-hamburg.de",
-    install_requires=["matplotlib", "pillow", "numpy"],
+    install_requires=["matplotlib", "numpy", "pillow", "posix_ipc"],
     **extra
 )

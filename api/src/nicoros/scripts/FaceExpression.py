@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
 import nicomsg.msg as msg
+import numpy as np
 import rospy
-import threading
+
 from nicoface.FaceExpression import faceExpression
 
 
@@ -248,8 +249,16 @@ class NicoRosFaceExpression:
         :param message: ROS message
         :type message: nicomsg.msg.bitmap_face
         """
-        # FIXME might have to reshape arrays
-        self.face.send_bitmap_face(message.brow_left, message.brow_right, message.mouth)
+        mouth = np.frombuffer(message.mouth, dtype="uint8").reshape(
+            message.mouth_shape_0, message.mouth_shape_1
+        )
+        left = np.frombuffer(message.brow_left, dtype="uint8").reshape(
+            message.brow_shape_0, message.brow_shape_1
+        )
+        right = np.frombuffer(message.brow_right, dtype="uint8").reshape(
+            message.brow_shape_0, message.brow_shape_1
+        )
+        self.face.send_bitmap_face(left, right, mouth)
 
 
 if __name__ == "__main__":

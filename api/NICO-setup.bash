@@ -118,16 +118,15 @@ fi
 #ROS + catkin
 echo "Building ROS packages"
 cd $WORKDIR
-if [ -e /opt/ros/indigo/setup.bash ]; then
-  ROS_VERSION="indigo"
-  source /opt/ros/${ROS_VERSION}/setup.bash
-elif [ -e /opt/ros/kinetic/setup.bash ]; then
-  ROS_VERSION="kinetic"
-  source /opt/ros/${ROS_VERSION}/setup.bash
-elif [ -e /opt/ros/melodic/setup.bash ]; then
-  ROS_VERSION="melodic"
-  source /opt/ros/${ROS_VERSION}/setup.bash
-fi
+
+for DISTRO in indigo kinetic melodic noetic
+do
+  if [ -e /opt/ros/${DISTRO}/setup.bash ]; then
+    source /opt/ros/${DISTRO}/setup.bash
+    break
+  fi
+done
+
 if [ -x "$(command -v catkin_make)" ]; then
   pip install rospkg catkin_pkg empy
   catkin_make -DPYTHON_EXECUTABLE=~/.$VIRTUALENVDIR/bin/python
