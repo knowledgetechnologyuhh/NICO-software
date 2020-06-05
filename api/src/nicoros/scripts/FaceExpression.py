@@ -3,6 +3,13 @@
 import nicomsg.msg as msg
 import numpy as np
 import rospy
+import logging
+from threading import Semaphore
+
+try:
+    import queue
+except ImportError:
+    import Queue as queue
 
 from nicoface.FaceExpression import faceExpression
 
@@ -25,7 +32,13 @@ class NicoRosFaceExpression:
         :type simulation: bool
         """
         # init face
+        logging.basicConfig(level=logging.DEBUG)
         self.face = faceExpression(devicename, simulation)
+
+        # thread managament
+        self.mutex = Semaphore()
+        self.pause = Semaphore(0)
+        self.queue = queue.Queue(maxsize=1)
 
         # init ROS
         rospy.init_node("faceexpression", anonymous=True)
@@ -36,6 +49,16 @@ class NicoRosFaceExpression:
         )
         rospy.Subscriber(
             "nico/faceExpression/sendEyebrow", msg.sffff, self._ROSPY_sendEyebrow
+        )
+        rospy.Subscriber(
+            "nico/faceExpression/send_wavelet_face",
+            msg.wavelet_face,
+            self._ROSPY_wavelet_custom,
+        )
+        rospy.Subscriber(
+            "nico/faceExpression/morph_wavelet_face",
+            msg.wavelet_face,
+            self._ROSPY_wavelet_morph,
         )
         rospy.Subscriber(
             "nico/faceExpression/sendFaceExpression",
@@ -79,7 +102,12 @@ class NicoRosFaceExpression:
             "nico/faceExpression/send_bitmap", msg.bitmap_face, self._ROSPY_bitmap,
         )
 
-        rospy.spin()
+        # execute callbacks in main thread
+        while not rospy.is_shutdown():
+            if not self.queue.empty():
+                func, args = self.queue.get_nowait()
+                func(*args)
+                self.pause.release()
 
     def _ROSPY_sendMouth(self, message):
         """
@@ -88,6 +116,7 @@ class NicoRosFaceExpression:
         :param message: ROS message
         :type message: nicomsg.msg.affffa
         """
+        self.mutex.acquire()
         if len(message.param1) > 1:
             self.face.gen_mouth(
                 (
@@ -112,7 +141,9 @@ class NicoRosFaceExpression:
                     message.param1[0].param4,
                 )
             )
-        self.face.send("m")
+        self.queue.put((self.face.send, ("m",)))
+        self.pause.acquire()
+        self.mutex.release()
 
     def _ROSPY_sendEyebrow(self, message):
         """
@@ -121,17 +152,14 @@ class NicoRosFaceExpression:
         :param message: ROS message
         :type message: nicomsg.msg.sffff
         """
-        if message.param1 == "l":
-            self.face.gen_eyebrowse(
-                (message.param2, message.param3, message.param4, message.param5),
-                type=message.param1,
-            )
-        else:
-            self.face.gen_eyebrowse(
-                (message.param2, message.param3, message.param4, message.param5),
-                type=message.param1,
-            )
-        self.face.send(message.param1)
+        self.mutex.acquire()
+        self.face.gen_eyebrowse(
+            (message.param2, message.param3, message.param4, message.param5),
+            type=message.param1,
+        )
+        self.queue.put((self.face.send, (message.param1,)))
+        self.pause.acquire()
+        self.mutex.release()
 
     def _ROSPY_sendFaceExpression(self, message):
         """
@@ -140,7 +168,10 @@ class NicoRosFaceExpression:
         :param message: ROS message
         :type message: nicomsg.msg.s
         """
-        self.face.sendFaceExpression(message.param1)
+        self.mutex.acquire()
+        self.queue.put((self.face.sendFaceExpression, (message.param1,)))
+        self.pause.acquire()
+        self.mutex.release()
 
     def _ROSPY_trained_expression(self, message):
         """
@@ -149,7 +180,10 @@ class NicoRosFaceExpression:
         :param message: ROS message
         :type message: nicomsg.msg.s
         """
-        self.face.sendTrainedFaceExpression(message.param1)
+        self.mutex.acquire()
+        self.queue.put((self.face.sendTrainedFaceExpression, (message.param1,)))
+        self.pause.acquire()
+        self.mutex.release()
 
     def _ROSPY_morph(self, message):
         """
@@ -158,8 +192,11 @@ class NicoRosFaceExpression:
         :param message: ROS message
         :type message: nicomsg.msg.s
         """
+        self.mutex.acquire()
         # TODO other parameters?
-        self.face.morph_face_expression(message.param1)
+        self.queue.put((self.face.morph_face_expression, (message.param1,)))
+        self.pause.acquire()
+        self.mutex.release()
 
     def _ROSPY_polynomial_preset(self, message):
         """
@@ -168,7 +205,10 @@ class NicoRosFaceExpression:
         :param message: ROS message
         :type message: nicomsg.msg.s
         """
-        self.face.send_morphable_face_expression(message.param1)
+        self.mutex.acquire()
+        self.queue.put((self.face.send_morphable_face_expression, (message.param1,)))
+        self.pause.acquire()
+        self.mutex.release()
 
     def _ROSPY_polynomial_mouth(self, message):
         """
@@ -177,7 +217,17 @@ class NicoRosFaceExpression:
         :param message: ROS message
         :type message: nicomsg.msg.polynomial_mouth
         """
-        self.face.generate_polynomial_mouth(**message)  # TODO Test if that works
+        self.mutex.acquire()
+        self.face.generate_polynomial_mouth(
+            message.degs1,
+            message.degs2,
+            message.x_shift,
+            message.crop_left,
+            message.crop_right,
+        )
+        self.queue.put((self.face.send, ()))
+        self.pause.acquire()
+        self.mutex.release()
 
     def _ROSPY_polynomial_eyebrow(self, message):
         """
@@ -188,7 +238,17 @@ class NicoRosFaceExpression:
             )ge
         :type message: nicomsg.msg.polynomial_eyebrow
         """
-        self.face.generate_polynomial_eyebrow(**message)  # TODO Test if that works
+        self.mutex.acquire()
+        self.face.generate_polynomial_eyebrow(
+            message.degs,
+            message.x_shift,
+            message.crop_left,
+            message.crop_right,
+            message.left,
+        )
+        self.queue.put((self.face.send, ()))
+        self.pause.acquire()
+        self.mutex.release()
 
     def _ROSPY_polynomial_custom(self, message):
         """
@@ -200,21 +260,29 @@ class NicoRosFaceExpression:
         mouth = message.mouth
         left = message.brow_left
         right = message.brow_right
-        self.face.send_polynomial_face(
-            mouth.degs1,
-            mouth.degs2,
-            mouth.x_shift,
-            mouth.crop_left,
-            mouth.crop_right,
-            left.degs,
-            left.x_shift,
-            left.crop_left,
-            left.crop_right,
-            right.degs,
-            right.x_shift,
-            right.crop_left,
-            right.crop_right,
+        self.mutex.acquire()
+        self.queue.put(
+            (
+                self.face.send_polynomial_face,
+                (
+                    mouth.degs1,
+                    mouth.degs2,
+                    mouth.x_shift,
+                    mouth.crop_left,
+                    mouth.crop_right,
+                    left.degs,
+                    left.x_shift,
+                    left.crop_left,
+                    left.crop_right,
+                    right.degs,
+                    right.x_shift,
+                    right.crop_left,
+                    right.crop_right,
+                ),
+            )
         )
+        self.pause.acquire()
+        self.mutex.release()
 
     def _ROSPY_polynomial_morph(self, message):
         """
@@ -226,21 +294,99 @@ class NicoRosFaceExpression:
         mouth = message.mouth
         left = message.brow_left
         right = message.brow_right
-        self.face.morph_polynomial_face(
-            mouth.degs1,
-            mouth.degs2,
-            mouth.x_shift,
-            mouth.crop_left,
-            mouth.crop_right,
-            left.degs,
-            left.x_shift,
-            left.crop_left,
-            left.crop_right,
-            right.degs,
-            right.x_shift,
-            right.crop_left,
-            right.crop_right,
+        self.mutex.acquire()
+        self.queue.put(
+            (
+                self.face.morph_polynomial_face,
+                (
+                    mouth.degs1,
+                    mouth.degs2,
+                    mouth.x_shift,
+                    mouth.crop_left,
+                    mouth.crop_right,
+                    left.degs,
+                    left.x_shift,
+                    left.crop_left,
+                    left.crop_right,
+                    right.degs,
+                    right.x_shift,
+                    right.crop_left,
+                    right.crop_right,
+                ),
+            )
         )
+        self.pause.acquire()
+        self.mutex.release()
+
+    def _ROSPY_wavelet_custom(self, message):
+        """
+        Callback handle for :meth:`nicoface.FaceExpression.send_wavelet_face`
+
+        :param message: ROS message
+        :type message: nicomsg.msg.wavelet_face
+        """
+        mouth = message.mouth
+        left = message.brow_left
+        right = message.brow_right
+        self.mutex.acquire()
+        self.queue.put(
+            (
+                self.face.send_wavelet_face,
+                (
+                    (
+                        mouth.param1[0].param1,
+                        mouth.param1[0].param2,
+                        mouth.param1[0].param3,
+                        mouth.param1[0].param4,
+                    ),
+                    (
+                        mouth.param1[1].param1,
+                        mouth.param1[1].param2,
+                        mouth.param1[1].param3,
+                        mouth.param1[1].param4,
+                    ),
+                    (left.param1, left.param2, left.param3, left.param4),
+                    (right.param1, right.param2, right.param3, right.param4),
+                ),
+            )
+        )
+        self.pause.acquire()
+        self.mutex.release()
+
+    def _ROSPY_wavelet_morph(self, message):
+        """
+        Callback handle for :meth:`nicoface.FaceExpression.morph_wavelet_face`
+
+        :param message: ROS message
+        :type message: nicomsg.msg.wavelet_face
+        """
+        mouth = message.mouth
+        left = message.brow_left
+        right = message.brow_right
+        self.mutex.acquire()
+        self.queue.put(
+            (
+                self.face.morph_wavelet_face,
+                (
+                    (
+                        mouth.param1[0].param1,
+                        mouth.param1[0].param2,
+                        mouth.param1[0].param3,
+                        mouth.param1[0].param4,
+                    ),
+                    (
+                        mouth.param1[1].param1,
+                        mouth.param1[1].param2,
+                        mouth.param1[1].param3,
+                        mouth.param1[1].param4,
+                    ),
+                    (left.param1, left.param2, left.param3, left.param4),
+                    (right.param1, right.param2, right.param3, right.param4),
+                ),
+            )
+        )
+        self.pause.acquire()
+        self.mutex.release()
 
     def _ROSPY_bitmap(self, message):
         """
@@ -258,7 +404,10 @@ class NicoRosFaceExpression:
         right = np.frombuffer(message.brow_right, dtype="uint8").reshape(
             message.brow_shape_0, message.brow_shape_1
         )
-        self.face.send_bitmap_face(left, right, mouth)
+        self.mutex.acquire()
+        self.queue.put((self.face.send_bitmap_face, (left, right, mouth)))
+        self.pause.acquire()
+        self.mutex.release()
 
 
 if __name__ == "__main__":

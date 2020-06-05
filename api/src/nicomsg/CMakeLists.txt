@@ -64,6 +64,7 @@ add_message_files(
    polynomial_eyebrow.msg
    polynomial_face.msg
    polynomial_mouth.msg
+   wavelet_face.msg
  )
 
 ## Generate services in the 'srv' folder
