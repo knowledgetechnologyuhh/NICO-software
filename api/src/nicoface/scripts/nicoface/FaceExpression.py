@@ -243,6 +243,13 @@ class faceExpression:
                            sadness,anger,disgust,surprise,fear,neutral,clear)
         :type expression: str
         """
+        if self.simulation:
+            self._logger.warning(
+                "'sendFaceExpression' does not work in simulated mode - "
+                "use 'send_morphable_face_expression' or "
+                "'sendTrainedFaceExpression' instead"
+            )
+            return
         self._logger.info("Showing expression: '%s'", expression)
         if expression == "clear":
             self._send(expression, "Clearing LCDs\r\n")
@@ -276,6 +283,7 @@ class faceExpression:
         """
         Displays current face as image
         """
+        self._logger.debug("Creating full face image")
         face = Image.new("L", (24, 18))
         draw = ImageDraw.Draw(face)
         draw.ellipse((9, 2, 13, 6), fill=255)
@@ -338,6 +346,7 @@ class faceExpression:
         :param Img: Image to display
         :type Img: PIL.Image
         """
+        self._logger.debug("Displaying face image")
         img_res = img.resize((img.size[0] * scale, img.size[1] * scale))
         img_cv = np.array(img_res, dtype=np.uint8)
         cv2.imshow("Simulated Face Expression", img_cv)
@@ -643,6 +652,7 @@ class faceExpression:
                            sadness,anger,disgust,surprise,fear,neutral)
         :type expression: str
         """
+        self._logger.debug("Sending polynomial preset '%s'" % expression)
         self.send_polynomial_face(
             *self.polynomial_presets[expression]["mouth"],
             *self.polynomial_presets[expression]["left"],
