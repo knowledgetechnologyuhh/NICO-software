@@ -1,10 +1,11 @@
 #!/bin/bash
 : ${PYTHON="/usr/bin/python3"}
 : ${VIRTUALENVDIR="NICO-python3"}
+: ${SKIP_PYREP=0}
 CALLDIR=$(pwd)
 WORKDIR="`dirname "$BASH_SOURCE"`"
+SKIP_CLEANUP=1
 
-: ${SKIP_PYREP=0}
 # check if COPPELIASIM_ROOT is set properly
 if  [ -z "$COPPELIASIM_ROOT" ]; then
   if [ $SKIP_PYREP -eq 0 ]; then
@@ -26,6 +27,7 @@ fi
 if [ ! -z $ROS_DISTRO ] && [ $ROS_DISTRO != noetic ]; then
   if [ -x "$(command -v catkin)" ] && ! [ -f $WORKDIR/../cv_bridge_build_ws/devel/setup.bash ]; then
     echo "Building cv_bridge for python 3"
+    pip install catkin_tools
     mkdir $WORKDIR/../cv_bridge_build_ws
     cd $WORKDIR/../cv_bridge_build_ws
     mkdir src
@@ -34,7 +36,8 @@ if [ ! -z $ROS_DISTRO ] && [ $ROS_DISTRO != noetic ]; then
     cd src
     git clone -b melodic https://github.com/ros-perception/vision_opencv.git
     cd $WORKDIR/../cv_bridge_build_ws
-    catkin build cv_bridge
+    catkin build cv_bridge --cmake-args -DPYTHON_VERSION=3.6
+
   fi
   if [ -f $WORKDIR/../cv_bridge_build_ws/devel/setup.bash ]; then
     source $WORKDIR/../cv_bridge_build_ws/devel/setup.bash --extend
@@ -43,4 +46,6 @@ if [ ! -z $ROS_DISTRO ] && [ $ROS_DISTRO != noetic ]; then
   fi
 fi
 
-cd "$CALLDIR"
+unset SKIP_CLEANUP
+unset SKIP_PYREP
+cleanup

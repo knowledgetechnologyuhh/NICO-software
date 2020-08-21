@@ -151,7 +151,9 @@ fi
 source ~/.$VIRTUALENVDIR/bin/activate
 END
 
-cleanup
+if [[ -x SKIP_CLEANUP ]]; then
+  cleanup
+fi
 
 echo "done"
 echo
