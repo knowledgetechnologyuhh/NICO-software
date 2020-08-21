@@ -41,14 +41,13 @@ class TextToSpeech(object):
             with open(cache_file) as f:
                 self._cache = json.load(f)
         else:
-            logger.info("File %s not found - initializing empty cache",
-                        cache_file)
+            logger.info("File %s not found - initializing empty cache", cache_file)
             self._cache = {}
         self._cache_dir = cache_dir
         self._cache_file = cache_file
         self._port = port
 
-    def say(self, text, language="en-GB", pitch=0, speed=1., blocking=True):
+    def say(self, text, language="en-GB", pitch=0, speed=1.0, blocking=True):
         """
         Generates and plays spoken text using gTTS if google is available or
         pico2wave as fallback if there is no cached file available.
@@ -78,8 +77,7 @@ class TextToSpeech(object):
             except requests.exceptions.ConnectionError:
                 logger.warn("Failed to connect to port %s", self._port)
 
-        if (tts_server_online and
-                response.headers['Content-Type'] == 'audio/wav'):
+        if tts_server_online and response.headers["Content-Type"] == "audio/wav":
             # play server response if online
             file = BytesIO(response.content)
             playback = AudioPlayer(file)
@@ -98,16 +96,22 @@ class TextToSpeech(object):
             if language.lower() not in lang.tts_langs():
                 logger.error(
                     "Language '{}' not supported by gTTS - supported languages"
-                    " are:\n".format(language) +
-                    "\n".join(["{} - {}".format(k, v) for k, v in
-                               lang.tts_langs().iteritems()]))
+                    " are:\n".format(language)
+                    + "\n".join(
+                        [
+                            "{} - {}".format(k, v)
+                            for k, v in lang.tts_langs().iteritems()
+                        ]
+                    )
+                )
                 e = IOError()
                 raise e
 
             # generate audio file
-            tts = gTTS(text, language, slow=False)
-            file = '/tmp/NICO_speech_{}.mp3'.format(
-                datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S.%f"))
+            tts = gTTS(text, lang=language, slow=False)
+            file = "/tmp/NICO_speech_{}.mp3".format(
+                datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S.%f")
+            )
             tts.save(file)
             playback = AudioPlayer(file)
 
@@ -117,27 +121,27 @@ class TextToSpeech(object):
                 json.dump(self._cache, f)
         else:
             # otherwise use pico2wave as fallback
-            logger.warn("Could not connect to google "
-                        "- using pico2wave fallback")
+            logger.warn("Could not connect to google " "- using pico2wave fallback")
             # google uses 'de' whereas pico2wave uses 'de-DE'
             if language == "de":
                 language = "de-DE"
             try:
-                file = '/tmp/NICO_speech_{}.wav'.format(
-                    datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S.%f"))
-                subprocess.call(["pico2wave", "-l", language,
-                                 "-w", file, text])
+                file = "/tmp/NICO_speech_{}.wav".format(
+                    datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S.%f")
+                )
+                subprocess.call(["pico2wave", "-l", language, "-w", file, text])
                 playback = AudioPlayer(file)
                 os.remove(file)
             except OSError:
                 logger.error(
                     "Could not execute pico2wave - make sure "
-                    "'libttspico-utils' apt package is installed")
+                    "'libttspico-utils' apt package is installed"
+                )
                 raise
             except IOError:
                 logger.error(
-                    "Language '{}' is not supported by pico2wave".format(
-                        language))
+                    "Language '{}' is not supported by pico2wave".format(language)
+                )
                 raise
 
         # play audio file
@@ -149,15 +153,16 @@ class TextToSpeech(object):
         return playback.duration - playback.position
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
 
     tts = TextToSpeech()
     # default
     tts.say("This is a test sentence.")
     # non-blocking
-    duration = tts.say("This is also a test sentence, but the call doesn't "
-                       "block.", blocking=False)
+    duration = tts.say(
+        "This is also a test sentence, but the call doesn't " "block.", blocking=False
+    )
     logger.info("Sleep until non-blocking call is done.")
     time.sleep(duration)
     # different language, e.g german

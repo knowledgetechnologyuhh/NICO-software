@@ -43,23 +43,21 @@ class SerialDevice(object):
         if device in self._serial_connections:
             self._logger.debug("Using existing connection to %s", device)
             ser, connected, mutex = self._serial_connections[device]
-            mutex.acquire()
-            if ser.baudrate != baudrate or ser.timeout != timeout:
-                mutex.release()
-                raise serial.SerialException(
-                    (
-                        "Failed to open %s with baudrate %i and timeout %f - "
-                        "Existing connection with baudrate %i and timeout %f"
-                    ),
-                    device,
-                    baudrate,
-                    timeout,
-                    ser.baudrate,
-                    ser.timeout,
-                )
-            else:
-                connected.add(str(self))
-                mutex.release()
+            with mutex:
+                if ser.baudrate != baudrate or ser.timeout != timeout:
+                    raise serial.SerialException(
+                        (
+                            "Failed to open %s with baudrate %i and timeout %f - "
+                            "Existing connection with baudrate %i and timeout %f"
+                        ),
+                        device,
+                        baudrate,
+                        timeout,
+                        ser.baudrate,
+                        ser.timeout,
+                    )
+                else:
+                    connected.add(str(self))
         else:
             self._logger.debug(
                 "Opened new connection to %s with baudrate %i and timeout %s",
@@ -86,14 +84,13 @@ class SerialDevice(object):
         :rtype: str
         """
         ser, connected, mutex = self._serial_connections[self._device]
-        mutex.acquire()
-        self._logger.debug("Sending '%s' to '%s'", message, self._device)
-        ser.write(message.encode("utf-8"))
-        response = ser.readline()
-        while ser.in_waiting:
-            response += ser.readline()
-        self._logger.debug("Received %s from '%s'", repr(response), self._device)
-        mutex.release()
+        with mutex:
+            self._logger.debug("Sending '%s' to '%s'", message, self._device)
+            ser.write(message.encode("utf-8"))
+            response = ser.readline()
+            while ser.in_waiting:
+                response += ser.readline()
+            self._logger.debug("Received %s from '%s'", repr(response), self._device)
         return response
 
     def close(self):
@@ -104,13 +101,13 @@ class SerialDevice(object):
         if self._device in self._serial_connections:
             self._logger.debug("Detaching %s from device %s", str(self), self._device)
             ser, connected, mutex = self._serial_connections[self._device]
-            mutex.acquire()
-            connected.discard(str(self))
-            if len(connected) == 0:
-                self._logger.info("Closing device %s", self._device)
-                ser.close()
-                self._serial_connections.pop(self._device)
-            mutex.release()
+            with mutex:
+                connected.discard(str(self))
+                if len(connected) == 0:
+                    self._logger.info("Closing device %s", self._device)
+                    ser.close()
+                    self._serial_connections.pop(self._device)
+            mutex.unlink()
 
     def reset(self):
         """
@@ -118,12 +115,11 @@ class SerialDevice(object):
         """
         if self._device in self._serial_connections:
             ser, connected, mutex = self._serial_connections[self._device]
-            mutex.acquire()
-            self._logger.debug("Resetting connection to %s", self._device)
-            ser.close()
-            ser.open()
-            time.sleep(1)
-            mutex.release()
+            with mutex:
+                self._logger.debug("Resetting connection to %s", self._device)
+                ser.close()
+                ser.open()
+                time.sleep(1)
 
     def flushInput(self):
         """
@@ -131,10 +127,9 @@ class SerialDevice(object):
         """
         if self._device in self._serial_connections:
             ser, connected, mutex = self._serial_connections[self._device]
-            mutex.acquire()
-            self._logger.debug("Flushing %s", self._device)
-            ser.reset_input_buffer()
-            mutex.release()
+            with mutex:
+                self._logger.debug("Flushing %s", self._device)
+                ser.reset_input_buffer()
 
     def __del__(self):
         self.close()

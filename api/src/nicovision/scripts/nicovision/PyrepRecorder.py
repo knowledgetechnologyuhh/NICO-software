@@ -75,7 +75,7 @@ class PyrepRecorder(object):
                 logger.error("Failed to autodetect vision sensors")
                 raise ValueError(
                     "Got empty 'sensor_names' and could not autodetect eye "
-                    "sensors in scene"
+                    + "sensors in scene"
                 )
         elif isinstance(sensor_names, str):
             self._devices.append(

@@ -37,7 +37,6 @@ for i in range(50):
     if i % 5 == 0:
         print("head_z: {}".format(robot.getAngle("head_z")))
         print("r_shoulder_y: {}".format(robot.getAngle("r_shoulder_y")))
-
 print("Stopping")
 
 robot.stopSimulation()
