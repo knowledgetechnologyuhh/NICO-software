@@ -36,11 +36,11 @@ def get_pulse_device():
 
 class AudioPlayer(object):
     """
-        The AudioPlayer class allows asynchronous playback of
-        (a segment of) a single audio file.
+    The AudioPlayer class allows asynchronous playback of
+    (a segment of) a single audio file.
     """
 
-    def __init__(self, filename, start=0, duration=None, speed=1.0, audio_device=None):
+    def __init__(self, filename, start=0, duration=None, audio_device=None):
         """
         The AudioPlayer allows asynchronous playback of (a segment of) a
         single audio file. The same object can be used for subsequent replays.
@@ -62,8 +62,8 @@ class AudioPlayer(object):
             self._audio_device = audio_device
         self._filename = filename
         self._pos = start
+        self._thread = None
         self._running = False
-        self._mutex = threading.Semaphore()
 
         segment = AudioSegment.from_file(filename)
         start *= 1000
@@ -187,8 +187,7 @@ class AudioPlayer(object):
         :param percentage: Volume [0.0, 1.0]
         :type percentage: float
         """
-        self._mutex.acquire()
-        if not self._running:
+        if self._thread is None:
             self.volume = volume
             self._thread = threading.Thread(target=self._playback)
             self._pos = 0
@@ -196,29 +195,25 @@ class AudioPlayer(object):
             self._thread.start()
         else:
             logger.warning("Task for file {} is already running".format(self.filename))
-        self._mutex.release()
 
     def pause(self):
         """
         Stops playback of the audio segment
         """
-        self._mutex.acquire()
         self._running = False
-        self._mutex.release()
         self._thread.join()
+        self._thread = None
 
     def resume(self):
         """
         Continues playback of the file from where it was previously stopped.
         """
-        self._mutex.acquire()
-        if not self._running:
+        if self._thread is None:
             self._thread = threading.Thread(target=self._playback)
             self._thread.start()
             self._running = True
         else:
             logger.warning("Task for file {} is already running".format(self.filename))
-        self._mutex.release()
 
     def _playback(self):
         """
@@ -236,12 +231,9 @@ class AudioPlayer(object):
         )
 
         # output the file in millisecond steps
-        self._mutex.acquire()
         while self._pos < len(self._segment) and self._running:
             stream.write(self._segment[self._pos]._data)
             self._pos += 1
-            self._mutex.release()
-            self._mutex.acquire()
 
         # close stream
         time.sleep(stream.get_output_latency())
@@ -249,5 +241,3 @@ class AudioPlayer(object):
         stream.close()
 
         p.terminate()
-        self._running = False
-        self._mutex.release()

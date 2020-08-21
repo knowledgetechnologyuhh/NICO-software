@@ -115,7 +115,7 @@ class Motion:
                 except ImportError as e:
                     self._logger.warning(
                         "Failed to import pyrep from pypot. Make sure you are "
-                        "using Python 3."
+                        "using Python 3 and all environment variables are set."
                     )
                     raise e
                 self._robot = pyrep.from_pyrep(

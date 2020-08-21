@@ -210,12 +210,12 @@ class AbstractHand(object):
         """
         if self.vrep:
             self.logger.warn("Vrep simulation does not support Palm IR sensor.")
-            return 0.0
+            return 0
         elif self.board.palm_sensor_installed:
             return self.board.palm_sensor_reading
         else:
             self.logger.warn("Palm IR sensor not installed")
-            return 0.0
+            return 0
 
     def executePose(self, poseName, fractionMaxSpeed=1.0, percentage=1.0):
         """

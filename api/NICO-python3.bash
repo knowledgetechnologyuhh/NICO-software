@@ -3,25 +3,16 @@
 : ${VIRTUALENVDIR="NICO-python3"}
 CALLDIR=$(pwd)
 WORKDIR="`dirname "$BASH_SOURCE"`"
-INSTALL_PYREP=1
 
-: ${IGNORE_MISSING_VREP=0}
-# check if VREP_ROOT is set properly
-if  [ -z "$COPPELIASIM_ROOT" ] && [ -z "$VREP_ROOT" ]; then
-  if [ -d /informatik3/wtm/public/installations/VREP/V-REP_PRO_EDU_V3_6_2_Ubuntu18_04 ]; then
-    echo "Using shared V-REP installation"
-    export VREP_ROOT=/informatik3/wtm/public/installations/VREP/V-REP_PRO_EDU_V3_6_2_Ubuntu18_04
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$VREP_ROOT
-    export QT_QPA_PLATFORM_PLUGIN_PATH=$VREP_ROOT
-  elif [ $IGNORE_MISSING_VREP -eq 0 ]; then
-    echo -e "\e[31mERROR: VREP_ROOT not set, which is required for PyRep installation (see readme.md). To continue regardless, set IGNORE_MISSING_VREP to 1.\e[0m"
+: ${SKIP_PYREP=0}
+# check if COPPELIASIM_ROOT is set properly
+if  [ -z "$COPPELIASIM_ROOT" ]; then
+  if [ $SKIP_PYREP -eq 0 ]; then
+    echo -e "\e[31mERROR: COPPELIASIM_ROOT not set, which is required for PyRep installation (see readme.md). To continue regardless, set SKIP_PYREP to 1.\e[0m"
     return 1 2> /dev/null
   else
-    echo -e "\e[33mWARNING: VREP_ROOT not set, PyRep will not be installed.\e[0m"
+    echo -e "\e[33mWARNING: COPPELIASIM_ROOT not set, PyRep will not be installed.\e[0m"
   fi
-elif ! [ -z "$VREP_ROOT" ] && ! [ -f "$VREP_ROOT/vrep.sh" ]; then
-  echo -e "\e[31mERROR: Could not find 'vrep.sh' inside VREP_ROOT directory ($VREP_ROOT).\e[0m"
-  return 1 2> /dev/null
 elif ! [ -f "$COPPELIASIM_ROOT/coppeliaSim.sh" ]; then
   echo -e "\e[31mERROR: Could not find 'coppeliaSim.sh' inside COPPELIASIM_ROOT directory ($COPPELIASIM_ROOT).\e[0m"
   return 1 2> /dev/null

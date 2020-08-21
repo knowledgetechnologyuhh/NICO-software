@@ -3,7 +3,6 @@
 import nicomsg.msg as msg
 import numpy as np
 import rospy
-import logging
 from threading import Semaphore
 
 try:
@@ -32,7 +31,6 @@ class NicoRosFaceExpression:
         :type simulation: bool
         """
         # init face
-        logging.basicConfig(level=logging.DEBUG)
         self.face = faceExpression(devicename, simulation)
 
         # thread managament

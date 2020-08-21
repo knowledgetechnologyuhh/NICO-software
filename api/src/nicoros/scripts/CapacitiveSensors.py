@@ -35,7 +35,7 @@ class NicoRosCapacitiveSensors:
         publish_rate = rospy.Rate(rate)
         while not rospy.is_shutdown():
             sensor_readings = self.cap_sensor.getCapacitiveReadings()
-            pub.publish(sensor_readings)
+            pub.publish(*sensor_readings)
             publish_rate.sleep()
 
 
@@ -52,7 +52,7 @@ if __name__ == "__main__":
         ),
     )
     parser.add_argument(
-        "--rate", nargs="?", help=("publish rate of the sensor readings"),
+        "--rate", nargs="?", help=("publish rate of the sensor readings"), default=10
     )
 
     args = parser.parse_args()

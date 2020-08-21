@@ -23,6 +23,8 @@
   <run_depend>std_msgs</run_depend>
   <run_depend>nico_msg</run_depend>
   <run_depend>motion</run_depend>
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>cv_bridge</run_depend>
 
   <export>
   </export>

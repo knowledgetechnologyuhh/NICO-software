@@ -6,18 +6,16 @@ import sys
 import threading
 import time
 
-import control_msgs.msg
 import nicomsg.msg
 import nicomsg.srv
 import rospy
 import sensor_msgs.msg
 from nicomotion.Motion import Motion
-from std_msgs.msg import String
 from std_srvs.srv import Empty
 
 try:
     from nicomoveit import moveitWrapper
-except ImportError as e:
+except ImportError:
     pass
 
 
@@ -266,6 +264,19 @@ class NicoRosMotion:
 
         # setup publishers
         self.logger.debug("Init publishers")
+        self._palm_publisher_left = rospy.Publisher(
+            "%s/palm_sensor/left" % config["rostopicName"],
+            nicomsg.msg.i,
+            queue_size=10,
+        )
+        self._palm_publisher_right = rospy.Publisher(
+            "%s/palm_sensor/right" % config["rostopicName"],
+            nicomsg.msg.i,
+            queue_size=10,
+        )
+        self._palm_thread = threading.Thread(target=self._palm_sensor_publisher)
+        self._palm_thread.start()
+
         if "nicomoveit.moveitWrapper" in sys.modules:
             self._jointStatePublisher = rospy.Publisher(
                 "%s" % config["jointStateName"],
@@ -285,6 +296,7 @@ class NicoRosMotion:
         self._running = False
         if self._jointStateThread:
             self._jointStateThread.join()
+        self._palm_thread.join()
 
     def _ROSPY_openHand(self, message):
         """
@@ -653,6 +665,15 @@ class NicoRosMotion:
 
     def __del__(self):
         self.robot.cleanup()
+
+    def _palm_sensor_publisher(self):
+        r = rospy.Rate(10)  # 10hz
+        while not rospy.is_shutdown():
+            left = self.robot.getPalmSensorReading("l")
+            right = self.robot.getPalmSensorReading("r")
+            self._palm_publisher_left.publish(left)
+            self._palm_publisher_right.publish(right)
+            r.sleep()
 
 
 if __name__ == "__main__":

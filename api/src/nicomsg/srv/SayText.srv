@@ -1,0 +1,7 @@
+string text
+string language
+float64 pitch
+float64 speed
+bool blocking
+---
+float64 duration
