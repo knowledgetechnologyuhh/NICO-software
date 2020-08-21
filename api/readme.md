@@ -21,6 +21,30 @@ Most prerequesites are automatically installed by sourcing `NICO-setup.bash` or
 `NICO-python3.bash`, however there are some apt packages that need to be
 installed for the libraries to work.
 
+PyRep
+--
+
+To install PyRep, which can be used to control and interact with CoppeliaSim, the setup requires `COPPELIASIM_ROOT` to point to the folder where CoppeliaSim is located. To do so, edit the path and add this to your `.bashrc`:
+```
+export COPPELIASIM_ROOT=EDIT/ME/PATH/TO/COPPELIASIM/INSTALL/DIR
+```
+
+Additionally, the `COPPELIASIM_ROOT` has to be added to `LD_LIBRARY_PATH` and `QT_QPA_PLATFORM_PLUGIN_PATH` to run PyRep. Since these can cause conflicts with other programms, a bash script is provided that can be sourced whenever PyRep is needed:
+
+```
+source pyrep_env.bash
+```
+
+Alternatively, add the following to your `.bashrc`
+(**note that this can cause conflicts with other programms**):
+```
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$COPPELIASIM_ROOT
+export QT_QPA_PLATFORM_PLUGIN_PATH=$COPPELIASIM_ROOT
+```
+
+See https://github.com/stepjam/PyRep for more information about PyRep.
+
+
 nicoaudio
 --
 
@@ -55,15 +79,6 @@ sudo chmod 777 /dev/ttyACM*
 `nicomotion.Motion` also tries to adjust port latency using `setserial`:
 ```
 sudo apt-get install setserial
-```
-
-PyRep:
-
-If you want to use PyRep to control V-Rep, add the following to .bashrc (see [official repository](https://github.com/stepjam/PyRep) for more info):
-```
-export VREP_ROOT=EDIT/ME/PATH/TO/V-REP/INSTALL/DIR
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$VREP_ROOT
-export QT_QPA_PLATFORM_PLUGIN_PATH=$VREP_ROOT
 ```
 
 nicovision

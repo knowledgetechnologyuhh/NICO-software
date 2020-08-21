@@ -80,6 +80,10 @@ add_service_files(
    StopAudioStream.srv
    GetChannelStates.srv
    SetIntValue.srv
+   SayText.srv
+   GetFilename.srv
+   LoadAudio.srv
+   GetAudioIDs.srv
 )
 
 ## Generate actions in the 'action' folder
