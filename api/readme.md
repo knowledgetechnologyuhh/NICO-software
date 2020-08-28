@@ -18,13 +18,12 @@ source NICO-python3.bash
 Prerequisites
 ===
 Most prerequesites are automatically installed by sourcing `NICO-setup.bash` or
-`NICO-python3.bash`, however there are some apt packages that need to be
-installed for the libraries to work.
+`NICO-python3.bash`. However some environment variables and permissions need to be set and apt packages to be installed for all the libraries to work.
 
 PyRep
 --
 
-To install PyRep, which can be used to control and interact with CoppeliaSim, the setup requires `COPPELIASIM_ROOT` to point to the folder where CoppeliaSim is located. To do so, edit the path and add this to your `.bashrc`:
+PyRep, which can be used to control and interact with CoppeliaSim, is automatically installed by the setup, but requires `COPPELIASIM_ROOT` to point to the folder where CoppeliaSim is located. To do so, edit the path and add this to your `.bashrc`:
 ```
 export COPPELIASIM_ROOT=EDIT/ME/PATH/TO/COPPELIASIM/INSTALL/DIR
 ```
@@ -104,10 +103,6 @@ and `~/.NICO-python3/bin/activate`. (note that `NICO-python3.bash` does this aut
 ```
 source cv_bridge_build_ws/devel/setup.bash --extend
 ```
-
-You might want to consider adding both catkin workspace setups to your
-`.bashrc` so you only need to activate the existing virtualenv if you do not
-want to execute `NICO-python3.bash`.
 
 nicotouch
 --

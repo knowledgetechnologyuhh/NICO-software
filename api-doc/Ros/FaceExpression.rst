@@ -12,7 +12,7 @@ To start the interface run (use -h to list optional arguments):
 Exposed topics
 ==============
 
-The following ROS services are exposed by the class - where $PREFIX stands for the prefix of the topics/services (Default: /nico/faceExpression/):
+The following ROS topics are exposed by the class - where $PREFIX stands for the prefix of the topics/services (Default: /nico/faceExpression/):
 
 +------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
 | ROS topic name                                 | Message type                                   | Short description                                                                     |

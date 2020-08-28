@@ -7,14 +7,15 @@ from nicotouch import OptoforceMultichannel
 
 class NicoRosOptoforceMultichannel:
     """
-    The NicoRosOptoforce class publishes the raw and newton sensor data of an
-    optoforce sensor via ROS
+    The NicoRosOptoforceMultichannel class publishes the raw and newton sensor
+    data of multiple optoforce sensors connected to the same device via ROS
     """
 
     def __init__(self, ser_number):
         """
-        The NicoRosOptoforce class publishes the raw and newton sensor data of
-        an optoforce sensor via ROS
+        The NicoRosOptoforceMultichannel class publishes the raw and newton
+        sensor data of multiple optoforce sensors connected to the same device
+        via ROS.
 
         :param port: serial device the sensor is connected with (e.g.
                      /dev/ttyACM0)
