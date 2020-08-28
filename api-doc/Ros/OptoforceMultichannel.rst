@@ -1,31 +1,33 @@
-nicoros - Optoforce
-*********************
+nicoros - OptoforceMultichannel
+*******************************
 
-The Optoforce class allows to send the Optoforce data through ROS.
+The OptoforceMultichannel class allows to send the Optoforce data from a device
+with multiple sensors through ROS.
 
 To start the interface run:
 
 .. code-block:: bash
 
-   rosrun nicoros Optoforce.py
+   rosrun nicoros OptoforceMultichannel.py
 
 Exposed topics
 ==============
 
-The following ROS services are exposed by the class - where $PREFIX stands for the prefix of the topics/services (Default: /nico/optoforce/$SERIAL where $SERIAL is the serial number of the sensor):
+The following ROS services are exposed by the class - where $PREFIX stands for the prefix of the topics/services (Default: /nico/optoforce/$SERIAL where $SERIAL is the serial number of the sensor)
+and $CHANNEL is an identifier for the sensor:
 
 +------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
 | ROS topic name                                 | Message type                                   | Short description                                                                     |
 +================================================+================================================+=======================================================================================+
-| $PREFIX/raw                                    | nicomsg/iii                                    | raw sensor data                                                                       |
+| $PREFIX/raw/$CHANNEL                           | nicomsg/fff                                    | raw sensor data                                                                       |
 +------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
-| $PREFIX/newton                                 | nicomsg/fff                                    | sensor data in newton (make sure the serial is correct as conversion is based on it)  |
+| $PREFIX/newton/$CHANNEL                        | nicomsg/fff                                    | sensor data in newton (only if conversion values known)                               |
 +------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
 
 Class documentation
 ===================
 
-.. automodule:: Optoforce
+.. automodule:: OptoforceMultichannel
     :members:
     :undoc-members:
     :show-inheritance:
