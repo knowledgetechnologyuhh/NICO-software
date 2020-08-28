@@ -14,9 +14,11 @@ This readme file serves as an overview over the different ROS nodes and their re
 |----|:-------:|
 |AudioPlayer.py|AudioPlayerExample.py|
 |AudioStream.py|StreamReceiverExample.py|
+|CapacitiveSensors.py|CapacitiveExample.py|
 |FaceExpression.py|FaceExample.py|
 |Motion.py|yesno_example.py|
 |Optoforce.py|OptoforceExample.py|
+|OptoforceMultichannel.py|OptoforceMultichannelExample.py|
 |Pyrep.py|PyrepExample.py|
 |TextToSpeech.py|TextToSpeechExample.py|
 |Vision.py|ImageSubscriberExample.py|
