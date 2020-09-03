@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# parameters
+: ${PYTHON="/usr/bin/python2.7"} # python executable of virtualenv
+: ${VIRTUALENVDIR="NICO"} # directory name of virtualenv in home (with a '.' prefix)
+: ${REINSTALL_PYPOT=0} # Set this to 1 to force a reinstall of pypot
+if [ $# -eq 1 ]
+then
+  VIRTUALENVDIR="$1"
+fi
+echo Virtual environment directory: "$VIRTUALENVDIR"
+
 # get dir
 CALLDIR=`pwd`
 cd "`dirname "$BASH_SOURCE"`"
@@ -8,20 +18,13 @@ cd "$CALLDIR"
 VIRTUALENV="virtualenv"
 echo Running at: "$WORKDIR"
 
-: ${PYTHON="/usr/bin/python2.7"}
-: ${VIRTUALENVDIR="NICO"}
-if [ $# -eq 1 ]
-then
-  VIRTUALENVDIR="$1"
-fi
-echo Virtual environment directory: "$VIRTUALENVDIR"
-
 cd
 
 cleanup() {
   echo "Cleanup"
   unset PYTHON
   unset VIRTUALENVDIR
+  unset REINSTALL_PYPOT
   rm -rf /tmp/pypot
   cd "$CALLDIR"
 }
@@ -52,7 +55,8 @@ if [ $ONLINE ] && [ $VIRTUAL_ENV == ~/.$VIRTUALENVDIR ]; then
 
   echo "Checking python packages"
   pip install 'sphinx' # required inside virtualenv to find all modules
-  pip install cffi
+  pip install cffi # pyrep requirement
+
   # install/update custom pypot
   cd /tmp
   git clone https://git.informatik.uni-hamburg.de/wtm-robots-and-equipment/pypot.git
@@ -64,7 +68,7 @@ if [ $ONLINE ] && [ $VIRTUAL_ENV == ~/.$VIRTUALENVDIR ]; then
   cd pypot
   CURRENT_GIT_COMMIT=`git show --name-status | grep commit`
   CURRENT_GIT_COMMIT=${CURRENT_GIT_COMMIT#'commit '}
-  if [ ! -f ~/.$VIRTUALENVDIR/.current_git_commit ] || [ ! `cat ~/.$VIRTUALENVDIR/.current_git_commit` == $CURRENT_GIT_COMMIT ]; then
+  if [ $REINSTALL_PYPOT == 1 ] || [ ! -f ~/.$VIRTUALENVDIR/.current_git_commit ] || [ ! `cat ~/.$VIRTUALENVDIR/.current_git_commit` == $CURRENT_GIT_COMMIT ]; then
     echo "Custom pypot outdated - updating to commit $CURRENT_GIT_COMMIT"
     pip uninstall pypot -y
     pip install .
@@ -152,6 +156,7 @@ fi
 source ~/.$VIRTUALENVDIR/bin/activate
 END
 
+# cleanup
 if [[ -x SKIP_CLEANUP ]]; then
   cleanup
 fi
