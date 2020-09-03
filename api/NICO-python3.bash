@@ -1,10 +1,14 @@
 #!/bin/bash
-: ${PYTHON="/usr/bin/python3"}
-: ${VIRTUALENVDIR="NICO-python3"}
-: ${SKIP_PYREP=0}
+
+# parameters
+: ${PYTHON="/usr/bin/python3"} # python executable of virtualenv
+: ${VIRTUALENVDIR="NICO-python3"} # directory name of virtualenv in home (with a '.' prefix)
+: ${SKIP_PYREP=0} # set to 1 to ignore pyrep environment checks
+: ${REINSTALL_PYPOT=0} # Set this to 1 to force a reinstall of pypot
+
+# get dir
 CALLDIR=$(pwd)
 WORKDIR="`dirname "$BASH_SOURCE"`"
-SKIP_CLEANUP=1
 
 # check if COPPELIASIM_ROOT is set properly
 if  [ -z "$COPPELIASIM_ROOT" ]; then
@@ -19,11 +23,14 @@ elif ! [ -f "$COPPELIASIM_ROOT/coppeliaSim.sh" ]; then
   return 1 2> /dev/null
 fi
 
+# run NICO setup
+SKIP_CLEANUP=1 # skips cleanup in NICO-setup.bash. DO NOT SET THIS MANUALLY
 source $WORKDIR/NICO-setup.bash
 if ! [ $? -eq 0 ]; then
   return 1 2> /dev/null
 fi
 
+# build cv bridge for python3 (for ros versions before noetic)
 if [ ! -z $ROS_DISTRO ] && [ $ROS_DISTRO != noetic ]; then
   if [ -x "$(command -v catkin)" ] && ! [ -f $WORKDIR/../cv_bridge_build_ws/devel/setup.bash ]; then
     echo "Building cv_bridge for python 3"
@@ -37,7 +44,6 @@ if [ ! -z $ROS_DISTRO ] && [ $ROS_DISTRO != noetic ]; then
     git clone -b melodic https://github.com/ros-perception/vision_opencv.git
     cd $WORKDIR/../cv_bridge_build_ws
     catkin build cv_bridge --cmake-args -DPYTHON_VERSION=3.6
-
   fi
   if [ -f $WORKDIR/../cv_bridge_build_ws/devel/setup.bash ]; then
     source $WORKDIR/../cv_bridge_build_ws/devel/setup.bash --extend
@@ -46,6 +52,7 @@ if [ ! -z $ROS_DISTRO ] && [ $ROS_DISTRO != noetic ]; then
   fi
 fi
 
+# cleanup
 unset SKIP_CLEANUP
 unset SKIP_PYREP
 cleanup
