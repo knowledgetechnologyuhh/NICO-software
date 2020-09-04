@@ -1,226 +1,243 @@
 import logging
+import threading
+import time
+from io import BytesIO
+
+from audiotsm import phasevocoder
+from audiotsm.io.wav import WavReader, WavWriter
+from pyaudio import PyAudio
+from pydub import AudioSegment
+
+logger = logging.getLogger(__name__)
 
 
-class AudioPlayer:
-    def __init__(self):
-        pass
+def get_pulse_device():
+    """
+    Detects pulse device
 
-    def getCurrentPosition(self, task):
+    :return: id of the pulse device
+    :rtype: int
+    """
+    # print("The following sound devices are available.")
+    p = PyAudio()
+    info = p.get_host_api_info_by_index(0)
+    numdevices = info.get("deviceCount")
+    audio_device = 0
+    for i in range(0, numdevices):
+        if (
+            p.get_device_info_by_host_api_device_index(0, i).get("maxOutputChannels")
+        ) > 0:
+            device_name = p.get_device_info_by_host_api_device_index(0, i).get("name")
+            # print("Input Device id ", i, " - ", device_name)
+            if device_name.find("pulse") != -1:
+                audio_device = i
+    return audio_device
+
+
+class AudioPlayer(object):
+    """
+    The AudioPlayer class allows asynchronous playback of
+    (a segment of) a single audio file.
+    """
+
+    def __init__(self, filename, start=0, duration=None, audio_device=None):
         """
-        Gets the current position of the file associated with a task
+        The AudioPlayer allows asynchronous playback of (a segment of) a
+        single audio file. The same object can be used for subsequent replays.
 
-        :param task: Target task
-        :type task: int
-        :return: Current position in seconds
-        :rtype: int
+        :param filename: audio file that should be loaded
+        :type filename: str
+        :param start: start position in seconds, preceding audio is not loaded
+        :type start: float
+        :param duration: duration in seconds (relative to start),
+                         subsequent audio is not loaded if duration is set.
+        :type duration: float
+        :param audio_device: id of audio_device, tries to autodetect pulse
+                             device if None.
+        :type audio_device: int
         """
-        # TODO: implement
-        pass
+        if audio_device is None:
+            self._audio_device = get_pulse_device()
+        else:
+            self._audio_device = audio_device
+        self._filename = filename
+        self._pos = start
+        self._thread = None
+        self._running = False
 
-    def getFileLength(self, task):
-        """
-        Returns the file length of the file associated with a task
+        segment = AudioSegment.from_file(filename)
+        start *= 1000
+        if duration is None:
+            stop = len(segment)
+        else:
+            stop = min(len(segment), start + duration * 1000)
 
-        :param task: Target task
-        :type task: int
-        :return: File length in seconds
-        :rtype: int
-        """
-        # TODO: implement
-        pass
+        if start > stop:
+            logger.warning(
+                "Could not play {} - start position set after "
+                "end of audio ({}s > {}s)".format(
+                    filename, start / 1000.0, stop / 1000.0
+                )
+            )
 
-    def getLoadedFilesTasks(self):
-        """
-        Returns the tasks of all loaded files
+        self._segment = segment[start:stop]
+        self._min_dbfs = -100
+        self._max_dbfs = segment.dBFS
 
-        :return: List of tasks
-        :rtype: list
+    @property
+    def position(self):
         """
-        # TODO: implement
-        pass
+        Current playback position
 
-    def getLoadedFilesNames(self):
+        :return: Position in seconds
+        :rtype: float
         """
-        Returns the file names of all loaded files
+        return self._pos / 1000.0
 
-        :return: List of file names
-        :rtype: list
+    @property
+    def duration(self):
         """
-        # TODO: implement
-        pass
+        Duration of the loaded audio segment
 
-    def getMasterVolume(self):
+        :return: Duration in seconds
+        :rtype: float
         """
-        Returns the master (default) volume
+        return self._segment.duration_seconds
+
+    @property
+    def filename(self):
+        """
+        Name of the loaded file
+
+        :return: filename
+        :rtype: str
+        """
+        return self._filename
+
+    @property
+    def volume(self):
+        """
+        Percentage of volume
 
         :return: Volume [0.0, 1.0]
         :rtype: float
         """
-        # TODO: implement
-        pass
+        return (self._segment.dBFS - self._min_dbfs) / (self._max_dbfs - self._min_dbfs)
 
-    def getVolume(self, task):
+    @volume.setter
+    def volume(self, percentage):
         """
-        Returns the volume of a given task
+        Setter for volume
 
-        :param task: Target task
-        :type task: int
-        :return: Volume [0.0, 1.0]
-        :rtype: float
+        :param percentage: Volume [0.0, 1.0]
+        :type percentage: float
         """
-        # TODO: implement
-        pass
+        vol = percentage * (self._max_dbfs - self._min_dbfs) + self._min_dbfs
+        self._segment += vol - self._segment.dBFS
 
-    def getMasterPanorama(self):
+    def pitch(self, octaves):
         """
-        Returns the master (default) panorama
+        Shifts pitch in octaves (this affects the speed)
 
-        :return: Panorama [-1.0 (left), 1.0 (right)]
-        :rtype: float
+        :param pitch: Pitch in octaves by which to shift the output
+                      (this affects the speed)
+        :type pitch: float
         """
-        # TODO: implement
-        pass
+        if octaves != 0:
+            logger.info("Setting pitch to %f", octaves)
+            new_sample_rate = int(self._segment.frame_rate * (2.0 ** octaves))
+            self._segment = self._segment._spawn(
+                self._segment.raw_data, overrides={"frame_rate": new_sample_rate}
+            )
 
-    def getPanorama(self, task):
+    def speed(self, speed):
         """
-        Returns the panorama of a task
+        Adjusts speed to given percentage without changing pitch
 
-        :param task: Target task
-        :type task: int
-        :return: Panorama [-1.0 (left), 1.0 (right)]
-        :rtype: float
+        :param speed: Percentage to increase/decrease speed without changing
+                      pitch
+        :type speed: float
         """
-        # TODO: implement
-        pass
+        if speed != 1:
+            logger.info("Setting speed to %f", speed)
+            logger.debug("Export file to BytesIO")
+            wav_in = BytesIO()
+            wav_in = self._segment.export(wav_in, format="wav")
+            wav_in.seek(0)
+            logger.debug("Initializing reader and writer")
+            with WavReader(wav_in) as reader:
+                wav_out = BytesIO()
+                with WavWriter(wav_out, reader.channels, reader.samplerate) as writer:
+                    logger.debug("Adjusting speed with vocoder")
+                    tsm = phasevocoder(reader.channels, speed=speed)
+                    tsm.run(reader, writer)
+                    logger.debug("Reload audio segment")
+                    wav_out.seek(44)  # skip metadata and start at first sample
+                    self._segment = AudioSegment.from_raw(
+                        wav_out,
+                        sample_width=self._segment.sample_width,
+                        channels=self._segment.channels,
+                        frame_rate=self._segment.frame_rate,
+                    )
 
-    def goTo(self, task, position):
+    def play(self, volume=1.0):
         """
-        Jumps to a given position in a task
+        Starts playback of the audio segment from its beginning
 
-        :param task: Target task
-        :type task: int
-        :param position: Position in seconds
-        :type position: int
+        :param percentage: Volume [0.0, 1.0]
+        :type percentage: float
         """
-        # TODO: implement
-        pass
+        if self._thread is None:
+            self.volume = volume
+            self._thread = threading.Thread(target=self._playback)
+            self._pos = 0
+            self._running = True
+            self._thread.start()
+        else:
+            logger.warning("Task for file {} is already running".format(self.filename))
 
-    def loadFile(self, filename):
+    def pause(self):
         """
-        Loads a given file
+        Stops playback of the audio segment
+        """
+        self._running = False
+        self._thread.join()
+        self._thread = None
 
-        :param filename: File name
-        :type filename: str
-        :return: Associated task
-        :rtype: int
+    def resume(self):
         """
-        # TODO: implement
-        pass
+        Continues playback of the file from where it was previously stopped.
+        """
+        if self._thread is None:
+            self._thread = threading.Thread(target=self._playback)
+            self._thread.start()
+            self._running = True
+        else:
+            logger.warning("Task for file {} is already running".format(self.filename))
 
-    def pause(self, task):
+    def _playback(self):
         """
-        Pauses the playback of a task
+        Playback function for thread. Plays a segment until running is set to
+        false or end is reached
+        """
+        # open stream
+        p = PyAudio()
+        stream = p.open(
+            format=p.get_format_from_width(self._segment.sample_width),
+            channels=self._segment.channels,
+            rate=self._segment.frame_rate,
+            output=True,
+            output_device_index=self._audio_device,
+        )
 
-        :param task: Target task
-        :type task: int
-        """
-        # TODO: implement
-        pass
+        # output the file in millisecond steps
+        while self._pos < len(self._segment) and self._running:
+            stream.write(self._segment[self._pos]._data)
+            self._pos += 1
 
-    def play(self, task, volume=1.0, panorama=0.0):
-        """
-        Plays a given task
+        # close stream
+        time.sleep(stream.get_output_latency())
+        stream.stop_stream()
+        stream.close()
 
-        :param task: Target task
-        :type task: int
-        :param volume: Volume [0.0, 1.0]
-        :type volume: float
-        :param panorama: Panorama [-1.0 (left), 1.0 (right)]
-        :type panorama: float
-        """
-        # TODO: implement
-        pass
-
-    def playFile(self, filename, position=0, volume=1.0, panorama=0.0):
-        """
-        Plays a given file
-
-        :param filename: File to play
-        :type filename: str
-        :param position: Start position in seconds
-        :type position: int
-        :param volume: Volume [0.0, 1.0]
-        :type volume: float
-        :param panorama: Panorama [-1.0 (left), 1.0 (right)]
-        :type panorama: float
-        """
-        # TODO: implement
-        pass
-
-    def setMasterVolume(self, volume):
-        """
-        Sets the master (default) volume
-
-        :param volume: Volume [0.0, 1.0]
-        :type volume: float
-        """
-        # TODO: implement
-        pass
-
-    def setVolume(self, task, volume):
-        """
-        Sets the volume of the given task
-
-        :param task: Target task
-        :type task: int
-        :param volume: Volume [0.0, 1.0]
-        :type volume: float
-        """
-        # TODO: implement
-        pass
-
-    def setMasterPanorama(self, panorama):
-        """
-        Sets the master (default) panorama
-
-        :param panorama: Panorama [-1.0 (left), 1.0 (right)]
-        :type panorama: float
-        """
-        # TODO: implement
-        pass
-
-    def setPanorama(self, task, panorama):
-        """
-        Sets the panorama of a given task
-
-        :param task: Target task
-        :type task: int
-        :param panorama: Panorama [-1.0 (left), 1.0 (right)]
-        :type panorama: float
-        """
-        # TODO: implement
-        pass
-
-    def stopAll(self):
-        """
-        Stopps all currently playing tasks
-        """
-        # TODO: implement
-        pass
-
-    def unloadAllFiles(self):
-        """
-        Unloads all files
-        """
-        # TODO: implement
-        pass
-
-    def unloadFile(self, task):
-        """
-        Unloads the file associated with a task
-
-        :param task: Target task
-        :type task: int
-        """
-        # TODO: implement
-        pass
+        p.terminate()

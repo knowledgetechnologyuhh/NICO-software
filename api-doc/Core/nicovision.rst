@@ -27,7 +27,7 @@ The ImageRecorder class enables the capturing of single images from a camera.
     :private-members:
 
 MultiCamRecorder
-#############
+################
 
 The MultiCamRecorder class enables synchronized capturing of single images from multiple cameras at once.
 
@@ -37,8 +37,52 @@ The MultiCamRecorder class enables synchronized capturing of single images from 
     :show-inheritance:
     :private-members:
 
+PyrepRecorder
+#############
+
+The PyrepRecorder class allows recording images and videos from CoppeliaSim vision sensors using pyrep.
+
+.. automodule:: nicovision.PyrepRecorder
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :private-members:
+
+CameraCalibrator
+################
+
+CameraCalibrator allows to calibrate the cameras with a chessboard pattern
+
+.. automodule:: nicovision.CameraCalibrator
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :private-members:
+
+Display
+#######
+
+The Display class displays multiple cameras in one window
+
+.. automodule:: nicovision.Display
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :private-members:
+
 Helper classes
 ##############
+
+Barrier
+=======
+
+The Barrier class provides a Python 2 compatible barrier for thread synchronization
+
+.. automodule:: nicovision.Barrier
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :private-members:
 
 Colorspace
 ==========
@@ -46,6 +90,29 @@ Colorspace
 The Colorspace class represents different colorspaces.
 
 .. automodule:: nicovision.Colorspace
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :private-members:
+
+ImageWriter
+===========
+
+The ImageWriter class saves image with multiple worker threads to allow capturing high resolution images at a high frequency
+
+.. automodule:: nicovision.ImageWriter
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :private-members:
+
+PyrepDevice
+===========
+
+The PyrepDevice class handles communication with CoppeliaSim Vision Sensors via Pyrep.
+It allows registering callback functions which are executed at each simulation step.
+
+.. automodule:: nicovision.PyrepDevice
     :members:
     :undoc-members:
     :show-inheritance:

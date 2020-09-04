@@ -39,7 +39,7 @@ class OptoforceSerialNumber:
         self.serial_number = serial_number
 
     def __str__(self):
-        return ''.join(self.serial_number).strip()
+        return b''.join(self.serial_number).strip().decode("utf-8")
 
 
 class OptoforceError(Exception):
@@ -309,7 +309,7 @@ class OptoforceDriver(object):
             offset = 4
             serial_number = struct.unpack_from('>8c', frame, offset)
             self._logger.debug("The sensor has the serial number "
-                               + ''.join(serial_number).strip())
+                               + b''.join(serial_number).strip().decode("utf-8"))
             return OptoforceSerialNumber(serial_number)
         else:
             self._logger.error("I can't recognize the header of frame: "

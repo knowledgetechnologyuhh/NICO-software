@@ -1,4 +1,3 @@
-import collections
 import json
 import logging
 import pprint
@@ -10,13 +9,13 @@ import pypot.dynamixel
 import pypot.dynamixel.error as pypot_error
 import pypot.robot
 import pypot.vrep
-from nicomotion._nicomotion_internal.MotionError import MotionErrorHandler
 from pypot.dynamixel.io.abstract_io import DxlCommunicationError, DxlError
 from pypot.vrep.remoteApiBindings import vrep as remote_api
 
-from _nicomotion_internal.RH4D_hand import RH4DHand
-from _nicomotion_internal.RH5D_hand import RH5DHand
-from _nicomotion_internal.RH7D_hand import RH7DHand
+from ._nicomotion_internal.MotionError import MotionErrorHandler
+from ._nicomotion_internal.RH4D_hand import RH4DHand
+from ._nicomotion_internal.RH5D_hand import RH5DHand
+from ._nicomotion_internal.RH7D_hand import RH7DHand
 
 
 class Motion:
@@ -25,9 +24,51 @@ class Motion:
     related functions of the NICO robot
     """
 
-    def __init__(self, motorConfig='config.json', vrep=False,
-                 vrepHost='127.0.0.1', vrepPort=19997, vrepScene=None,
-                 ignoreMissing=False, monitorHandCurrents=True):
+    @staticmethod
+    def vrepRemoteConfig():
+        """
+        Returns a default config dict
+
+        :return: dict
+        """
+        return {
+            "use_pyrep": False,
+            "vrep_host": "127.0.0.1",
+            "vrep_port": 19997,
+            "vrep_scene": None,
+            "tracked_objects": [],
+            "tracked_collisions": [],
+            "id": None,
+            "shared_vrep_io": None,
+        }
+
+    @staticmethod
+    def pyrepConfig():
+        """
+        Returns a default config dict
+
+        :return: dict
+        """
+        return {
+            "use_pyrep": True,
+            "vrep_scene": "",
+            "start": False,
+            "headless": False,
+            "responsive_ui": False,
+            "tracked_objects": [],
+            "tracked_collisions": [],
+            "id": None,
+            "shared_vrep_io": None,
+        }
+
+    def __init__(
+        self,
+        motorConfig="config.json",
+        vrep=False,
+        vrepConfig=None,
+        ignoreMissing=False,
+        monitorHandCurrents=True,
+    ):
         """
         Motion is an interface to control the movement of the NICO robot.
 
@@ -57,40 +98,69 @@ class Motion:
 
         pypot_error.BaseErrorHandler = MotionErrorHandler
 
-        with open(motorConfig, 'r') as config_file:
+        if vrepConfig is None:
+            vrepConfig = Motion.vrepRemoteConfig()
+        self._pyrep = vrepConfig["use_pyrep"]
+
+        with open(motorConfig, "r") as config_file:
             config = json.load(config_file)
 
         self._config = config
 
         if vrep:
-            self._logger.info('Using VREP')
-            to_remove = ['l_virtualhand_x', 'r_virtualhand_x']
-            for motor in to_remove:
-                config['motors'].pop(motor)
-                for group in config['motorgroups'].keys():
-                    config['motorgroups'][group] = [x for x in
-                                                    config['motorgroups'][
-                                                        group] if x != motor]
-            self._robot = pypot.vrep.from_vrep(config, vrepHost, vrepPort,
-                                               vrepScene)
-            self._vrepIO = self._robot._controllers[0].io
+            self._logger.info("Using VREP")
+            if self._pyrep:
+                try:
+                    from pypot import pyrep
+                except ImportError as e:
+                    self._logger.warning(
+                        "Failed to import pyrep from pypot. Make sure you are "
+                        "using Python 3 and all environment variables are set."
+                    )
+                    raise e
+                self._robot = pyrep.from_pyrep(
+                    config,
+                    vrepConfig["vrep_scene"],
+                    vrepConfig["start"],
+                    vrepConfig["headless"],
+                    vrepConfig["responsive_ui"],
+                    vrepConfig["tracked_objects"],
+                    vrepConfig["tracked_collisions"],
+                    vrepConfig["id"],
+                    vrepConfig["shared_vrep_io"],
+                )
+            else:
+                self._robot = pypot.vrep.from_vrep(
+                    config,
+                    vrepConfig["vrep_host"],
+                    vrepConfig["vrep_port"],
+                    vrepConfig["vrep_scene"],
+                    vrepConfig["tracked_objects"],
+                    vrepConfig["tracked_collisions"],
+                    vrepConfig["id"],
+                    vrepConfig["shared_vrep_io"],
+                )
+                self._vrepIO = self._robot._controllers[0].io
         else:
-            self._logger.info('Using robot')
+            self._logger.info("Using robot")
             self._adjust_port_latency()
 
             def remove_missing(ids):
                 for id in ids:
                     id = int(id)
-                    for motor in config['motors'].keys():
-                        if config['motors'][motor]['id'] == id:
+                    for motor in list(config["motors"].keys()):
+                        if config["motors"][motor]["id"] == id:
                             self._logger.warning(
-                                'Removing motor {} ({})'.format(motor, id))
-                            config['motors'].pop(motor)
-                            for group in config['motorgroups'].keys():
-                                config['motorgroups'][group] = [
-                                    x for x in config['motorgroups'][
-                                        group] if x != motor]
-                self._logger.warning('New config created:')
+                                "Removing motor {} ({})".format(motor, id)
+                            )
+                            config["motors"].pop(motor)
+                            for group in config["motorgroups"].keys():
+                                config["motorgroups"][group] = [
+                                    x
+                                    for x in config["motorgroups"][group]
+                                    if x != motor
+                                ]
+                self._logger.warning("New config created:")
                 self._logger.warning(pprint.pformat(config))
 
             retries = 0
@@ -114,13 +184,12 @@ class Motion:
                     # reinitialize pypot up to 3 times
                     if retries < 3:
                         # fetch ids from error
-                        regex = re.compile(r'.*\((?P<ids>.*)\).*')
-                        match = regex.match(e.message)
-                        string = match.group('ids')
-                        ids = string.split(',')
+                        regex = re.compile(r".*\((?P<ids>.*)\).*")
+                        match = regex.match(e.args[0])
+                        string = match.group("ids")
+                        ids = string.split(",")
                         self._logger.warning(
-                            "Missing ids {} - Retrying initialization".format(
-                                string)
+                            "Missing ids {} - Retrying initialization".format(string)
                         )
                         if ignoreMissing:
                             remove_missing(ids)
@@ -129,66 +198,82 @@ class Motion:
                     # reinitialize pypot up to 3 times
                     if retries < 3:
                         # fetch ids from error
-                        regex = re.compile(r'.*\[.*\].*\[(?P<ids>.*)\].*')
-                        match = regex.match(e.message)
-                        string = match.group('ids')
-                        ids = string.split(',')
+                        regex = re.compile(r".*\[.*\].*\[(?P<ids>.*)\].*")
+                        match = regex.match(e.args[0])
+                        string = match.group("ids")
+                        ids = string.split(",")
                         self._logger.warning(
-                            "Missing ids {} - Retrying initialization".format(
-                                string)
+                            "Missing ids {} - Retrying initialization".format(string)
                         )
                         if ignoreMissing:
                             remove_missing(ids)
                         retries += 1
                     else:
                         self._logger.error(
-                            (
-                                "Initialization failed after {} retries"
-                            ).format(retries))
+                            ("Initialization failed after {} retries").format(retries)
+                        )
                         raise e
                 except RuntimeError as e:
                     # Workaround for every other init failing
                     # FIXME Find source for RuntimeError on every other init
                     if retries == 3:
                         self._logger.error(
-                            (
-                                "Initialization failed after {} retries"
-                            ).format(retries))
+                            ("Initialization failed after {} retries").format(retries)
+                        )
                         raise e
                     retries += 1
                     self._logger.warning(
-                        "Retrying initialization after an error occured")
+                        "Retrying initialization after an error occured"
+                    )
                     time.sleep(1)
         time.sleep(3)  # wait for syncloop to initialize values
         # initialize hands
         # left hand
-        if (hasattr(self._robot, "l_middlefingers_x")):
-            if (hasattr(self._robot, "l_wrist_x")):
-                self._leftHand = RH7DHand(robot=self._robot, isLeft=True,
-                                          monitorCurrents=monitorHandCurrents,
-                                          vrep=vrep)
+        if hasattr(self._robot, "l_middlefingers_x"):
+            if hasattr(self._robot, "l_wrist_x"):
+                self._leftHand = RH7DHand(
+                    robot=self._robot,
+                    isLeft=True,
+                    monitorCurrents=monitorHandCurrents,
+                    vrep=vrep,
+                )
             else:
-                self._leftHand = RH5DHand(robot=self._robot, isLeft=True,
-                                          monitorCurrents=monitorHandCurrents,
-                                          vrep=vrep)
-        elif (hasattr(self._robot, "l_thumb_x")):
-            self._leftHand = RH4DHand(robot=self._robot, isLeft=True,
-                                      monitorCurrents=monitorHandCurrents,
-                                      vrep=vrep)
+                self._leftHand = RH5DHand(
+                    robot=self._robot,
+                    isLeft=True,
+                    monitorCurrents=monitorHandCurrents,
+                    vrep=vrep,
+                )
+        elif hasattr(self._robot, "l_thumb_x"):
+            self._leftHand = RH4DHand(
+                robot=self._robot,
+                isLeft=True,
+                monitorCurrents=monitorHandCurrents,
+                vrep=vrep,
+            )
         # right hand
-        if (hasattr(self._robot, "r_middlefingers_x")):
-            if (hasattr(self._robot, "r_wrist_x")):
-                self._rightHand = RH7DHand(robot=self._robot, isLeft=False,
-                                           monitorCurrents=monitorHandCurrents,
-                                           vrep=vrep)
+        if hasattr(self._robot, "r_middlefingers_x"):
+            if hasattr(self._robot, "r_wrist_x"):
+                self._rightHand = RH7DHand(
+                    robot=self._robot,
+                    isLeft=False,
+                    monitorCurrents=monitorHandCurrents,
+                    vrep=vrep,
+                )
             else:
-                self._rightHand = RH5DHand(robot=self._robot, isLeft=False,
-                                           monitorCurrents=monitorHandCurrents,
-                                           vrep=vrep)
-        elif (hasattr(self._robot, "r_thumb_x")):
-            self._rightHand = RH4DHand(robot=self._robot, isLeft=False,
-                                       monitorCurrents=monitorHandCurrents,
-                                       vrep=vrep)
+                self._rightHand = RH5DHand(
+                    robot=self._robot,
+                    isLeft=False,
+                    monitorCurrents=monitorHandCurrents,
+                    vrep=vrep,
+                )
+        elif hasattr(self._robot, "r_thumb_x"):
+            self._rightHand = RH4DHand(
+                robot=self._robot,
+                isLeft=False,
+                monitorCurrents=monitorHandCurrents,
+                vrep=vrep,
+            )
         # remember initial situation as a safe state
         self.safeState = dict()
         for motor in self._robot.motors:
@@ -202,16 +287,18 @@ class Motion:
         try:
             subprocess.check_output(["which", "setserial"])
         except subprocess.CalledProcessError as e:
-            self._logger.critical("could not find setserial - please make " +
-                                  "sure that the setserial package is " +
-                                  "installed on your system")
+            self._logger.critical(
+                "could not find setserial - please make "
+                + "sure that the setserial package is "
+                + "installed on your system"
+            )
             raise e
 
         # get all ports
         ports = pypot.dynamixel.get_available_ports()
 
         if not ports:
-            raise OSError('No available ports found')
+            raise OSError("No available ports found")
 
         # find a port which has dynamixel motors attached
         ids = range(48)
@@ -225,7 +312,8 @@ class Motion:
                     break
             except DxlCommunicationError:
                 self._logger.warning(
-                    "Skipping {} due to communication error".format(port))
+                    "Skipping {} due to communication error".format(port)
+                )
 
         if not motors_found:
             raise OSError("No valid port found")
@@ -256,37 +344,66 @@ class Motion:
         """
         Starts the V-REP Simulation. If 'synchronize' is set True the
         simulation steps will not advance until nextSimulationStep() is called.
+        (NOTE: pyrep is always in synchronous mode)
 
         :param synchronize: Enables control over simulation time steps
         :type synchronize: bool
         """
         if self._vrep:
-            if synchronize:
-                remote_api.simxSynchronous(self._vrepIO.client_id, True)
-                self._vrepIO.start_simulation()
+            if self._pyrep:
+                self._robot.start_simulation()
             else:
-                remote_api.simxSynchronous(self._vrepIO.client_id, False)
-                self._vrepIO.start_simulation()
+                if synchronize:
+                    remote_api.simxSynchronous(self._vrepIO.client_id, True)
+                    self._vrepIO.start_simulation()
+                else:
+                    remote_api.simxSynchronous(self._vrepIO.client_id, False)
+                    self._vrepIO.start_simulation()
+
         else:
-            self._logger.warning(
-                'startSimulation() has no effect on a real robot')
+            self._logger.warning("startSimulation() has no effect on a real robot")
 
     def setSimulationDeltatime(self, dt):
         """
-        Sets the timeframe which one simulation step represents. Only works
-        while the simulation is stopped and dt is set to custom in V-REP.
+        Sets the timeframe which one simulation step represents.
 
-        :param dt: timeframe of one simulation step
-        :type dt: int
+        Only works while the simulation is stopped and dt is set
+        to custom.
+
+
+        :param dt: timeframe of one simulation step in seconds
+        :type dt: float
         """
         if self._vrep:
-            self._vrepIO.call_remote_api(
-                'simxSetFloatingParameter',
-                remote_api.sim_floatparam_simulation_time_step,
-                dt)
+            if self._pyrep:
+                self._robot.set_simulation_timestep(dt)
+            else:
+                self._vrepIO.call_remote_api(
+                    "simxSetFloatingParameter",
+                    remote_api.sim_floatparam_simulation_time_step,
+                    dt,
+                )
         else:
-            self._logger.warning(
-                'nextSimulationStep() has no effect on a real robot')
+            self._logger.warning("Robot is not simulated.")
+
+    def getSimulationDeltatime(self):
+        """
+        Gets the timeframe which one simulation step represents.
+
+        :return: timeframe of one simulation step in seconds
+        :rtype: float
+        """
+        if self._vrep:
+            if self._pyrep:
+                return self._robot.get_simulation_timestep()
+            else:
+                return self._vrepIO.call_remote_api(
+                    "simxGetFloatingParameter",
+                    remote_api.sim_floatparam_simulation_time_step,
+                )
+        else:
+            self._logger.warning("Robot is not simulated.")
+            return 0.0
 
     def nextSimulationStep(self):
         """
@@ -294,30 +411,36 @@ class Motion:
         startSimulation().
         """
         if self._vrep:
-            remote_api.simxSynchronousTrigger(self._vrepIO.client_id)
+            if self._pyrep:
+                self._robot.simulation_step()
+            else:
+                remote_api.simxSynchronousTrigger(self._vrepIO.client_id)
         else:
-            self._logger.warning(
-                'nextSimulationStep() has no effect on a real robot')
+            self._logger.warning("nextSimulationStep() has no effect on a real robot")
 
     def stopSimulation(self):
         """
         Stops the V-REP simulation
         """
         if self._vrep:
-            self._vrepIO.stop_simulation()
+            if self._pyrep:
+                self._robot.stop_simulation()
+            else:
+                self._vrepIO.stop_simulation()
         else:
-            self._logger.warning(
-                'stopSimulation() has no effect on a real robot')
+            self._logger.warning("stopSimulation() has no effect on a real robot")
 
     def resetSimulation(self):
         """
         Restarts the V-REP simulation
         """
         if self._vrep:
-            self._vrepIO.restart_simulation()
+            if self._pyrep:
+                self._robot.reset_simulation()
+            else:
+                self._vrepIO.restart_simulation()
         else:
-            self._logger.warning(
-                'resetSimulation() has no effect on a real robot')
+            self._logger.warning("resetSimulation() has no effect on a real robot")
 
     def callVREPRemoteApi(self, func_name, *args, **kwargs):
         """ Calls any remote API func in a thread_safe way.
@@ -330,8 +453,7 @@ class Motion:
 
         .. note:: You can add an extra keyword to specify if you want to use
                   the streaming or sending mode. The oneshot_wait mode is used
-                  by default (see `here <
-                  http://www.coppeliarobotics.com/helpFiles/en/remoteApiConstants.htm#operationModes>`_
+                  by default (see `here <http://www.coppeliarobotics.com/helpFiles/en/remoteApiConstants.htm#operationModes>`_
                   for details about possible modes).
 
         .. warning:: You should not pass the clientId and the operationMode as
@@ -340,8 +462,7 @@ class Motion:
         if self._vrep:
             return self._vrepIO.call_remote_api(func_name, *args, **kwargs)
         else:
-            self._logger.warning(
-                'callVREPRemoteApi() has no effect on a real robot')
+            self._logger.warning("callVREPRemoteApi() has no effect on a real robot")
             return None
 
     def getVrepIO(self):
@@ -355,11 +476,10 @@ class Motion:
         if self._vrep:
             return self._vrepIO
         else:
-            self._logger.warning('A real robot has no VREP controller')
+            self._logger.warning("A real robot has no VREP controller")
             return None
 
-    def setHandPose(self, handName, poseName, fractionMaxSpeed=1.0,
-                    percentage=1):
+    def setHandPose(self, handName, poseName, fractionMaxSpeed=1.0, percentage=1):
         """
         Executes pose with the specified hand. Most poses only works with the
         RH5D and RH7D 4-finger hands. Make sure to open the hand beforehand.
@@ -382,8 +502,7 @@ class Motion:
         :type percentage: float
         """
         if self._vrep:
-            self._logger.warning(
-                "'{}' pose is not supported for vrep".format(poseName))
+            self._logger.warning("'{}' pose is not supported for vrep".format(poseName))
         else:
             if handName.lower().startswith("l"):
                 hand = self._leftHand
@@ -398,7 +517,9 @@ class Motion:
             else:
                 self._logger.warning(
                     "'{}' pose is not supported for hand model {}".format(
-                        poseName, hand.__class__.__name__))
+                        poseName, hand.__class__.__name__
+                    )
+                )
 
     def openHand(self, handName, fractionMaxSpeed=1.0, percentage=1.0):
         """
@@ -419,11 +540,9 @@ class Motion:
             self._logger.warning("Unknown hand name {}".format(handName))
 
         if self._vrep:
-            hand.openHandVREP(min(fractionMaxSpeed, self._maximumSpeed),
-                              percentage)
+            hand.openHandVREP(min(fractionMaxSpeed, self._maximumSpeed), percentage)
         else:
-            hand.openHand(min(fractionMaxSpeed, self._maximumSpeed),
-                          percentage)
+            hand.openHand(min(fractionMaxSpeed, self._maximumSpeed), percentage)
 
     def closeHand(self, handName, fractionMaxSpeed=1.0, percentage=1.0):
         """
@@ -444,11 +563,27 @@ class Motion:
             self._logger.warning("Unknown hand name {}".format(handName))
 
         if self._vrep:
-            hand.closeHandVREP(min(fractionMaxSpeed, self._maximumSpeed),
-                               percentage)
+            hand.closeHandVREP(min(fractionMaxSpeed, self._maximumSpeed), percentage)
         else:
-            hand.closeHand(min(fractionMaxSpeed, self._maximumSpeed),
-                           percentage)
+            hand.closeHand(min(fractionMaxSpeed, self._maximumSpeed), percentage)
+
+    def getPalmSensorReading(self, handName):
+        """
+        Returns current reading of the palm IR sensor of the specified hand.
+
+        :param handName: Name of the hand (RHand, LHand)
+        :type handName: str
+        :return: Raw IR sensor value
+        :rtype: int
+        """
+        if handName.lower().startswith("l"):
+            hand = self._leftHand
+        elif handName.lower().startswith("r"):
+            hand = self._rightHand
+        else:
+            self._logger.warning("Unknown hand name {}".format(handName))
+
+        return hand.getPalmSensorReading()
 
     def enableForceControlAll(self, goalForce=500):
         """
@@ -458,7 +593,7 @@ class Motion:
         :type goalForce: int
         """
         for motor in self._robot.motors:
-            if hasattr(motor, 'force_control_enable'):
+            if hasattr(motor, "force_control_enable"):
                 motor.force_control_enable = True
                 motor.goal_force = goalForce
 
@@ -467,7 +602,7 @@ class Motion:
         Disables force control for all joints which support this feature
         """
         for motor in self._robot.motors:
-            if hasattr(motor, 'force_control_enable'):
+            if hasattr(motor, "force_control_enable"):
                 motor.force_control_enable = False
 
     def enableForceControl(self, jointName, goalForce):
@@ -481,12 +616,11 @@ class Motion:
         """
         if hasattr(self._robot, jointName):
             motor = getattr(self._robot, jointName)
-            if hasattr(motor, 'force_control_enable'):
+            if hasattr(motor, "force_control_enable"):
                 motor.force_control_enable = True
                 motor.goal_force = goalForce
             else:
-                self._logger.warning(
-                    'Joint %s has no force control' % jointName)
+                self._logger.warning("Joint %s has no force control" % jointName)
         else:
             self._logger.warning('No joint "%s" found' % jointName)
             return
@@ -500,11 +634,10 @@ class Motion:
         """
         if hasattr(self._robot, jointName):
             motor = getattr(self._robot, jointName)
-            if hasattr(motor, 'force_control_enable'):
+            if hasattr(motor, "force_control_enable"):
                 motor.force_control_enable = False
             else:
-                self._logger.warning(
-                    'Joint %s has no force control' % jointName)
+                self._logger.warning("Joint %s has no force control" % jointName)
         else:
             self._logger.warning('No joint "%s" found' % jointName)
             return
@@ -532,23 +665,21 @@ class Motion:
         """
         if hasattr(self._robot, jointName):
             handMotor = False
-            if (hasattr(self, "_leftHand") and
-                    self._leftHand.isHandMotor(jointName)):
+            if hasattr(self, "_leftHand") and self._leftHand.isHandMotor(jointName):
                 hand = self._leftHand
                 handMotor = True
-            elif (hasattr(self, "_rightHand") and
-                  self._rightHand.isHandMotor(jointName)):
+            elif hasattr(self, "_rightHand") and self._rightHand.isHandMotor(jointName):
                 hand = self._rightHand
                 handMotor = True
 
             if handMotor:
-                hand.setAngle(jointName, angle, min(
-                    fractionMaxSpeed, self._maximumSpeed))
+                hand.setAngle(
+                    jointName, angle, min(fractionMaxSpeed, self._maximumSpeed)
+                )
             else:
                 motor = getattr(self._robot, jointName)
                 motor.compliant = False
-                motor.goal_speed = 1000.0 * min(fractionMaxSpeed,
-                                                self._maximumSpeed)
+                motor.goal_speed = 1000.0 * min(fractionMaxSpeed, self._maximumSpeed)
                 motor.goal_position = angle
         else:
             self._logger.warning('No joint "%s" found' % jointName)
@@ -567,24 +698,24 @@ class Motion:
         """
         if hasattr(self._robot, jointName):
             handMotor = False
-            if (hasattr(self, "_leftHand") and
-                    self._leftHand.isHandMotor(jointName)):
+            if hasattr(self, "_leftHand") and self._leftHand.isHandMotor(jointName):
                 hand = self._leftHand
                 handMotor = True
-            elif (hasattr(self, "_rightHand") and
-                  self._rightHand.isHandMotor(jointName)):
+            elif hasattr(self, "_rightHand") and self._rightHand.isHandMotor(jointName):
                 hand = self._rightHand
                 handMotor = True
 
             motor = getattr(self._robot, jointName)
 
             if handMotor:
-                hand.setAngle(jointName, change + motor.present_position, min(
-                    fractionMaxSpeed, self._maximumSpeed))
+                hand.setAngle(
+                    jointName,
+                    change + hand.getAngle(jointName),
+                    min(fractionMaxSpeed, self._maximumSpeed),
+                )
             else:
                 motor.compliant = False
-                motor.goal_speed = 1000.0 * min(fractionMaxSpeed,
-                                                self._maximumSpeed)
+                motor.goal_speed = 1000.0 * min(fractionMaxSpeed, self._maximumSpeed)
                 motor.goal_position = change + motor.present_position
         else:
             self._logger.warning('No joint "%s" found' % jointName)
@@ -600,8 +731,19 @@ class Motion:
         :rtype: float
         """
         if hasattr(self._robot, jointName):
-            motor = getattr(self._robot, jointName)
-            return motor.present_position
+            handMotor = False
+            if hasattr(self, "_leftHand") and self._leftHand.isHandMotor(jointName):
+                hand = self._leftHand
+                handMotor = True
+            elif hasattr(self, "_rightHand") and self._rightHand.isHandMotor(jointName):
+                hand = self._rightHand
+                handMotor = True
+
+            if handMotor:
+                return hand.getAngle(jointName)
+            else:
+                motor = getattr(self._robot, jointName)
+                return motor.present_position
         else:
             self._logger.warning('No joint "%s" found' % jointName)
             return 0.0
@@ -615,7 +757,8 @@ class Motion:
         """
         jointNames = []
         for motor in self._robot.motors:
-            jointNames += [motor.name]
+            if "virtualhand" not in motor.name:
+                jointNames += [motor.name]
         return jointNames
 
     def getSensorNames(self):
@@ -719,11 +862,10 @@ class Motion:
         """
         if hasattr(self._robot, jointName):
             motor = getattr(self._robot, jointName)
-            if hasattr(motor, 'present_temperature'):
+            if hasattr(motor, "present_temperature"):
                 return motor.present_temperature
             else:
-                self._logger.warning(
-                    'Joint %s has no present temperature' % jointName)
+                self._logger.warning("Joint %s has no present temperature" % jointName)
                 return 0.0
         else:
             self._logger.warning('No joint "%s" found' % jointName)
@@ -739,19 +881,16 @@ class Motion:
         :rtype: float
         """
         if hasattr(self._robot, jointName):
-            if(hasattr(self, "_leftHand") and
-               self._leftHand.isHandMotor(jointName)):
+            if hasattr(self, "_leftHand") and self._leftHand.isHandMotor(jointName):
                 return self._leftHand.getPresentCurrent(jointName)
-            elif(hasattr(self, "_rightHand") and
-                 self._rightHand.isHandMotor(jointName)):
+            elif hasattr(self, "_rightHand") and self._rightHand.isHandMotor(jointName):
                 return self._rightHand.getPresentCurrent(jointName)
             else:
                 motor = getattr(self._robot, jointName)
-                if hasattr(motor, 'present_current'):
+                if hasattr(motor, "present_current"):
                     return motor.present_current
                 else:
-                    self._logger.warning(
-                        'Joint %s has no present current' % jointName)
+                    self._logger.warning("Joint %s has no present current" % jointName)
                     return 0.0
         else:
             self._logger.warning('No joint "%s" found' % jointName)
@@ -768,11 +907,10 @@ class Motion:
         """
         if hasattr(self._robot, jointName):
             motor = getattr(self._robot, jointName)
-            if hasattr(motor, 'present_speed'):
+            if hasattr(motor, "present_speed"):
                 return motor.present_speed
             else:
-                self._logger.warning(
-                    'Joint %s has no present speed' % jointName)
+                self._logger.warning("Joint %s has no present speed" % jointName)
                 return 0.0
         else:
             self._logger.warning('No joint "%s" found' % jointName)
@@ -787,8 +925,7 @@ class Motion:
         :param maximumSpeed: Maximum allowed speed (0 <= maximumSpeed <= 1.0)
         """
         if not 0.0 <= maximumSpeed <= 1.0:
-            self._logger.warning(
-                'New maximum speed out of bounds (%d)' % maximumSpeed)
+            self._logger.warning("New maximum speed out of bounds (%d)" % maximumSpeed)
             return
         self._maximumSpeed = maximumSpeed
 
@@ -802,19 +939,17 @@ class Motion:
         :type stiffness: float
         """
         if not 0.0 <= stiffness <= 1.0:
-            self._logger.warning(
-                'New stiffness out of bounds (%d)' % maximumSpeed)
+            self._logger.warning("New stiffness out of bounds (%d)", stiffness)
             return
 
         if hasattr(self._robot, jointName):
             motor = getattr(self._robot, jointName)
-            if hasattr(motor, 'torque_limit'):
+            if hasattr(motor, "torque_limit"):
                 motor.torque_limit = 100.0 * stiffness
             else:
-                self._logger.warning(
-                    'Joint %s has no torque limit' % jointName)
+                self._logger.warning("Joint %s has no torque limit" % jointName)
 
-            if (stiffness < 0.001):
+            if stiffness < 0.001:
                 self.disableTorque(jointName)
         else:
             self._logger.warning('No joint "%s" found' % jointName)
@@ -833,11 +968,10 @@ class Motion:
             motor = getattr(self._robot, jointName)
             if motor.compliant:  # no torque
                 return 0.0
-            elif hasattr(motor, 'torque_limit'):
+            elif hasattr(motor, "torque_limit"):
                 return motor.torque_limit / 100.0
             else:
-                self._logger.warning(
-                    'Joint %s has no torque limit' % jointName)
+                self._logger.warning("Joint %s has no torque limit" % jointName)
                 return 1.0
         else:
             self._logger.warning('No joint "%s" found' % jointName)
@@ -859,15 +993,17 @@ class Motion:
         """
         if hasattr(self._robot, jointName):
             motor = getattr(self._robot, jointName)
-            if hasattr(motor, 'pid'):
-                if ((hasattr(self, "_leftHand") and
-                     self._leftHand.isHandMotor(jointName)) or
-                    (hasattr(self, "_rightHand") and
-                     self._rightHand.isHandMotor(jointName))):
+            if hasattr(motor, "pid"):
+                if (
+                    hasattr(self, "_leftHand") and self._leftHand.isHandMotor(jointName)
+                ) or (
+                    hasattr(self, "_rightHand")
+                    and self._rightHand.isHandMotor(jointName)
+                ):
                     motor.pid_lock = False
                 motor.pid = (p, i, d)
             else:
-                self._logger.warning('Joint %s has no pid' % jointName)
+                self._logger.warning("Joint %s has no pid" % jointName)
         else:
             self._logger.warning('No joint "%s" found' % jointName)
             return
@@ -884,10 +1020,10 @@ class Motion:
         """
         if hasattr(self._robot, jointName):
             motor = getattr(self._robot, jointName)
-            if hasattr(motor, 'pid'):
+            if hasattr(motor, "pid"):
                 return motor.pid
             else:
-                self._logger.warning('Joint %s has no pid' % jointName)
+                self._logger.warning("Joint %s has no pid" % jointName)
                 return (0.0, 0.0, 0.0)
         else:
             self._logger.warning('No joint "%s" found' % jointName)
@@ -955,11 +1091,10 @@ class Motion:
         longer control the robot
         """
         if self._robot is None:
-            self._logger.warning(
-                'Cleanup called - but robot is not initialised')
+            self._logger.warning("Cleanup called - but robot is not initialised")
             return
 
-        self._logger.info('Closing robot connection')
+        self._logger.info("Closing robot connection")
         self._robot.close()
         self._robot = None
 

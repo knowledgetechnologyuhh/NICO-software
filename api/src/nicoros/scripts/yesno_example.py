@@ -16,7 +16,7 @@ def talker():
     rospy.init_node('talker', anonymous=True)
     rate = rospy.Rate(10)  # 10hz
     position = -20
-    for i in xrange(6):
+    for i in range(6):
         position = position * -1
         pub.publish("head_y", position, 0.05)
         time.sleep(1)

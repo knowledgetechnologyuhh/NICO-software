@@ -6,13 +6,13 @@ The Motion class allows control over the NICO motors through ROS.
 To start the interface run:
 
 .. code-block:: bash
-   
+
    rosrun nicoros Motion.py
 
 Many options are available to change the behaviour of RosNico. For a list of them run:
 
 .. code-block:: bash
-   
+
    rosrun nicoros Motion.py -h
 
 Exposed topics
@@ -73,6 +73,11 @@ The following ROS topics are exposed by the class - where $PREFIX stands for the
 |                                                |                                                |  1. Name of joint                                                                     |
 |                                                |                                                |  2. stifftness                                                                        |
 +------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
+| $PREFIX/palm_sensor/left                       | nicomsg/i                                      | Publishes readings of the sensor in the left palm.                                    |
++------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
+| $PREFIX/palm_sensor/right                      | nicomsg/i                                      | Publishes readings of the sensor in the right palm.                                   |
++------------------------------------------------+------------------------------------------------+---------------------------------------------------------------------------------------+
+
 
 Exposed services
 ################
@@ -82,7 +87,7 @@ The following ROS services are exposed by the class - where $PREFIX stands for t
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
 | ROS service name                               | Service type                                   | Short description                                                          |
 +================================================+================================================+============================================================================+
-| $PREFIX/getAngle                               | nicomsg/GetValue                               | Returns the angle of a single joint                                        | 
+| $PREFIX/getAngle                               | nicomsg/GetValue                               | Returns the angle of a single joint                                        |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+
 | $PREFIX/getAngleLowerLimit                     | nicomsg/GetValue                               | Returns the lower limit of the angle for a single joint                    |
 +------------------------------------------------+------------------------------------------------+----------------------------------------------------------------------------+

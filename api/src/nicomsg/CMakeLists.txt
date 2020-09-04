@@ -60,6 +60,11 @@ add_message_files(
    sffff.msg
    ffff.msg
    affffa.msg
+   bitmap_face.msg
+   polynomial_eyebrow.msg
+   polynomial_face.msg
+   polynomial_mouth.msg
+   wavelet_face.msg
  )
 
 ## Generate services in the 'srv' folder
@@ -75,6 +80,10 @@ add_service_files(
    StopAudioStream.srv
    GetChannelStates.srv
    SetIntValue.srv
+   SayText.srv
+   GetFilename.srv
+   LoadAudio.srv
+   GetAudioIDs.srv
 )
 
 ## Generate actions in the 'action' folder

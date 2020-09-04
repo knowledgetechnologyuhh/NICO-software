@@ -7,14 +7,17 @@ import weakref
 import serial
 import serial.tools.list_ports
 
-import _nicotouch_internal.optoforce as optoforce_driver
+import nicotouch._nicotouch_internal.optoforce as optoforce_driver
 
 # 'Counts/N' from sensitivity report
-scales = {"ONR0A003": [[230.34, 230.34, 230.34],  # DSE0A174 (ring)
-                       [186.19, 186.19, 186.19],  # DSE0A173 (index)
-                       [189.20, 189.20, 189.20],  # DSE0A184 (thumb)
-                       [1, 1, 1]]  # unused 4th slot
-          }
+scales = {
+    "ONR0A003": [
+        [230.34, 230.34, 230.34],  # DSE0A174 (ring)
+        [186.19, 186.19, 186.19],  # DSE0A173 (index)
+        [189.20, 189.20, 189.20],  # DSE0A184 (thumb)
+        [1, 1, 1],
+    ]  # unused 4th slot
+}
 
 # labels for fingers
 keys = {"ONR0A003": ["ring", "index", "thumb", None]}
@@ -55,38 +58,34 @@ class OptoforceMultichannel(object):
         for p in ports:
             if "OptoForce" in p.description:
                 logging.info(
-                    (
-                        "Connecting to OptoForce sensor on port {}"
-                    ).format(p.device))
+                    ("Connecting to OptoForce sensor on port {}").format(p.device)
+                )
                 try:
                     driver = optoforce_driver.OptoforceDriver(
-                        p.device, "m-ch/3-axis", self._scale)
+                        p.device, "m-ch/3-axis", self._scale
+                    )
 
                     driver.request_serial_number()
                     while driver._serial.is_open:
                         try:
                             data = driver.read()
 
-                            if isinstance(
-                                    data,
-                                    optoforce_driver.OptoforceSerialNumber
-                            ):
-                                if (
-                                    ser_number is None or ser_number == str(
-                                        data)
-                                ):
+                            if isinstance(data, optoforce_driver.OptoforceSerialNumber):
+                                if ser_number is None or ser_number == str(data):
                                     logging.info(
                                         (
-                                            "Successfully connected to " +
-                                            "OptoForce sensor {} on port {}"
-                                        ).format(
-                                            str(data), p.device))
+                                            "Successfully connected to "
+                                            + "OptoForce sensor {} on port {}"
+                                        ).format(str(data), p.device)
+                                    )
                                     self._ser_number = str(data)
                                     return driver
-                                logging.info((
-                                    "OptoForce sensor on port {} skipped - " +
-                                    "serial number {} not matching {}").format(
-                                    p.device, ser_number, str(data)))
+                                logging.info(
+                                    (
+                                        "OptoForce sensor on port {} skipped - "
+                                        + "serial number {} not matching {}"
+                                    ).format(p.device, ser_number, str(data))
+                                )
                                 driver._serial.close()
                                 del driver
 
@@ -95,19 +94,34 @@ class OptoforceMultichannel(object):
 
                 except serial.SerialException as e:
                     logging.warning(
-                        ("Connection to OptoForce sensor port {} failed due " +
-                         "to {}").format(p.device, e))
+                        (
+                            "Connection to OptoForce sensor port {} failed due "
+                            + "to {}"
+                        ).format(p.device, e)
+                    )
 
         if ser_number is None:
             logging.fatal("No OptoForce sensor found")
         else:
             logging.fatal(
-                (
-                    "No matching OptoForce sensor found for serial number {}"
-                ).format(ser_number))
+                ("No matching OptoForce sensor found for serial number {}").format(
+                    ser_number
+                )
+            )
         return None
 
     def __init__(self, ser_number=None, cache_frequency=None):
+        """
+        Connects to optoforce sensor with given serial number (autodetects if
+        None) and starts caching if a frequency is given. (otherwise a new value
+        is fetched on method call)
+
+        :param ser_number: Serial number of the sensor (optional)
+        :type ser_number: str
+        :param ser_number: Cache frequency (optional)
+        :type ser_number: int
+        """
+
         self._logger = logging.getLogger(__name__)
         self._scale = [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]
         self._driver = self._scan_ports(ser_number)
@@ -117,9 +131,10 @@ class OptoforceMultichannel(object):
         else:
             self._logger.warning(
                 (
-                    "Missing 'Counts/N' entry from sensitivity report for {}" +
-                    " - conversion to Newton won't be possible"
-                ).format(self._ser_number))
+                    "Missing 'Counts/N' entry from sensitivity report for {}"
+                    + " - conversion to Newton won't be possible"
+                ).format(self._ser_number)
+            )
 
         if self._ser_number in keys:
             self._keys = keys[self._ser_number]
@@ -127,9 +142,9 @@ class OptoforceMultichannel(object):
             self._keys = ["0", "1", "2", "3"]
             self._logger.warning(
                 (
-                    "No name keys defined for {} - using generic keys {} " +
-                    "instead"
-                ).format(self._ser_number, self._keys))
+                    "No name keys defined for {} - using generic keys {} " + "instead"
+                ).format(self._ser_number, self._keys)
+            )
 
         self._cached_data = None
         self._cached_mode = False
@@ -139,14 +154,17 @@ class OptoforceMultichannel(object):
         if cache_frequency:
             self._cached_mode = True
             worker = threading.Thread(
-                target=_cache_thread,
-                args=(weakref.ref(self), cache_frequency))
+                target=_cache_thread, args=(weakref.ref(self), cache_frequency)
+            )
             worker.daemon = True
             worker.start()
 
         time.sleep(0.2)
 
     def update_cache(self):
+        """
+        Collects new sensor values from the device.
+        """
         while True:
             self._driver.flush()
             data = self._driver.read()
@@ -192,9 +210,9 @@ class OptoforceMultichannel(object):
         # convert forces for each sensor
         for key in self._keys:
             # elementwise division
-            raw["forces"][key] = map(lambda val, scale: val / scale,
-                                     raw["forces"][key],
-                                     self._scale[self._keys.index(key)])
+            raw["forces"][key] = map(
+                lambda val, scale: val / scale,
+                raw["forces"][key],
+                self._scale[self._keys.index(key)],
+            )
         return raw
-
-        return ret

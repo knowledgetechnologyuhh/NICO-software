@@ -25,7 +25,7 @@
 import sys
 import time
 
-from nicomotion import Motion
+import Motion
 
 
 class Mover:
@@ -44,7 +44,7 @@ class Mover:
     def __del__(self):
 
         if self.stiff_off is True:
-            print "And the stiffness off"
+            print ("And the stiffness off")
             self.robot.disableTorqueAll()
         # virtualRobot.disableTorqueAll()
 
@@ -57,7 +57,7 @@ class Mover:
 
         key = "s"
 
-        print "Give 'q' for stop recording"
+        print ("Give 'q' for stop recording")
 
         if (fname is None):
             fname = time.strftime("traj_%Y%m%d-%H%M%S") + ".csv"
@@ -81,7 +81,7 @@ class Mover:
 
                 key = raw_input()
 
-        print "Movement written as " + fname
+        print ("Movement written as " + fname)
 
     # record a position. Move the robot to its position and press <return>
     def record_position(self, fname=None):
@@ -110,7 +110,7 @@ class Mover:
 
             wr.writerow(recent_joint_positions)
 
-        print "Position written as " + fname
+        print ("Position written as " + fname)
 
     # Move the robot straight to the goal position. synchronize the speed for
     # the joint in a way, that they reach the position at the same time
@@ -130,7 +130,7 @@ class Mover:
         # print time_to_reach
         max_time = max(time_to_reach.values())
         max_keys = [k for k, v in time_to_reach.items() if v == max_time]
-        print "Max time: " + str((max_keys, max_time))
+        print ("Max time: " + str((max_keys, max_time)))
         for joi in target_positions:
             if real and max_time != 0.0:
                 self.robot.setAngle(joi, float(
@@ -260,7 +260,7 @@ class Mover:
                     pos = self.robot.getAngle(joint)
                     time.sleep(0.1)
                     pos = self.robot.getAngle(joint)
-                    print "angle: " + joint + " " + str(pos)
+                    print ("angle: " + joint + " " + str(pos))
                     self.robot.setAngle(joint, pos, 0.02)
                     # self.robot.enableTorque(joint)
                     # self.robot.enableTorque(joint)
@@ -276,7 +276,7 @@ if __name__ == "__main__":
     import argparse
     import logging
 
-    logging.basicConfig(level=logging.WARNING)
+    logging.basicConfig(level=logging.ERROR)
 
     # examples
     # Move with move file from current position over trajectory
