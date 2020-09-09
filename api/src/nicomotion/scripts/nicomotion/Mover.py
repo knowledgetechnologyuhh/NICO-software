@@ -25,13 +25,14 @@
 import sys
 import time
 
-import Motion
+import nicomotion.Motion as Motion
+
+if sys.version_info[0] >= 3:
+    raw_input = input
 
 
 class Mover:
-
-    def __init__(self, robot, stiff_off=False,
-                 path_to_config_file="mover.conf"):
+    def __init__(self, robot, stiff_off=False, path_to_config_file="mover.conf"):
 
         # print "Waiting for 2 seconds - Do not know why"
         # time.sleep(2)
@@ -44,7 +45,7 @@ class Mover:
     def __del__(self):
 
         if self.stiff_off is True:
-            print ("And the stiffness off")
+            print("And the stiffness off")
             self.robot.disableTorqueAll()
         # virtualRobot.disableTorqueAll()
 
@@ -57,9 +58,9 @@ class Mover:
 
         key = "s"
 
-        print ("Give 'q' for stop recording")
+        print("Give 'q' for stop recording")
 
-        if (fname is None):
+        if fname is None:
             fname = time.strftime("traj_%Y%m%d-%H%M%S") + ".csv"
 
         # filename = time.strftime("%Y%m%d-%H%M%S") + ".csv"
@@ -67,21 +68,22 @@ class Mover:
 
         raw_input()
 
-        with open(fname, "wb") as jointfile:
+        with open(fname, "w") as jointfile:
 
             wr = csv.writer(jointfile, quoting=csv.QUOTE_ALL)
             wr.writerow(self.robot.getJointNames())
 
-            while (key != "q"):
+            while key != "q":
 
-                recent_joint_positions = [self.robot.getAngle(
-                    jName) for jName in (self.robot.getJointNames())]
+                recent_joint_positions = [
+                    self.robot.getAngle(jName) for jName in (self.robot.getJointNames())
+                ]
 
                 wr.writerow(recent_joint_positions)
 
                 key = raw_input()
 
-        print ("Movement written as " + fname)
+        print("Movement written as " + fname)
 
     # record a position. Move the robot to its position and press <return>
     def record_position(self, fname=None):
@@ -91,26 +93,27 @@ class Mover:
 
         key = "s"
 
-        print "Put the NICO in the position and press <return>"
+        print("Put the NICO in the position and press <return>")
 
-        if (fname is None):
+        if fname is None:
             fname = time.strftime("pos-%Y%m%d-%H%M%S") + ".csv"
 
         # filename = time.strftime("%Y%m%d-%H%M%S") + ".csv"
 
         raw_input()
 
-        with open(fname, "wb") as jointfile:
+        with open(fname, "w") as jointfile:
 
             wr = csv.writer(jointfile, quoting=csv.QUOTE_ALL)
             wr.writerow(self.robot.getJointNames())
 
-            recent_joint_positions = [self.robot.getAngle(
-                jName) for jName in (self.robot.getJointNames())]
+            recent_joint_positions = [
+                self.robot.getAngle(jName) for jName in (self.robot.getJointNames())
+            ]
 
             wr.writerow(recent_joint_positions)
 
-        print ("Position written as " + fname)
+        print("Position written as " + fname)
 
     # Move the robot straight to the goal position. synchronize the speed for
     # the joint in a way, that they reach the position at the same time
@@ -125,17 +128,23 @@ class Mover:
         current_positions = copy.deepcopy(target_positions)
         for joint in current_positions:
             current_positions[joint] = self.robot.getAngle(joint)
-        time_to_reach = {k: abs((float(current_positions[k]) - float(
-            target_positions[k])) / cur_speed) for k in current_positions}
+        time_to_reach = {
+            k: abs(
+                (float(current_positions[k]) - float(target_positions[k])) / cur_speed
+            )
+            for k in current_positions
+        }
         # print time_to_reach
         max_time = max(time_to_reach.values())
         max_keys = [k for k, v in time_to_reach.items() if v == max_time]
-        print ("Max time: " + str((max_keys, max_time)))
+        print("Max time: " + str((max_keys, max_time)))
         for joi in target_positions:
             if real and max_time != 0.0:
-                self.robot.setAngle(joi, float(
-                    target_positions[joi]), ((speed * time_to_reach[joi]) /
-                                             max_time))
+                self.robot.setAngle(
+                    joi,
+                    float(target_positions[joi]),
+                    ((speed * time_to_reach[joi]) / max_time),
+                )
         return max_time
 
     # Read the position from a file and move the joint from the current postion
@@ -145,16 +154,16 @@ class Mover:
         import csv
         import time
 
-        if (subsetfname is not None):
+        if subsetfname is not None:
             with open(subsetfname) as f:
                 subsf = csv.reader(f)
                 subsetjoints = next(subsf)
 
         mt = 0
-        with open(fname, 'rb') as infile:
+        with open(fname, "r") as infile:
             reader = csv.DictReader(infile)
             # If no subsetfile, send to all the joints
-            if (subsetfname is None):
+            if subsetfname is None:
                 for row in reader:
                     mt = self.move_position(row, move_speed)
             else:
@@ -165,7 +174,7 @@ class Mover:
                     joi = {k: row[k] for k in subsetjoints}
                     # print joi
                     mt = self.move_position(joi, move_speed)
-        return(mt)
+        return mt
 
     # Read the position from a file and calculate a trajectory from the current
     # position to i
@@ -174,7 +183,7 @@ class Mover:
         import csv
         import copy
 
-        with open(fname, 'rb') as infile:
+        with open(fname, "r") as infile:
             reader = csv.DictReader(infile)
             for row in reader:
                 target_positions = row
@@ -182,11 +191,12 @@ class Mover:
             current_positions = copy.deepcopy(target_positions)
             for joint in current_positions:
                 current_positions[joint] = self.robot.getAngle(joint)
-            stepsize = {k: (float(target_positions[k]) -
-                            float(current_positions[k])) / number for k in
-                        current_positions}
+            stepsize = {
+                k: (float(target_positions[k]) - float(current_positions[k])) / number
+                for k in current_positions
+            }
 
-            with open(target_fname, "wb") as jointfile:
+            with open(target_fname, "w") as jointfile:
 
                 wr = csv.writer(jointfile, quoting=csv.QUOTE_ALL)
                 wr.writerow(target_positions.keys())
@@ -194,8 +204,7 @@ class Mover:
                 calc_pos = copy.deepcopy(current_positions)
                 for n in range(number):
                     wr.writerow(calc_pos.values())
-                    calc_pos = {k: (calc_pos[k] + stepsize[k]) for k in
-                                calc_pos}
+                    calc_pos = {k: (calc_pos[k] + stepsize[k]) for k in calc_pos}
 
         # return (mt)
 
@@ -210,16 +219,16 @@ class Mover:
 
         # raw_input()
 
-        if (subsetfname is not None):
+        if subsetfname is not None:
             with open(subsetfname) as f:
                 subsf = csv.reader(f)
                 subsetjoints = next(subsf)
 
         mt = 0
-        with open(fname, 'rb') as infile:
+        with open(fname, "r") as infile:
             reader = csv.DictReader(infile)
             # If no subsetfile, send to all the joints
-            if (subsetfname is None):
+            if subsetfname is None:
                 for row in reader:
                     mt = self.move_position(row, move_speed)
                     # print row
@@ -260,7 +269,7 @@ class Mover:
                     pos = self.robot.getAngle(joint)
                     time.sleep(0.1)
                     pos = self.robot.getAngle(joint)
-                    print ("angle: " + joint + " " + str(pos))
+                    print("angle: " + joint + " " + str(pos))
                     self.robot.setAngle(joint, pos, 0.02)
                     # self.robot.enableTorque(joint)
                     # self.robot.enableTorque(joint)
@@ -294,28 +303,42 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "command", help=("One of the commands m (record movement), " +
-                         "p (record position), pm (play movement), " +
-                         "pp (play position), cm (calculate movement) " +
-                         "fj(freeze joints) uj(unfreeze joints)"))
+        "command",
+        help=(
+            "One of the commands m (record movement), "
+            + "p (record position), pm (play movement), "
+            + "pp (play position), cm (calculate movement) "
+            + "fj(freeze joints) uj(unfreeze joints)"
+        ),
+    )
     # fj freeze joints as they are by torquing it. You subset to freeze only
     # a subset of the joints.
-    parser.add_argument('--json', nargs='?',
-                        default='../../../../../json/nico_humanoid_upper.json',
-                        help=("robots json file. Default: " +
-                              "nico_humanoid_upper.json"))
-    parser.add_argument('--filename', nargs='?', default=None,
-                        help="file to record or to play")
-    parser.add_argument('--targetfilename', nargs='?',
-                        default="/tmp/mov-calc.csv", help="file to write")
-    parser.add_argument('--subset', nargs='?', default=None,
-                        help="joint subset file")
-    parser.add_argument('--speed', nargs='?',
-                        default="0.05", help="speed of movement")
-    parser.add_argument('--vrep', action="store_true", default=False,
-                        help="let it run on vrep than instead of real robot")
-    parser.add_argument('--stiffoff', action="store_true", default=False,
-                        help="sets the stiffness to off after movement")
+    parser.add_argument(
+        "--json",
+        nargs="?",
+        default="../../../../../json/nico_humanoid_upper.json",
+        help=("robots json file. Default: " + "nico_humanoid_upper.json"),
+    )
+    parser.add_argument(
+        "--filename", nargs="?", default=None, help="file to record or to play"
+    )
+    parser.add_argument(
+        "--targetfilename", nargs="?", default="/tmp/mov-calc.csv", help="file to write"
+    )
+    parser.add_argument("--subset", nargs="?", default=None, help="joint subset file")
+    parser.add_argument("--speed", nargs="?", default="0.05", help="speed of movement")
+    parser.add_argument(
+        "--vrep",
+        action="store_true",
+        default=False,
+        help="let it run on vrep than instead of real robot",
+    )
+    parser.add_argument(
+        "--stiffoff",
+        action="store_true",
+        default=False,
+        help="sets the stiffness to off after movement",
+    )
     args = parser.parse_args()
     # print args
 
@@ -342,13 +365,11 @@ if __name__ == "__main__":
         mov.record_position(filename)
 
     if command == "pm":
-        mov.play_movement(filename, subsetfilename,
-                          move_speed=float(args.speed))
+        mov.play_movement(filename, subsetfilename, move_speed=float(args.speed))
         raw_input()
 
     if command == "pp":
-        mov.move_file_position(filename, subsetfilename,
-                               move_speed=float(args.speed))
+        mov.move_file_position(filename, subsetfilename, move_speed=float(args.speed))
         raw_input()
 
     if command == "cm":
