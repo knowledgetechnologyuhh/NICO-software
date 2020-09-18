@@ -61,15 +61,15 @@ if [ $ONLINE ] && [ $VIRTUAL_ENV == ~/.$VIRTUALENVDIR ]; then
   CURRENT_GIT_COMMIT=`git ls-remote https://github.com/knowledgetechnologyuhh/pypot.git HEAD | awk '{ print $1}'`
   if [ $REINSTALL_PYPOT == 1 ] || [ ! -f ~/.$VIRTUALENVDIR/.current_git_commit ] || [ ! `cat ~/.$VIRTUALENVDIR/.current_git_commit` == $CURRENT_GIT_COMMIT ]; then
     echo "Custom pypot outdated - updating to commit $CURRENT_GIT_COMMIT"
-    pip uninstall pypot -y
     cd /tmp
     git clone https://github.com/knowledgetechnologyuhh/pypot.git
     if [ ! $? -eq 0 ]; then
-        echo -e "\e[31mERROR: Could not clone pypot\e[0m"
-        cd $CALLDIR
-        return 1 2> /dev/null
+      echo -e "\e[31mERROR: Could not clone pypot\e[0m"
+      cleanup
+      return 1 2> /dev/null
     fi
     cd pypot
+    pip uninstall pypot -y
     pip install .
     if [ ! -z "$(pip list --disable-pip-version-check | grep -F pypot)" ]
     then
