@@ -26,9 +26,7 @@ to use the api without reinstalling or updating packages:
 
    source api/activate.bash
 
-For additional prerequisites see ``api/readme.md``
-
-:doc:`/Misc/prerequisites`
+See :doc:`/Misc/prerequisites` for additional instructions.
 
 Table Of Contents
 -----------------
