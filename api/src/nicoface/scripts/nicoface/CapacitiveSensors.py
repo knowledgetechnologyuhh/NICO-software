@@ -6,7 +6,9 @@ from SerialConnectionManager import SerialDevice
 class CapacitiveSensors(object):
     """
     CapacitiveSensors handles communication with the capacitive sensors
-    inside the head.
+    inside the NICO head.
+
+    Based on contributions by Seed Robotics (www.seedorobotics.com)
     """
 
     def __init__(self, devicename=None):
@@ -65,7 +67,16 @@ class CapacitiveSensors(object):
         exit(1)
 
     def getCapacitiveReadings(self):
+        """
+        Returns a list with the capacitive readings. Use the /len()/ python
+        operator to determine the size of the list.
 
+        An empty object is returned if there is a communication failure or the
+        feature is not supported on the Arduino sketch running in the head.
+
+        :return: capacitive readings
+        :rtype: list
+        """
         self._logger.info("Querying capacitive readings using command 'cprr'")
         # clear all buffered data to ensure we only get the data for our command
         self.ser.flushInput()
@@ -101,7 +112,10 @@ class CapacitiveSensors(object):
 
     def recallibrateCapacitivePads(self):
         """
-        Recalibrates the capacitive pads
+        Recallibrates the zero/baseline reading on the capacitive pads.
+
+        By default pads are callibrated on power up of the head board. Use this
+        function only if you find significant deviations during operation.
         """
         self._logger.info("Reacallibrating capacitive pads using command 'capca'")
         # clear all buffered data to ensure we only get the data for our command
