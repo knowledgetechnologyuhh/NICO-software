@@ -1,7 +1,7 @@
 Usage
 ===
 
-> **Note:** Due to changes in the setup, versions of the API installed prior to 22.09.2020 should be removed. Please delete the `~/.NICO`, `api/build` and `api/devel` folders and before running the setup script.
+> **Note:** Due to changes in the setup, versions of the API installed prior to 22.09.2020 should be removed. Please delete the `~/.NICO`, `api/build` and `api/devel` folders before running the setup script.
 
 To setup a virtualenv, install most required packages and build ros, use one of
 the two setup scripts.
