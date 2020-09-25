@@ -96,7 +96,7 @@ nicoros
 
 cv-bridge for python 3:
 
-As of writing, there is no pre-compiled `cv-bridge` for python 3. Therefore the
+There is no pre-compiled `cv-bridge` for ROS versions before Noetic. Therefore the
 `NICO-python3.bash` script needs to build it, which requires `catkin build`:
 
 .. code-block:: bash
