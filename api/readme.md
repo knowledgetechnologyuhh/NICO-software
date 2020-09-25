@@ -1,5 +1,8 @@
 Usage
 ===
+
+> **Note:** Due to changes in the setup, versions of the API installed prior to 22.09.2020 should be removed. Please delete the `~/.NICO`, `api/build` and `api/devel` folders and before running the setup script.
+
 To setup a virtualenv, install most required packages and build ros, use one of
 the two setup scripts.
 
@@ -13,6 +16,13 @@ For Python 3:
 
 ```
 source NICO-python3.bash
+```
+
+Either setup will generate an activation script that can be sourced
+to use the API without reinstalling or updating packages:
+
+```bash
+   source api/activate.bash
 ```
 
 Prerequisites
@@ -92,7 +102,7 @@ nicoros
 
 cv-bridge for python 3:
 
-As of writing, there is no pre-compiled `cv-bridge` for python 3. Therefore the
+There is no pre-compiled `cv-bridge` for ROS versions before Noetic. Therefore the
 `NICO-python3.bash` script needs to build it, which requires `catkin build`:
 ```
 sudo apt-get install python-catkin-tools
