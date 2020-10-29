@@ -13,11 +13,11 @@ if vrep:
     vrepConfig = Motion.Motion.vrepRemoteConfig()
     # vrepConfig = Motion.Motion.pyrepConfig() # requires python 3
     vrepConfig["vrep_scene"] = "../../../v-rep/NICO-seated-with-table.ttt"
-    robot = Motion.Motion("../../../json/nico_humanoid_upper_with_hands_vrep.json",
-                          vrep=True, vrepConfig=vrepConfig)
-else:
     robot = Motion.Motion(
-        "../../../json/nico_humanoid_upper_with_hands.json", vrep=False)
+        "../../../json/nico_humanoid_vrep.json", vrep=True, vrepConfig=vrepConfig
+    )
+else:
+    robot = Motion.Motion("../../../json/nico_humanoid_upper.json", vrep=False)
 
 position = 20
 
@@ -53,3 +53,4 @@ print("Moving to safe position")
 robot.toSafePosition()
 time.sleep(7)
 robot.disableTorqueAll()
+del robot
