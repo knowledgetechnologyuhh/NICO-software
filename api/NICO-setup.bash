@@ -41,9 +41,8 @@ if [ -d ".$VIRTUALENVDIR/" ]; then
 else
   echo "No virtualenv found - setting up new virtualenv"
   # Test for virtualenv
-  if ! [ -x "$(command -v virtualenv)" ]; then
-    pip install --user virtualenv
-    VIRTUALENV=".local/bin/virtualenv"
+  if ! [ -x "$(command -v $VIRTUALENV)" ]; then
+    echo -e "\e[31mERROR: Could not find command $VIRTUALENV, please make sure it is installed or change the value of VIRTUALENV to the proper command.\e[0m"
   fi
   $VIRTUALENV -p $PYTHON ~/.$VIRTUALENVDIR
 fi
