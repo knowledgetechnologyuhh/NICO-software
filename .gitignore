@@ -26,6 +26,7 @@ api/activate.bash
 
 # catkin generated files
 api/build
+api/src/CMakeLists.txt
 api/devel
 api/build-old
 api/devel-old
