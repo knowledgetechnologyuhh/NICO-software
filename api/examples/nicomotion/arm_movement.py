@@ -12,8 +12,8 @@ vrep = True
 if vrep:
     vrepConfig = Motion.Motion.vrepRemoteConfig()
     # vrepConfig = Motion.Motion.pyrepConfig() # requires python 3
-    vrepConfig["vrep_scene"] = "../../../v-rep/NICO-seated-with-table.ttt"
-    robot = Motion.Motion("../../../json/nico_humanoid_upper_with_hands_vrep.json",
+    vrepConfig["vrep_scene"] = "../../../v-rep/NICO-seated.ttt"
+    robot = Motion.Motion("../../../json/nico_humanoid_legged_with_hands_mod-vrep.json",
                           vrep=True, vrepConfig=vrepConfig)
 else:
     robot = Motion.Motion(
