@@ -12,9 +12,10 @@ vrep = True
 nico_root = dirname(abspath(__file__)) + "/../../.."
 
 if vrep:
-    # get default config for remote api and set scene
+    # get default config for remote api
     vrepConfig = Motion.Motion.vrepRemoteConfig()
-    vrepConfig["vrep_scene"] = nico_root + "/v-rep/NICO-seated-with-table.ttt"
+    # set scene (simulation will start automatically if this is set)
+    vrepConfig["vrep_scene"] = nico_root + "/v-rep/NICO-seated.ttt"
     # init simulated robot
     robot = Motion.Motion(
         nico_root + "/json/nico_humanoid_vrep.json", vrep=True, vrepConfig=vrepConfig

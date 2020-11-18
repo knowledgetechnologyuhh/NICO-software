@@ -22,12 +22,13 @@ if len(sys.argv) != 2:
     exit(1)
 
 if vrep:
-    # get default config for remote api and set scene
-    vrepConfig = Motion.Motion.vrepRemoteConfig()
-    vrepConfig["vrep_scene"] = nico_root + "/v-rep/NICO-seated.ttt"
+    # get default config for remote api
+    # vrepConfig = Motion.Motion.vrepRemoteConfig()
+    # set scene (simulation will start automatically if this is set)
+    # vrepConfig["vrep_scene"] = nico_root + "/v-rep/NICO-seated.ttt"
     # init simulated robot
     robot = Motion.Motion(
-        nico_root + "/json/nico_humanoid_vrep.json", vrep=True, vrepConfig=vrepConfig
+        nico_root + "/json/nico_humanoid_vrep.json", vrep=True,  # vrepConfig=vrepConfig
     )
 else:
     # init real robot
@@ -50,7 +51,8 @@ time.sleep(3)
 
 # cleanup
 if vrep:
-    robot.stopSimulation()
+    # robot.stopSimulation()
+    pass
 else:
     robot.disableTorqueAll()
 del robot
