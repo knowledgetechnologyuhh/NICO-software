@@ -5,12 +5,12 @@ import math
 import time
 from os.path import abspath, dirname
 
-import matplotlib.pyplot as plt
 import numpy as np
-from mpl_toolkits.mplot3d import Axes3D  # needed for 3d projection
 
 from nicomotion import Motion
-from ._nicomotion_internal.ikpy import chain, geometry_utils
+from ._nicomotion_internal.gaikpy import chain, chain_definitions
+from ._nicomotion_internal.gaikpy import robot as visualizer
+from ikpy.utils import geometry
 
 
 class Kinematics(object):
@@ -18,7 +18,10 @@ class Kinematics(object):
     with inverse kinematics."""
 
     def __init__(
-        self, robot, urdf=((dirname(abspath(__file__)) + "/urdf/kinematics.urdf"))
+        self,
+        robot,
+        urdf=((dirname(abspath(__file__)) + "/urdf/kinematics.urdf")),
+        visualizer=None,
     ):
         """
         The Kinematics class can be used to control the arms of the NICO robot
@@ -26,6 +29,8 @@ class Kinematics(object):
 
         :param robot: Motion object that controls the robot
         :type robot: nicomotion.Motion
+        :param visualizer: Visualizer obj[])ect
+        :type visualizer: nicomotion.Visualizer
         """
         self.logger = logging.getLogger(__name__)
         self.rightchain = chain.Chain.from_urdf_file(
@@ -46,9 +51,19 @@ class Kinematics(object):
                 "right_palm:11",
                 "r_ringfingers_x",
             ],
-            active_links_mask=[False, True, True, True, True, True, True],
+            active_joints_mask=[
+                False,
+                True,
+                True,
+                True,
+                True,
+                True,
+                True,
+                False,
+                False,
+                False,
+            ],
             name="right_arm",
-            last_link="r_wrist_x",
         )
         self.leftchain = chain.Chain.from_urdf_file(
             urdf,
@@ -68,14 +83,23 @@ class Kinematics(object):
                 "left_palm:11",
                 "l_ringfingers_x",
             ],
-            active_links_mask=[False, True, True, True, True, True, True],
+            active_joints_mask=[
+                False,
+                True,
+                True,
+                True,
+                True,
+                True,
+                True,
+                False,
+                False,
+                False,
+            ],
             name="left_arm",
-            last_link="l_wrist_x",
         )
 
         self.robot = robot
-
-        self.fig = plt.figure()
+        self.visualizer = visualizer
 
     def calculate_target_angles(
         self,
@@ -87,7 +111,6 @@ class Kinematics(object):
         pitch,
         yaw,
         origin_matrix=None,
-        visualize=True,
         distance_acc=0.01,
         orientation_acc=0.1,
         orientation_weight=0.3,
@@ -114,8 +137,6 @@ class Kinematics(object):
         :param origin_file: .csv file containing position and rotation values
                             to use as costum origin
         :type origin_file: str
-        :param visualize: whether the pose should be visualized as 3d graph
-        :type visualize: bool
         :param distance_acc: Minimal distance to goal position that the
                              solution should achieve (in meters)
         :type distance_acc: float
@@ -143,9 +164,8 @@ class Kinematics(object):
             exit(1)
 
         if origin_matrix is not None:
-            origin_pos, origin_rot = geometry_utils.from_transformation_matrix(
-                origin_matrix
-            )
+            origin_pos, origin_rot = geometry.from_transformation_matrix(origin_matrix)
+            origin_pos = origin_pos[:-1]
         else:
             origin_pos = np.array([0, 0, 0])
             origin_rot = np.eye(3)
@@ -158,66 +178,38 @@ class Kinematics(object):
             self.robot.getAngle(prefix + "_elbow_y"),
             self.robot.getAngle(prefix + "_wrist_z"),
             self.robot.getAngle(prefix + "_wrist_x"),
+            0,
+            0,
+            0,
         ]
-        if not self.robot._vrep:
-            start_angles[5] = start_angles[5] / 2.0
         start_angles = map(math.radians, start_angles)
 
         # orientation
         roll, pitch, yaw = map(math.radians, [roll, pitch, yaw])
-        rpyM = geometry_utils.rpy_matrix(roll, pitch, yaw)
+        rpyM = geometry.rpy_matrix(roll, pitch, yaw)
         rpyM = np.dot(rpyM, origin_rot)
         # position
         pos_x, pos_y, pos_z = origin_pos + np.array([pos_x, pos_y, pos_z])
         # calculate target angles
-        frame_target = geometry_utils.to_transformation_matrix(
-            [pos_x, pos_y, pos_z], rpyM
-        )
+        frame_target = geometry.to_transformation_matrix([pos_x, pos_y, pos_z], rpyM)
+        self.logger.info("Calculating target angles")
         target_angles = active_chain.inverse_kinematics(
             frame_target,
             initial_position=start_angles,
             method="ga_simple",
             include_orientation=True,
-            distance_acc=distance_acc,
-            orientation_acc=orientation_acc,
+            dist_acc=distance_acc,
+            or_acc=orientation_acc,
             orientation_weight=orientation_weight,
-            num_generations=num_generations,
+            numGenerations=num_generations,
         )
-        if visualize:
-            self.plot_angles(arm_name, target_angles, (pos_x, pos_y, pos_z))
+        self.logger.debug("Calculation done")
+        if self.visualizer is not None:
+            self.visualizer.set_target_frame(frame_target)
+            names = active_chain.get_all_active_joint_names()
+            angles = active_chain.active_from_full(target_angles)
+            self.visualizer.set_angles_radians(names, angles)
         return map(math.degrees, target_angles)
-
-    def plot_angles(self, arm_name, joint_angles, target_positions):
-        """
-        Creates a 3d plot of the jointstates for the given arm with the given
-        joint angles and target positions.
-
-        :param arm_name: Name of the arm to move ("left" or "right")
-        :type arm_name: str
-        :param joint_angles: angles for each motor joint (in radians)
-        :type joint_angles: tuple(float)
-        :param target_positions: (x, y, z) vector of the target position
-        :type target_positions: tuple(float)
-        """
-        prefix = arm_name[0].lower()
-        if prefix == "l":
-            active_chain = self.leftchain
-            inactive_chain = self.rightchain
-        elif prefix == "r":
-            active_chain = self.rightchain
-            inactive_chain = self.leftchain
-        else:
-            self.logger.error("Unknown arm name '{}'".format(arm_name))
-            exit(1)
-
-        joints = [0] * len(inactive_chain.links)
-        plt.ion()
-        plt.clf()
-        ax = self.fig.add_subplot(111, projection="3d")
-        inactive_chain.plot(joints, ax)
-        active_chain.plot(joint_angles, ax, target=target_positions)
-        plt.draw()
-        plt.pause(0.1)
 
     def visualize_pose(
         self,
@@ -282,7 +274,6 @@ class Kinematics(object):
             pitch,
             yaw,
             origin_matrix,
-            True,
             distance_acc,
             orientation_acc,
             orientation_weight,
@@ -299,7 +290,6 @@ class Kinematics(object):
         pitch,
         yaw,
         origin_matrix=None,
-        visualize=True,
         distance_acc=0.01,
         orientation_acc=0.1,
         orientation_weight=0.3,
@@ -314,7 +304,6 @@ class Kinematics(object):
             pitch,
             yaw,
             origin_matrix,
-            visualize,
             distance_acc,
             orientation_acc,
             orientation_weight,
@@ -359,7 +348,6 @@ class Kinematics(object):
         pitch,
         yaw,
         origin_file=None,
-        visualize=True,
         distance_acc=0.01,
         orientation_acc=0.1,
         orientation_weight=0.2,
@@ -388,8 +376,6 @@ class Kinematics(object):
         :param origin_file: .csv file containing position and rotation values
                             to use as costum origin
         :type origin_file: str
-        :param visualize: whether the pose should be visualized as 3d graph
-        :type visualize: bool
         :param distance_acc: Minimal distance to goal position that the
                              solution should achieve (in meters)
         :type distance_acc: float
@@ -417,7 +403,6 @@ class Kinematics(object):
             pitch,
             yaw,
             origin_matrix,
-            visualize,
             distance_acc,
             orientation_acc,
             orientation_weight,
@@ -433,7 +418,6 @@ class Kinematics(object):
         roll,
         pitch,
         yaw,
-        visualize=True,
         distance_acc=0.01,
         orientation_acc=0.1,
         orientation_weight=0.3,
@@ -458,8 +442,6 @@ class Kinematics(object):
         :type pitch: float
         :param yaw: target rotation around z-axis in degrees
         :type yaw: float
-        :param visualize: whether the pose should be visualized as 3d graph
-        :type visualize: bool
         :param distance_acc: Minimal distance to goal position that the
                              solution should achieve (in meters)
         :type distance_acc: float
@@ -477,8 +459,8 @@ class Kinematics(object):
         self.logger.info(
             "Moving position of '%s' by %s and changing orientation by %s",
             arm_name,
-            ", ".join([pos_x, pos_y, pos_z]),
-            ", ".join([roll, pitch, yaw]),
+            ", ".join(map(str, [pos_x, pos_y, pos_z])),
+            ", ".join(map(str, [roll, pitch, yaw])),
         )
         origin_matrix = self.get_current_end_effector_transformation(arm_name)
         self.move_relative_to_origin_matrix(
@@ -490,7 +472,6 @@ class Kinematics(object):
             pitch,
             yaw,
             origin_matrix,
-            visualize,
             distance_acc,
             orientation_acc,
             orientation_weight,
@@ -500,7 +481,7 @@ class Kinematics(object):
     def get_current_end_effector_transformation(self, arm_name):
         """
         Computes end effector position and orientation from the forward
-        kinematics of the arms current pose
+        kinematics of thvisualizee arms current pose
 
         :param arm_name: Name of the arm to move ("left" or "right")
         :type arm_name: str
@@ -524,6 +505,9 @@ class Kinematics(object):
             self.robot.getAngle(prefix + "_elbow_y"),
             self.robot.getAngle(prefix + "_wrist_z"),
             self.robot.getAngle(prefix + "_wrist_x"),
+            0,
+            0,
+            0,
         ]
         if not self.robot.getVrep:
             start_angles[5] = start_angles[5] / 2.0
@@ -569,47 +553,3 @@ class Kinematics(object):
         self.logger.debug("{} loaded from {}".format(trans_matrix, path))
         self.logger.info("Successfully loaded '{}'".format(path))
         return trans_matrix
-
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.WARNING)
-
-    robot = Motion.Motion(
-        ("../../../../../json/" + "nico_humanoid_legged_with_hands_mod-vrep.json"),
-        vrep=True,
-    )
-
-    kinematics = Kinematics(robot)
-    kinematics.logger.setLevel(logging.DEBUG)
-
-    vel = 0.02
-    kinematics.robot.setAngle("l_shoulder_z", 0, vel)
-    kinematics.robot.setAngle("l_shoulder_y", 0, vel)
-    kinematics.robot.setAngle("l_arm_x", 0, vel)
-    kinematics.robot.setAngle("l_elbow_y", 0, vel)
-    kinematics.robot.setAngle("l_wrist_z", 0, vel)
-    kinematics.robot.setAngle("l_wrist_x", 0, vel)
-
-    kinematics.logger.info("Chains:")
-    kinematics.logger.info(kinematics.rightchain)
-    kinematics.logger.info(kinematics.leftchain)
-
-    kinematics.logger.info("Forward Kinematics: ")
-    start_angles = [0] * 7
-    fwk = kinematics.leftchain.forward_kinematics(start_angles, full_kinematics=False)
-    kinematics.logger.info(fwk)
-    start_rotation = geometry_utils.euler_angles_from_rotation_matrix(fwk[:3, :3])
-    start_rotation = map(math.degrees, start_rotation)
-    kinematics.logger.info("start_rot = {}".format(start_rotation))
-
-    raw_input("wait for movement to stop and press [enter]")
-    kinematics.move_relative("left_arm", 0.13, -0.05, 0.2, 0, -90, 0)
-    raw_input("wait for movement to stop and press [enter]")
-    kinematics.save_end_effector_transformation("left_arm", "test.csv")
-    for n in range(11):
-        # kinematics.move_relative("left_arm", .01, 0, 0, 0, 0, 0)
-        kinematics.move_to("left_arm", 0.01 * n, 0, 0, 0, 0, 0, origin_file="test.csv")
-        raw_input("wait for movement to stop and press [enter]")
-
-    time.sleep(10)
-    kinematics.robot.disableTorqueAll()

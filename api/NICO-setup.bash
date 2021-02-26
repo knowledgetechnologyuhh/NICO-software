@@ -93,35 +93,9 @@ else
   fi
 fi
 
-#MoveIt!
-MOVEIT_indigo=$(dpkg-query -W --showformat='${Status}\n' ros-indigo-moveit 2>/dev/null|grep "install ok
-installed")
-MOVEIT_kinetic=$(dpkg-query -W --showformat='${Status}\n' ros-kinetic-moveit 2>/dev/null|grep "install ok
-installed")
-MOVEIT_melodic=$(dpkg-query -W --showformat='${Status}\n' ros-melodic-moveit 2>/dev/null|grep "install ok
-installed")
-if [ "" == "$MOVEIT_indigo" ] && [ "" == "$MOVEIT_kinetic" ] && [ "" == "$MOVEIT_melodic" ]; then
-  if [ -f $WORKDIR/src/nicomoveit/kinematics/package.xml ]; then
-    rm $WORKDIR/src/nicomoveit/kinematics/package.xml
-  fi
-  echo "MoveIt! is not installed"
-else
-  if [ -f $WORKDIR/src/nicomoveit/kinematics/package_.xml ]; then
-    cp $WORKDIR/src/nicomoveit/kinematics/package_.xml $WORKDIR/src/nicomoveit/kinematics/package.xml
-  fi
-  echo "MoveIt! is installed"
-  echo "To use MoveIt! with visualization run: roslaunch nicoros nicoros_moveit_visual.launch"
-  echo "To use MoveIt! without visualization run: roslaunch nicoros nicoros_moveit.launch"
-  pip install 'pyassimp==4.1.3' #FIXME version 4.1.4 causes segmentation faults while loading stl files
-  pip install defusedxml
-  pip install netifaces
-  pip install pyside2
-fi
+# ROS
 
-#ROS + catkin
-echo "Building ROS packages"
-cd $WORKDIR
-
+# source setup
 for DISTRO in indigo kinetic melodic noetic
 do
   if [ -e /opt/ros/${DISTRO}/setup.bash ]; then
@@ -129,6 +103,33 @@ do
     break
   fi
 done
+
+# MoveIt!
+if ! [ -z $ROS_DISTRO ]; then
+  MOVEIT=$(dpkg-query -W --showformat='${Status}\n' ros-${ROS_DISTRO}-moveit
+  2>/dev/null | grep "install ok installed")
+  if [ -z "$MOVEIT" ]; then
+    if [ -f $WORKDIR/src/nicomoveit/kinematics/package.xml ]; then
+      rm $WORKDIR/src/nicomoveit/kinematics/package.xml
+    fi
+    echo "MoveIt! is not installed"
+  else
+    if [ -f $WORKDIR/src/nicomoveit/kinematics/package_.xml ]; then
+      cp $WORKDIR/src/nicomoveit/kinematics/package_.xml $WORKDIR/src/nicomoveit/kinematics/package.xml
+    fi
+    echo "MoveIt! is installed"
+    echo "To use MoveIt! with visualization run: roslaunch nicoros nicoros_moveit_visual.launch"
+    echo "To use MoveIt! without visualization run: roslaunch nicoros nicoros_moveit.launch"
+    pip install 'pyassimp==4.1.3' #FIXME version 4.1.4 causes segmentation faults while loading stl files
+    pip install defusedxml
+    pip install netifaces
+    pip install pyside2
+  fi
+fi
+
+# build catkin workspace
+echo "Building ROS packages"
+cd $WORKDIR
 
 if [ -x "$(command -v catkin_make)" ]; then
   pip install rospkg catkin_pkg empy

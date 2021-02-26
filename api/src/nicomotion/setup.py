@@ -16,6 +16,6 @@ setup(
     description="NICO api package for motion related modules",
     author="Connor Gaede",
     author_email="4gaede@informatik.uni-hamburg.de",
-    install_requires=["math3d", "transforms3d"],
+    install_requires=["math3d", "transforms3d", "numpy", "matplotlib", "gaikpy",],
     **extra
 )
