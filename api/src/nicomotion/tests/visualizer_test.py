@@ -1,3 +1,4 @@
+import gc
 import math
 import unittest
 
@@ -9,6 +10,10 @@ from numpy.testing import assert_array_equal
 class VisualizerTest(unittest.TestCase):
     def setUp(self):
         self.visualizer = Visualizer.Visualizer()
+
+    def tearDown(self):
+        del self.visualizer
+        gc.collect()
 
     def test_set_angle(self):
         joint = "r_shoulder_z"

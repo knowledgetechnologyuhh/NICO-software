@@ -481,7 +481,7 @@ class Kinematics(object):
     def get_current_end_effector_transformation(self, arm_name):
         """
         Computes end effector position and orientation from the forward
-        kinematics of thvisualizee arms current pose
+        kinematics of the arms current pose
 
         :param arm_name: Name of the arm to move ("left" or "right")
         :type arm_name: str
