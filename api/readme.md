@@ -111,3 +111,20 @@ otherwise you need to manually set the permissions each time you open a shell:
 ```
 sudo chmod 777 /dev/ttyACM*
 ```
+
+Testing
+===
+To verify whether the installation was successful, you can execute the following test script:
+
+```
+source NICO-test.bash
+```
+
+This script will run a series of tests for the `nicoaudio`, `nicoface` and `nicomotion` modules. Note that it will only test functions independant of external hardware. Tests for the `nicomotion` require `pyrep`.
+
+If you only want to test a specific module, you can also run `pytest` directly
+in the corresponding test directory, e.g. `nicoaudio`:
+
+```
+pytest -v src/nicoaudio/tests
+```

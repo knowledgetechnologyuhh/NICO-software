@@ -7,7 +7,7 @@ from PIL import Image, ImageDraw
 from nicoface.FaceExpression import faceExpression
 
 
-class SerialTest(unittest.TestCase):
+class FaceTest(unittest.TestCase):
     def setUp(self):
         self.face = faceExpression(simulation=True)
 

@@ -4,17 +4,23 @@ from setuptools import find_packages, setup
 
 extra = {}
 if sys.version_info >= (3,):
-    extra['use_2to3'] = True
+    extra["use_2to3"] = True
 
 setup(
     name="nicoaudio",
     version="1.0",
     packages=find_packages("scripts/"),
-    package_dir={'': 'scripts'},
-    description='NICO api package for audio related modules',
-    author='Connor Gaede',
-    author_email='4gaede@informatik.uni-hamburg.de',
-    install_requires=['audiotsm', 'pydub', 'pyaudio', 'pyalsaaudio',
-                      'requests', 'gtts'],
+    package_dir={"": "scripts"},
+    description="NICO api package for audio related modules",
+    author="Connor Gaede",
+    author_email="4gaede@informatik.uni-hamburg.de",
+    install_requires=[
+        "audiotsm",
+        "pydub",
+        "pyaudio",
+        "pyalsaaudio",
+        "requests",
+        "gtts",
+    ],
     **extra
 )
