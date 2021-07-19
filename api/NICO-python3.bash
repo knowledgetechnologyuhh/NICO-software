@@ -32,7 +32,7 @@ fi
 
 # build cv bridge for python3 (for ros versions before noetic)
 if [ ! -z $ROS_DISTRO ] && [ $ROS_DISTRO != noetic ]; then
-  if [ -x "$(command -v catkin)" ] && ! [ -f $WORKDIR/../cv_bridge_build_ws/devel/setup.bash ]; then
+  if [ ! -f $WORKDIR/../cv_bridge_build_ws/devel/setup.bash ]; then
     echo "Building cv_bridge for python 3"
     pip install catkin_tools
     mkdir $WORKDIR/../cv_bridge_build_ws
