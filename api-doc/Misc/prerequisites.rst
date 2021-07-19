@@ -94,22 +94,7 @@ v4l2-ctl:
 nicoros
 -------
 
-cv-bridge for python 3:
-
-As of writing, there is no pre-compiled `cv-bridge` for python 3. Therefore the
-`NICO-python3.bash` script needs to build it, which requires `catkin build`:
-
-.. code-block:: bash
-
-  sudo apt-get install python-catkin-tools
-
-
-`cv_bridge_build_ws` needs to be sourced in addition to `api/devel/setup.bash`
-and `~/.NICO-python3/bin/activate`. (note that `NICO-python3.bash` does this automatically):
-
-.. code-block:: bash
-
-  source cv_bridge_build_ws/devel/setup.bash --extend
+For informations on ROS see https://www.ros.org/
 
 nicotouch
 ---------
