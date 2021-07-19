@@ -89,7 +89,9 @@ atexit.register(on_exit, robot)
 robot.setAngle("head_y", 50, 0.05)
 
 # move to safe height
-kinematics.move_to("left_arm", 0, 0, SAFE_HEIGHT, 0, 0, 0, "cube_origin.npy")
+kinematics.move_to(
+    "left_arm", 0, 0, SAFE_HEIGHT, 0, 0, 0,
+)  # "cube_origin.npy")
 
 time.sleep(5)
 
@@ -112,7 +114,7 @@ def move_cube_meters(
         origin_orientation[0],
         origin_orientation[1],
         origin_orientation[2],
-        "cube_origin.npy",
+        # "cube_origin.npy",
     )
     robot.openHand("LHand", fractionMaxSpeed=0.05)
     print("moving above cube")  # - press [enter] to continue")
@@ -127,7 +129,7 @@ def move_cube_meters(
         origin_orientation[0],
         origin_orientation[1],
         origin_orientation[2],
-        "cube_origin.npy",
+        # "cube_origin.npy",
     )
     time.sleep(2)
     kinematics.move_to(
@@ -138,7 +140,7 @@ def move_cube_meters(
         origin_orientation[0],
         origin_orientation[1],
         origin_orientation[2],
-        "cube_origin.npy",
+        # "cube_origin.npy",
     )
     print("lowering arm to pick up cube")  # - press [enter] to continue")
     time.sleep(2)
@@ -155,7 +157,7 @@ def move_cube_meters(
         origin_orientation[0],
         origin_orientation[1],
         origin_orientation[2],
-        "cube_origin.npy",
+        # "cube_origin.npy",
     )
     print("lifting cube")  # - press [enter] to continue")
     # move above target position
@@ -167,7 +169,7 @@ def move_cube_meters(
         target_orientation[0],
         target_orientation[1],
         target_orientation[2],
-        "cube_origin.npy",
+        # "cube_origin.npy",
     )
     print("moving above target positon")  # - press [enter] to continue")
     time.sleep(2)
@@ -181,7 +183,7 @@ def move_cube_meters(
         target_orientation[0],
         target_orientation[1],
         target_orientation[2],
-        "cube_origin.npy",
+        # "cube_origin.npy",
     )
     print("lowering arm to place cube")  # - press [enter] to continue")
     time.sleep(2)
@@ -198,11 +200,13 @@ def move_cube_meters(
         target_orientation[0],
         target_orientation[1],
         target_orientation[2],
-        "cube_origin.npy",
+        # "cube_origin.npy",
     )
     # to origin
-    kinematics.move_to("left_arm", 0, 0, SAFE_HEIGHT, 0, 0, 0, "cube_origin.npy")
-    # kinematics.move_to("left_arm", 0, 0, 0, 0, 0, 0, "cube_origin.npy")
+    kinematics.move_to(
+        "left_arm", 0, 0, SAFE_HEIGHT, 0, 0, 0,
+    )  # "cube_origin.npy")
+    # kinematics.move_to("left_arm", 0, 0, 0, 0, 0, 0, #"cube_origin.npy")
 
 
 def coords_to_meters(x, y, z):

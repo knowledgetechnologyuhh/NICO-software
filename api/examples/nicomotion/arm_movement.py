@@ -4,30 +4,37 @@ import logging
 import time
 
 from nicomotion import Motion
+from os.path import dirname, abspath
 
 logging.basicConfig(level=logging.WARNING)
 
 vrep = True
+nico_root = dirname(abspath(__file__)) + "/../../.."
 
 if vrep:
+    # get default config for remote api
     vrepConfig = Motion.Motion.vrepRemoteConfig()
-    # vrepConfig = Motion.Motion.pyrepConfig() # requires python 3
-    vrepConfig["vrep_scene"] = "../../../v-rep/NICO-seated-with-table.ttt"
-    robot = Motion.Motion("../../../json/nico_humanoid_upper_with_hands_vrep.json",
-                          vrep=True, vrepConfig=vrepConfig)
-else:
+    # set scene (simulation will start automatically if this is set)
+    vrepConfig["vrep_scene"] = nico_root + "/v-rep/NICO-seated.ttt"
+    # init simulated robot
     robot = Motion.Motion(
-        "../../../json/nico_humanoid_upper_with_hands.json", vrep=False)
+        nico_root + "/json/nico_humanoid_vrep.json", vrep=True, vrepConfig=vrepConfig
+    )
+else:
+    # init real robot
+    robot = Motion.Motion(nico_root + "/json/nico_humanoid_upper.json", vrep=False)
 
+# perform movement
 position = 20
-
 for i in range(10):
+    # arm movement
     robot.setAngle("r_arm_x", -80 + position, 0.05)
     robot.setAngle("r_elbow_y", -40 + position, 0.05)
 
     robot.setAngle("l_arm_x", 80 + position, 0.05)
     robot.setAngle("l_elbow_y", 40 + position, 0.05)
 
+    # head movement
     if i % 2 == 0:
         if i % 4 == 0:
             robot.setAngle("head_z", -position, 0.05)
@@ -39,6 +46,7 @@ for i in range(10):
         else:
             robot.setAngle("head_y", -position, 0.05)
 
+    # open/close hands
     if position > 0:
         print(1)
         robot.closeHand("LHand")
@@ -49,7 +57,13 @@ for i in range(10):
     position = position * -1
     time.sleep(2)
 
+# reset position
 print("Moving to safe position")
 robot.toSafePosition()
 time.sleep(7)
-robot.disableTorqueAll()
+# cleanup
+if vrep:
+    robot.stopSimulation()
+else:
+    robot.disableTorqueAll()
+del robot

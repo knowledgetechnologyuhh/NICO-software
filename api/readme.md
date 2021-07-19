@@ -18,11 +18,10 @@ For Python 3:
 source NICO-python3.bash
 ```
 
-Either setup will generate an activation script that can be sourced
-to use the API without reinstalling or updating packages:
+Either setup will generate an activation script that can be sourced to use the API without reinstalling or updating packages:
 
-```bash
-   source api/activate.bash
+```
+source api/activate.bash
 ```
 
 Prerequisites
@@ -90,28 +89,18 @@ sudo chmod 777 /dev/ttyACM*
 sudo apt-get install setserial
 ```
 
+nicoros
+--
+
+For informations on ROS see https://www.ros.org/
+
+
 nicovision
 --
 
 v4l2-ctl:
 ```
 sudo apt-get install v4l-utils
-```
-nicoros
---
-
-cv-bridge for python 3:
-
-There is no pre-compiled `cv-bridge` for ROS versions before Noetic. Therefore the
-`NICO-python3.bash` script needs to build it, which requires `catkin build`:
-```
-sudo apt-get install python-catkin-tools
-```
-
-`cv_bridge_build_ws` needs to be sourced in addition to `api/devel/setup.bash`
-and `~/.NICO-python3/bin/activate`. (note that `NICO-python3.bash` does this automatically):
-```
-source cv_bridge_build_ws/devel/setup.bash --extend
 ```
 
 nicotouch
@@ -124,4 +113,21 @@ sudo adduser $USER dialout
 otherwise you need to manually set the permissions each time you open a shell:
 ```
 sudo chmod 777 /dev/ttyACM*
+```
+
+Testing
+===
+To verify whether the installation was successful, you can execute the following test script:
+
+```
+source NICO-test.bash
+```
+
+This script will run a series of tests for the `nicoaudio`, `nicoface` and `nicomotion` modules. Note that it will only test functions independant of external hardware. Tests for the `nicomotion` require `pyrep`.
+
+If you only want to test a specific module, you can also run `pytest` directly
+in the corresponding test directory, e.g. `nicoaudio`:
+
+```
+pytest -v src/nicoaudio/tests
 ```

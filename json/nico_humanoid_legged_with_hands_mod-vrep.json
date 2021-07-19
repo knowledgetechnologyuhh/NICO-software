@@ -37,16 +37,14 @@
       "r_wrist_z",
       "r_wrist_x",
       "r_indexfingers_x",
-      "r_thumb_x",
-      "r_virtualhand_x"
+      "r_thumb_x"
 
     ],
     "l_hand": [
       "l_wrist_z",
       "l_wrist_x",
       "l_indexfingers_x",
-      "l_thumb_x",
-      "l_virtualhand_x"
+      "l_thumb_x"
     ],
     "hands": [
       "r_hand",
@@ -215,24 +213,7 @@
         160
       ],
       "orientation": "direct"
-    },
-    "l_virtualhand_x": {
-      "offset": 0.0,
-      "type": "MX-28",
-      "id": 31,
-      "angle_limit": [-160,
-        160
-      ],
-      "orientation": "direct"
-    },
-    "r_virtualhand_x": {
-      "offset": 0.0,
-      "type": "MX-28",
-      "id": 32,
-      "angle_limit": [-160,
-        160
-      ],
-      "orientation": "direct"
     }
+
   }
 }
