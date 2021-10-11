@@ -107,10 +107,10 @@ class VideoDevice:
             if device in file:
                 candidates += [file]
 
-        if len(candidates) is 0:
+        if len(candidates) == 0:
             logger.error("No candidates found")
             return -1
-        elif len(candidates) is 1:
+        elif len(candidates) == 1:
             return int(os.readlink(VideoDevice._VIDEO_DEVICE_PATH + candidates[0])[-1:])
         else:
             logger.error("Multiple candidates found: {}".format(candidates))
@@ -141,7 +141,7 @@ class VideoDevice:
         """
         logger = logging.getLogger(__name__)
         id = VideoDevice.resolve_device(device)
-        if id is -1:
+        if id == -1:
             logger.error("Can not create VideoDevice from ID %s" % id)
             return None
         return VideoDevice(
@@ -406,7 +406,7 @@ class VideoDevice:
         :return: value of zoom_absolute
         :rtype: int
         """
-        call_str = "v4l2-ctl -d {} -C zoom_absolute".format(self._deviceId, value)
+        call_str = "v4l2-ctl -d {} -C zoom_absolute".format(self._deviceId)
         output = subprocess.check_output([call_str], shell=True)
         return int(output.split()[1])
 
