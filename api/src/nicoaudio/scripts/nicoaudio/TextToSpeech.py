@@ -47,14 +47,14 @@ class TextToSpeech(object):
         self._cache_file = cache_file
         self._port = port
 
-    def say(self, text, language="en-GB", pitch=0, speed=1.0, blocking=True):
+    def say(self, text, language="en", pitch=0, speed=1.0, blocking=True):
         """
         Generates and plays spoken text using gTTS if google is available or
         pico2wave as fallback if there is no cached file available.
 
         :param text: text to speak
         :type text: str
-        :param language: Language code (e.g. 'en-GB' or 'de')
+        :param language: Language code (e.g. 'en' or 'de')
         :type language: str
         :param pitch: Pitch in octaves by which to shift the output
                       (this affects the speed)
@@ -89,10 +89,6 @@ class TextToSpeech(object):
         elif os.system("ping -c 1 google.com > /dev/null 2>&1") == 0:
             # use gTTS if google is available
 
-            # google uses 'de' whereas pico2wave uses 'de-DE'
-            if language == "de-DE":
-                language = "de"
-
             if language.lower() not in lang.tts_langs():
                 logger.error(
                     "Language '{}' not supported by gTTS - supported languages"
@@ -125,6 +121,8 @@ class TextToSpeech(object):
             # google uses 'de' whereas pico2wave uses 'de-DE'
             if language == "de":
                 language = "de-DE"
+            elif language == "en":
+                language = "en-GB"
             try:
                 file = "/tmp/NICO_speech_{}.wav".format(
                     datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S.%f")

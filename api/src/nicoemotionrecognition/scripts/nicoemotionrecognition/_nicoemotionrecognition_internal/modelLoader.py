@@ -3,10 +3,12 @@ import os
 
 from keras.models import load_model
 
-from nicoemotionrecognition._nicoemotionrecognition_internal import (
-    imageProcessingUtil,
-    metrics,
-)
+# from nicoemotionrecognition._nicoemotionrecognition_internal import (
+#     imageProcessingUtil,
+#     metrics,
+# )
+import imageProcessingUtil
+import metrics
 
 
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
