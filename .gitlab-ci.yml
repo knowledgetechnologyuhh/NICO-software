@@ -14,6 +14,6 @@ build-push-docker-image-job:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker build -t $IMAGE_TAG $SRC_DIR
     - docker push $IMAGE_TAG
-  only:
-    changes:
-      - $SRC_DIR/*
+  # only:
+  #  changes:
+  #    - $SRC_DIR/*
