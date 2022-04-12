@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 import sys
-import subprocess
-from os import dirname, abspath
 from setuptools import find_packages, setup
 
 extra = {}
@@ -22,14 +20,3 @@ setup(
     ],
     **extra
 )
-
-if subprocess.getstatusoutput("command -v docker")[0] == 0:
-    subprocess.call(
-        "docker build -t emotionrecognition {}".format(
-            dirname(abspath(__file__))
-            + "/scripts/nicoemotionrecognition/_nicoemotionrecognition_internal"
-        ),
-        shell=True,
-    )
-else:
-    print("\033[31mDocker not installed - cannot build emotion recognition server\033")
