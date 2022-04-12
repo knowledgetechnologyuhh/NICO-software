@@ -14,8 +14,7 @@ german:
   fear:
     - Hast Du vor etwas Angst? Was ist denn hier gefaehrlich?
     - Ich bin ganz harmlos! Du musst keine Angst vor mir haben!
-    - Du siehst aus, als haettest Du einen Geist gesehen!
-    - Da bekomme ich auch Angst
+    - Du siehst aus, als haettest Du einen Geist gesehen! Da bekomme ich auch Angst
   sadness:
     - Sei nicht traurig, wir können so viel Spaß zusammen haben!
     - Ich würde ja auch weinen, aber ich habe keine Tränendrüsen.
@@ -38,7 +37,7 @@ english:
     - I am angry as well!
     - What is wrong with you?
   fear:
-    - Do you fear something?. What is dangerous here?
+    - Do you fear something? What is dangerous here?
     - I am harmless! You do not have to fear me
     - You look like you have seen a ghost, but that is only me!
   sadness:
