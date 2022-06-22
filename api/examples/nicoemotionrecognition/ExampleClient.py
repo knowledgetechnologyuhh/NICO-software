@@ -22,6 +22,8 @@ def example_client():
                     )
                 )
                 print("Individual Scores: {}".format(emotion.get_categorical_data()))
+            else:
+                print("No face detected!")
 
     # initialize video device
     # device_name = VideoDevice.autodetect_nicoeyes()[0]

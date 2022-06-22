@@ -16,7 +16,8 @@ setup(
     author="Connor Gaede",
     author_email="gaede@informatik.uni-hamburg.de",
     install_requires=[
-        "flaskcom @ git+https://github.com/LemonSpeech/flaskcom.git@44660c8#egg=flaskcom"
+        "docker",
+        "flaskcom @ git+https://github.com/LemonSpeech/flaskcom.git@44660c8#egg=flaskcom",
     ],
     **extra
 )

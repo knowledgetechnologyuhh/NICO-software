@@ -60,6 +60,7 @@ class EmotionRecognition(object):
         """
         return self._emotion_server.get_face_center()
 
+    @property
     def face_detected(self):
         """
         Whether a face was detected in the current frame

@@ -67,25 +67,23 @@ class EmotionDemo(object):
         self._emotion_recognition = EmotionRecognition()
         self._camera.add_callback(self._callback)
 
+        self.running = True
+
+        def stop_client():
+            raw_input("Press enter to stop\n")
+            self.running = False
+
+        t = threading.Thread(target=stop_client)
+        t.daemon = True
+        t.start()
         # update face in main thread to avoid issues with cv2.imshow
         if face is not None:
-
-            self.running = True
-
-            def stop_client():
-                raw_input("Press enter to stop\n")
-                self.running = False
-
-            t = threading.Thread(target=stop_client)
-            t.daemon = True
-            t.start()
-
             self._face_expression.send_morphable_face_expression("neutral")
             time.sleep(2)
-            while self.running:
-                if self._update_face:
-                    self._face_expression.morph_face_expression(self._last_exp)
-                    self._update_face = False
+        while self.running:
+            if self._update_face and face is not None:
+                self._face_expression.morph_face_expression(self._last_exp)
+                self._update_face = False
 
     def show_emotion(self, emotion):
         """
@@ -133,13 +131,14 @@ class EmotionDemo(object):
         if self._robot is not None:
             if self._tracking_counter == self._tracking_delta:
                 center = self._emotion_recognition.get_face_center()
-                # (width - center_x)/width * FOV - FOV/2
-                # horizontal
-                angle_z = (640 - center[0]) / 640.0 * 60 - 60 / 2.0
-                # vertikal
-                angle_y = (480 - center[1]) / 480.0 * 50 - 50 / 2.0
-                self._robot.changeAngle("head_z", angle_z, 0.02)
-                self._robot.changeAngle("head_y", -angle_y, 0.02)
+                if center is not None:
+                    # (width - center_x)/width * FOV - FOV/2
+                    # horizontal
+                    angle_z = (640 - center[0]) / 640.0 * 60 - 60 / 2.0
+                    # vertikal
+                    angle_y = (480 - center[1]) / 480.0 * 50 - 50 / 2.0
+                    self._robot.changeAngle("head_z", angle_z, 0.02)
+                    self._robot.changeAngle("head_y", -angle_y, 0.02)
                 self._tracking_counter = 0
             else:
                 self._tracking_counter += 1
@@ -150,7 +149,8 @@ class EmotionDemo(object):
         self._camera.close()
         self._emotion_recognition.close()
         if self._robot:
-            self._robot.close()
+            self._robot.disableTorqueAll()
+            self._robot.cleanup()
 
     def _callback(self, rval, frame):
         """
@@ -218,6 +218,16 @@ if __name__ == "__main__":
             default_config
         ),
     )
+    for camera_path in VideoDevice.autodetect_nicoeyes():
+        if camera_path is not None:
+            break
+    parser.add_argument(
+        "--camera-path",
+        dest="camera_path",
+        type=str,
+        default=camera_path,
+        help="Path of the used camera. (Autodetected: {})".format(camera_path),
+    )
     parser.add_argument(
         "--german",
         action="store_true",
@@ -265,15 +275,12 @@ if __name__ == "__main__":
     if args.face_enabled:
         face = faceExpression(simulation=args.simulate_face)
 
-    camera_path = VideoDevice.autodetect_nicoeyes()[0]  # 0: left_eye, 1: right_eye
+    logger.info("Using camera %s", args.camera_path)
 
-    logger.info("Using camera %s", camera_path)
+    camera = VideoDevice.from_device(args.camera_path)
 
-    # camera = VideoDevice.from_device(camera_path)
-    camera = VideoDevice(0)
-
-    # if "See3CAM" in camera_path:
-    #     camera.zoom(300)
+    if "See3CAM" in args.camera_path:
+        camera.zoom(300)
 
     emotion_demo = EmotionDemo(
         camera,
