@@ -6,13 +6,15 @@ class RH4DHand(AbstractHand):
 
     current_limit = 250
 
+    closing_direction = -1
+
     sensitive_motors = ("thumb_x", "indexfingers_x")
 
     current_ports = {"wrist_z": 0, "wrist_x": 1, "thumb_x": 2, "indexfingers_x": 3}
 
     poses = {
-        "openHand": {"thumb_x": (-160.0, 1.0), "indexfingers_x": (-160.0, 1.0)},
-        "closeHand": {"thumb_x": (100.0, 1.0), "indexfingers_x": (100.0, 1.0)},
+        "openHand": {"thumb_x": (0.0, 1.0), "indexfingers_x": (0.0, 1.0)},
+        "closeHand": {"thumb_x": (-75.0, 1.0), "indexfingers_x": (-75.0, 1.0)},
         "openHandVREP": {"thumb_x": (0.0, 1.0), "indexfingers_x": (0.0, 1.0)},
         "closeHandVREP": {"thumb_x": (-30.0, 1.0), "indexfingers_x": (-30.0, 1.0)},
     }
