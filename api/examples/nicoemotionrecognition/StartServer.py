@@ -13,4 +13,4 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-server = EmotionRecognitionServer(args.gui)
+server = EmotionRecognitionServer(args.gui, "development")
