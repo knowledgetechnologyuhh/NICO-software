@@ -146,7 +146,7 @@ BRIDGE_PATH=$(realpath $WORKDIR/..)/cv_bridge_build_ws/devel/setup.bash
 cat <<END > activate.bash
 #!/bin/bash
 
-if [ ! -z $ROS_DISTRO ]; then
+if [ ! -z \$ROS_DISTRO ] && [ \$ROS_DISTRO == $ROS_DISTRO ]; then
   source /opt/ros/${ROS_DISTRO}/setup.bash
   source $(realpath $WORKDIR/devel/setup.bash)
   if [ -f $BRIDGE_PATH ]; then
