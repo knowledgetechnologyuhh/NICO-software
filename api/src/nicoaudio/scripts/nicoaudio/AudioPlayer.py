@@ -25,9 +25,11 @@ def get_pulse_device():
     audio_device = 0
     for i in range(0, numdevices):
         if (
-            p.get_device_info_by_host_api_device_index(0, i).get("maxOutputChannels")
+            p.get_device_info_by_host_api_device_index(
+                0, i).get("maxOutputChannels")
         ) > 0:
-            device_name = p.get_device_info_by_host_api_device_index(0, i).get("name")
+            device_name = p.get_device_info_by_host_api_device_index(
+                0, i).get("name")
             # print("Input Device id ", i, " - ", device_name)
             if device_name.find("pulse") != -1:
                 audio_device = i
@@ -147,7 +149,8 @@ class AudioPlayer(object):
             logger.info("Setting pitch to %f", octaves)
             new_sample_rate = int(self._segment.frame_rate * (2.0 ** octaves))
             self._segment = self._segment._spawn(
-                self._segment.raw_data, overrides={"frame_rate": new_sample_rate}
+                self._segment.raw_data, overrides={
+                    "frame_rate": new_sample_rate}
             )
 
     def speed(self, speed):
@@ -194,7 +197,8 @@ class AudioPlayer(object):
             self._running = True
             self._thread.start()
         else:
-            logger.warning("Task for file {} is already running".format(self.filename))
+            logger.warning(
+                "Task for file {} is already running".format(self.filename))
 
     def pause(self):
         """
@@ -213,7 +217,8 @@ class AudioPlayer(object):
             self._thread.start()
             self._running = True
         else:
-            logger.warning("Task for file {} is already running".format(self.filename))
+            logger.warning(
+                "Task for file {} is already running".format(self.filename))
 
     def _playback(self):
         """
