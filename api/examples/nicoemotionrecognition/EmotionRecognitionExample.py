@@ -31,6 +31,8 @@ class EmotionDemo(object):
         robot=None,
         face=None,
         voice_enabled=False,
+        voice_cache_dir="/tmp",
+        voice_use_cuda=False,
         german=False,
         face_tracking=False,
         mirror_emotion=False,
@@ -55,7 +57,16 @@ class EmotionDemo(object):
         self._last_exp = "neutral"
 
         if voice_enabled:
-            self._tts = TextToSpeech()
+            if german:
+                self._tts = TextToSpeech(
+                    model_name="tts_models/de/thorsten/vits",
+                    cache_dir=voice_cache_dir,
+                    use_cuda=voice_use_cuda,
+                )
+            else:
+                self._tts = TextToSpeech(
+                    cache_dir=voice_cache_dir, use_cuda=voice_use_cuda
+                )
             self._tts_end = 0
             with open(
                 dirname(abspath(__file__)) + "/voice_reactions.yml", "r"
@@ -115,13 +126,9 @@ class EmotionDemo(object):
         if emotion in self._voice_reactions:
             sentence = random.choice(self._voice_reactions[emotion])
             if self._german:
-                duration = self._tts.say(
-                    sentence, language="de", blocking=False, pitch=0.2, speed=2 ** -0.2
-                )
+                duration = self._tts.say(sentence, language="de", blocking=False)
             else:
-                duration = self._tts.say(
-                    sentence, language="en", blocking=False, pitch=0.2, speed=2 ** -0.2
-                )
+                duration = self._tts.say(sentence, language="en", blocking=False)
             self._tts_end = time.time() + duration + delay
 
     def follow_face_with_head(self):
@@ -262,6 +269,19 @@ if __name__ == "__main__":
         help="Displays face as image rather than sending it to the real robot",
     )
 
+    parser.add_argument(
+        "--cache-dir",
+        dest="voice_cache_dir",
+        type=str,
+        default="/tmp",
+        help="Path to cache generated sound files. (Default: /tmp)",
+    )
+    parser.add_argument(
+        "--use-cuda",
+        dest="voice_use_cuda",
+        action="store_true",
+        help="Enable cuda for tts model",
+    )
     # parser.add_argument(
     #     "--disable-gui", dest="gui", action="store_false", help="Disables the GUI."
     # )
@@ -287,6 +307,8 @@ if __name__ == "__main__":
         robot,
         face,
         voice_enabled=args.voice,
+        voice_cache_dir=args.voice_cache_dir,
+        voice_use_cuda=args.voice_use_cuda,
         german=args.german,
         face_tracking=args.motion,
         mirror_emotion=args.face_enabled,
