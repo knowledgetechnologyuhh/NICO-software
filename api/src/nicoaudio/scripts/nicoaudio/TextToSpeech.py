@@ -4,7 +4,6 @@ import logging
 import os
 from os.path import dirname, abspath, join
 import time
-from io import BytesIO
 
 from nicoaudio.AudioPlayer import AudioPlayer
 

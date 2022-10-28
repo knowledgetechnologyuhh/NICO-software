@@ -14,14 +14,6 @@ setup(
     description="NICO api package for audio related modules",
     author="Connor Gaede",
     author_email="gaede@informatik.uni-hamburg.de",
-    install_requires=[
-        "audiotsm",
-        "pydub",
-        "pyaudio",
-        "pyalsaaudio",
-        "requests",
-        "gtts",  # TODO delete?
-        "tts",
-    ],
+    install_requires=["audiotsm", "pydub", "pyaudio", "pyalsaaudio", "requests", "tts"],
     **extra
 )
