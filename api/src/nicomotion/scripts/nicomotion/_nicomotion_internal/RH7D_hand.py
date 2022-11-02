@@ -6,6 +6,8 @@ class RH7DHand(AbstractHand):
 
     current_limit = 225
 
+    closing_direction = 1
+
     sensitive_motors = ("thumb_z", "thumb_x", "indexfinger_x", "middlefingers_x")
 
     current_ports = {

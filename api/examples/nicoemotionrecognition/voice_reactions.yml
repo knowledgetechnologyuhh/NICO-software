@@ -1,0 +1,50 @@
+german:
+  happiness:
+    - Ich bin froehlich, wenn Du es auch bist!
+    - Was fuer ein schoener Tag heute ist, nicht wahr?
+    - Du bist gerade gluecklich, stimmts?
+  surprise:
+    - Du siehst ueberrascht aus. Was ist denn los?
+    - Bist Du ueberrascht, was fuer ein smarter Roboter ich bin?
+    - Das ist eine Ueberraschung, nicht wahr?
+  anger:
+    - Du siehst so aergerlich aus, ist alles in Ordnung?
+    - aeh Digga, ich bin auch sauer!
+    - Was ist Dir denn ueber die Leber gelaufen?
+  fear:
+    - Hast Du vor etwas Angst? Was ist denn hier gefaehrlich?
+    - Ich bin ganz harmlos! Du musst keine Angst vor mir haben!
+    - Du siehst aus, als haettest Du einen Geist gesehen! Da bekomme ich auch Angst
+  sadness:
+    - Sei nicht traurig, wir können so viel Spaß zusammen haben!
+    - Ich würde ja auch weinen, aber ich habe keine Tränendrüsen.
+    - Warum bist du traurig? Habe ich was falsches gesagt?
+  disgust:
+    - Hey! Ich finde dich auch nicht besonders hübsch!
+    - Ich bin von deinem Ekel angewiedert!
+    - Du siehst etwas blass aus. Ist alles in Ordnung?
+english:
+  happiness:
+    - I am happy, if YOU are happy.
+    - What a nice day, right?
+    - You are happy right now, are you?
+  surprise:
+    - You look surprised. Is everything alright?
+    - Are you surprised, what a smart robot I am?
+    - This is a surprise, right?
+  anger:
+    - You look angry. Is everything alright?
+    - I am angry as well!
+    - What is wrong with you?
+  fear:
+    - Do you fear something? What is dangerous here?
+    - I am harmless! You do not have to fear me
+    - You look like you have seen a ghost, but that is only me!
+  sadness:
+    - Don't be sad, we can have so much fun together!
+    - I'd cry as well, but I don't have tears.
+    - Why are you sad? Did I say something wrong?
+  disgust:
+    - Hey! I don't like the way you look either.
+    - I'm disgusted by your disgust!
+    - You look a bit pale. Is everything alright?

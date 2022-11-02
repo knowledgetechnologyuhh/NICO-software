@@ -41,6 +41,11 @@ class AbstractHand(object):
         """Dict to specify motors whose angle ranges need to be remapped
         {"motor_name": pypot_range, real_range}"""
         pass
+        
+    @abstractproperty
+    def closing_direction(self):
+        """Direction in which the hand is closing (-1 or 1)"""
+        pass
 
     def __init__(self, robot, isLeft, monitorCurrents=True, vrep=False):
 
@@ -157,7 +162,7 @@ class AbstractHand(object):
 
             self.mutex.acquire()
             if motor_name in self.sensitive_motors:
-                if position > motor.present_position:
+                if self.closing_direction * position > self.closing_direction * motor.present_position:
                     self.motor_directions[motor_name] = "closing"
                 else:
                     self.motor_directions[motor_name] = "opening"
