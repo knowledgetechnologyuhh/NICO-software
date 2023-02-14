@@ -1,11 +1,12 @@
 import logging
+import math
 import threading
 import time
 from io import BytesIO
 
 from audiotsm import phasevocoder
 from audiotsm.io.wav import WavReader, WavWriter
-from pyaudio import PyAudio
+from pyaudio import PyAudio, paContinue
 from pydub import AudioSegment
 
 logger = logging.getLogger(__name__)
@@ -25,11 +26,9 @@ def get_pulse_device():
     audio_device = 0
     for i in range(0, numdevices):
         if (
-            p.get_device_info_by_host_api_device_index(
-                0, i).get("maxOutputChannels")
+            p.get_device_info_by_host_api_device_index(0, i).get("maxOutputChannels")
         ) > 0:
-            device_name = p.get_device_info_by_host_api_device_index(
-                0, i).get("name")
+            device_name = p.get_device_info_by_host_api_device_index(0, i).get("name")
             # print("Input Device id ", i, " - ", device_name)
             if device_name.find("pulse") != -1:
                 audio_device = i
@@ -63,9 +62,9 @@ class AudioPlayer(object):
         else:
             self._audio_device = audio_device
         self._filename = filename
-        self._pos = start
-        self._thread = None
-        self._running = False
+        self._pos = 0
+        self._stream = None
+        self._pyaudio = PyAudio()
 
         segment = AudioSegment.from_file(filename)
         start *= 1000
@@ -149,8 +148,7 @@ class AudioPlayer(object):
             logger.info("Setting pitch to %f", octaves)
             new_sample_rate = int(self._segment.frame_rate * (2.0 ** octaves))
             self._segment = self._segment._spawn(
-                self._segment.raw_data, overrides={
-                    "frame_rate": new_sample_rate}
+                self._segment.raw_data, overrides={"frame_rate": new_sample_rate}
             )
 
     def speed(self, speed):
@@ -190,59 +188,76 @@ class AudioPlayer(object):
         :param percentage: Volume [0.0, 1.0]
         :type percentage: float
         """
-        if self._thread is None:
+        if self._stream is None:
+            logger.info(f"Starting playback of file {self.filename}")
             self.volume = volume
-            self._thread = threading.Thread(target=self._playback)
             self._pos = 0
-            self._running = True
-            self._thread.start()
+            self._stream = self._pyaudio.open(
+                format=self._pyaudio.get_format_from_width(self._segment.sample_width),
+                channels=self._segment.channels,
+                rate=self._segment.frame_rate,
+                output=True,
+                output_device_index=self._audio_device,
+                frames_per_buffer=128,
+                stream_callback=self._playback,
+            )
+            terminator = threading.Thread(target=self._terminate)
+            terminator.daemon = True
+            terminator.start()
         else:
             logger.warning(
-                "Task for file {} is already running".format(self.filename))
+                "Playback of file {} is already running".format(self.filename)
+            )
 
     def pause(self):
         """
         Stops playback of the audio segment
         """
-        self._running = False
-        self._thread.join()
-        self._thread = None
+        if self._stream is None:
+            logger.warning(
+                f"There is no active playback to stop for file {self.filename}"
+            )
+        elif self._stream.is_stopped():
+            logger.warning(f"Playback of file {self.filename} is already stopped")
+        else:
+            logger.info(f"Stopping playback of file {self.filename}")
+            self._stream.stop_stream()
 
     def resume(self):
         """
         Continues playback of the file from where it was previously stopped.
         """
-        if self._thread is None:
-            self._thread = threading.Thread(target=self._playback)
-            self._thread.start()
-            self._running = True
-        else:
+        if self._stream is None:
             logger.warning(
-                "Task for file {} is already running".format(self.filename))
+                f"There is no active playback to resume for file {self.filename}"
+            )
+        elif self._stream.is_stopped():
+            logger.info(f"Resuming playback of file {self.filename}")
+            self._stream.start_stream()
+        else:
+            logger.warning(f"Playback of file {self.filename} is already running")
 
-    def _playback(self):
+    def _playback(self, in_data, frame_count, time_info, status_flags):
         """
-        Playback function for thread. Plays a segment until running is set to
-        false or end is reached
+        Callback function for PyAudio stream
         """
-        # open stream
-        p = PyAudio()
-        stream = p.open(
-            format=p.get_format_from_width(self._segment.sample_width),
-            channels=self._segment.channels,
-            rate=self._segment.frame_rate,
-            output=True,
-            output_device_index=self._audio_device,
-        )
+        frame_ms = (frame_count / self._segment.frame_rate) * 1000.0
+        data = self._segment[self._pos : math.ceil(self._pos + frame_ms)].raw_data
+        self._pos += frame_ms
+        return (data, paContinue)
 
-        # output the file in millisecond steps
-        while self._pos < len(self._segment) and self._running:
-            stream.write(self._segment[self._pos]._data)
-            self._pos += 1
+    def _terminate(self):
+        """
+        Thread to terminate stream after playback is done
+        """
+        logger.debug("Started termination thread")
+        # wait for stream to finish
+        while self._stream.is_active() or self._stream.is_stopped():
+            time.sleep(self._stream.get_output_latency())
 
         # close stream
-        time.sleep(stream.get_output_latency())
-        stream.stop_stream()
-        stream.close()
+        self._stream.close()
 
-        p.terminate()
+        self._pyaudio.terminate()
+        self._stream = None
+        logger.debug("Stream terminated")

@@ -20,7 +20,7 @@ args = parser.parse_args()
 # Change your interface here
 fe = faceExpression(args.s)
 
-# Chnange betwee two faces
+# Change between two faces
 
 for i in range(2, -1, -1):
     fe.setCommMode(i)

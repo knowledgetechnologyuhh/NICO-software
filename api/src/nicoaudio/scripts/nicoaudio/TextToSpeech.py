@@ -20,19 +20,24 @@ class TextToSpeech(object):
     """
 
     def __init__(
-        self, cache_dir="/tmp", model_name="tts_models/en/vctk/vits", use_cuda=False
+        self,
+        cache_dir="/tmp",
+        load_tts=True,
+        model_name="tts_models/en/vctk/vits",
+        use_cuda=False,
     ):
         """
-        TextToSpeech allows simple text to speech using locally hosted mozilla
-        tts (https://github.com/mozilla/TTS), gTTS if google is available or
-        pico2wave as fallback if there is no cached file.
+        TextToSpeech allows generating speech from text using Coqui TTS (https://github.com/coqui-ai/TTS).
 
         :param cache_dir: directory where generated audiofiles should be
                           stored.
         :type cache_dir: str
-        :param port: port at which mozilla tts is hosted (uses fallbacks if
-                     connection fails)
-        :type port: str
+        :param load_tts: whether to load the tts model or only use cached files
+        :type load_tts: bool
+        :param model_name: which TTS model to use
+        :type use_cuda: str
+        :param use_cuda: whether to run the model on the gpu
+        :type use_cuda: bool
         """
         # load cache dictionary
         if not os.path.isdir(cache_dir):
@@ -48,21 +53,22 @@ class TextToSpeech(object):
             self._cache = {}
         self._cache_dir = cache_dir
         self._cache_file = cache_file
-        # init TTS
-        tts_path = join(dirname(abspath(TTS.__file__)), ".models.json")
-        manager = ModelManager(tts_path)
-        model_path, config_path, model_item = manager.download_model(model_name)
-        self._synthesizer = Synthesizer(
-            model_path,
-            config_path,
-            None,  # speakers_file_path,
-            None,  # language_ids_file_path,
-            None,  # vocoder_path,
-            None,  # vocoder_config_path,
-            None,  # encoder_path,
-            None,  # encoder_config_path,
-            use_cuda,
-        )
+        self._cache_only = not load_tts
+        if load_tts:
+            tts_path = join(dirname(abspath(TTS.__file__)), ".models.json")
+            manager = ModelManager(tts_path)
+            model_path, config_path, model_item = manager.download_model(model_name)
+            self._synthesizer = Synthesizer(
+                model_path,
+                config_path,
+                None,  # speakers_file_path,
+                None,  # language_ids_file_path,
+                None,  # vocoder_path,
+                None,  # vocoder_config_path,
+                None,  # encoder_path,
+                None,  # encoder_config_path,
+                use_cuda,
+            )
         self._model_name = model_name
 
     @staticmethod
@@ -72,57 +78,62 @@ class TextToSpeech(object):
         return manager.list_models()
 
     def get_speaker_ids(self):
-        if self._synthesizer.tts_model.speaker_manager is not None:
+        if self._cache_only:
+            if self._model_name not in self._cache:
+                return None
+            return [
+                speaker
+                for speaker in [
+                    self._cache[self._model_name][language]
+                    for language in self._cache[self._model_name]
+                ]
+            ]
+        elif self._synthesizer.tts_model.speaker_manager is not None:
             return self._synthesizer.tts_model.speaker_manager.speaker_names
         else:
             return None
 
-    def say(
-        self,
-        text,
-        language="en",
-        pitch=0.25,
-        speed=2 ** -0.25,
-        blocking=True,
-        speaker="p336",
-    ):
+    def generate_audio(self, text, language="en", speaker="p336", use_cached=True):
         """
-        Generates and plays spoken text using gTTS if google is available or
-        pico2wave as fallback if there is no cached file available.
+        Generates spoken text using Coqui TTS or returns saved audio files
 
         :param text: text to speak
         :type text: str
         :param language: Language code (e.g. 'en' or 'de')
         :type language: str
-        :param pitch: Pitch in octaves by which to shift the output
-        :type pitch: float
-        :param speed: Percentage to increase/decrease speed without changing
-                      pitch
-        :type speed: float
-        :param blocking: whether this call should block during playback
-        :type blocking: bool
+        :param speaker: Speaker selection for multi-speaker models
+        :type speaker: str
+        :param use_cached: whether to reuse previously generated audio
+        :type use_cached: bool
 
-        :return: Playback duration left (0 if blocking)
-        :rtype: float
+        :return: raw wave audio data
+        :rtype:
         """
-        logger.info("Saying: {}".format(text))
+        logger.info(f"Generating audio file for '{text}'")
         # prevent models without speaker selection from crashing
-        if self._synthesizer.tts_model.speaker_manager is None:
-            speaker = None
+        cached_speaker = speaker
+        if self._cache_only:
+            if (
+                self._model_name in self._cache
+                and language in self._cache[self._model_name]
+                and "null" in self._cache[self._model_name][language]
+            ):
+                cached_speaker = "null"
+        elif self._synthesizer.tts_model.speaker_manager is None:
             cached_speaker = "null"
-        else:
-            cached_speaker = speaker
-        # use cached file if possible
+            speaker = None
+        # generate audio or load existing file from storage
         if (
-            self._model_name in self._cache
+            use_cached
+            and self._model_name in self._cache
             and language in self._cache[self._model_name]
             and cached_speaker in self._cache[self._model_name][language]
             and text in self._cache[self._model_name][language][cached_speaker]
         ):
+            # use cached file if possible
             out = self._cache[self._model_name][language][cached_speaker][text]
             logger.info("Using cached file {}".format(out))
-        else:
-            logger.info("Generating audio file...")
+        elif not self._cache_only:
             # generate audio from text
             wav = self._synthesizer.tts(
                 text, speaker, language
@@ -146,9 +157,53 @@ class TextToSpeech(object):
             with open(self._cache_file, "w") as f:
                 json.dump(self._cache, f)
             logger.info("Updated cache")
+        else:
+            logger.error(
+                f"Could not find chached audio file of '{text}' for model '{self._model_name}', language '{language}' and speaker '{cached_speaker}' in cache-only mode"
+            )
+            raise KeyError(
+                f"Could not find chached audio file of '{text}' for model '{self._model_name}', language '{language}' and speaker '{cached_speaker}' in cache-only mode"
+            )
+        return out
+
+    def say(
+        self,
+        text,
+        language="en",
+        pitch=0.25,
+        speed=2 ** -0.25,
+        blocking=True,
+        speaker="p336",
+        use_cached=True,
+    ):
+        """
+        Plays spoken text generated by Coqui TTS. Saves and reuses pregenerated
+        files if enabled and available to save computation time.
+
+        :param text: text to speak
+        :type text: str
+        :param language: Language code (e.g. 'en' or 'de')
+        :type language: str
+        :param pitch: Pitch in octaves by which to shift the output
+        :type pitch: float
+        :param speed: Percentage to increase/decrease speed without changing
+                      pitch
+        :type speed: float
+        :param blocking: whether this call should block during playback
+        :type blocking: bool
+        :param speaker: Speaker selection for multi-speaker models
+        :type speaker: str
+        :param use_cached: whether to reuse previously generated audio
+        :type use_cached: bool
+
+        :return: Playback duration left (0 if blocking)
+        :rtype: float
+        """
+        logger.info("Saying: {}".format(text))
+        # produce audio (or load cached file)
+        out = self.generate_audio(text, language, speaker, use_cached)
         # load audio
         playback = AudioPlayer(out)
-
         # play audio file
         playback.pitch(pitch)
         playback.speed(speed)
