@@ -142,18 +142,24 @@ fi
 
 # activation script
 echo "Generating 'activate.bash'"
+if [ -f activate.bash ]; then
+  rm activate.bash
+fi
 BRIDGE_PATH=$(realpath $WORKDIR/..)/cv_bridge_build_ws/devel/setup.bash
 cat <<END > activate.bash
 #!/bin/bash
 
-if [ ! -z \$ROS_DISTRO ] && [ \$ROS_DISTRO == $ROS_DISTRO ]; then
-  source /opt/ros/${ROS_DISTRO}/setup.bash
+# activate python environment
+source ~/.$VIRTUALENVDIR/bin/activate
+
+# activate ros workspace
+if [ ! -z $ROS_DISTRO ] && [ -f /opt/ros/$ROS_DISTRO/setup.bash ]; then
+  source /opt/ros/$ROS_DISTRO/setup.bash
   source $(realpath $WORKDIR/devel/setup.bash)
   if [ -f $BRIDGE_PATH ]; then
     source $BRIDGE_PATH --extend
   fi
 fi
-source ~/.$VIRTUALENVDIR/bin/activate
 END
 
 # cleanup
