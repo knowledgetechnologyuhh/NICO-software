@@ -242,7 +242,7 @@ class AudioPlayer(object):
         Callback function for PyAudio stream
         """
         frame_ms = (frame_count / self._segment.frame_rate) * 1000.0
-        data = self._segment[self._pos : math.ceil(self._pos + frame_ms)].raw_data
+        data = self._segment[self._pos :].raw_data[: frame_count * 2]
         self._pos += frame_ms
         return (data, paContinue)
 
