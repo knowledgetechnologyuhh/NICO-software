@@ -2,6 +2,7 @@
 
 import argparse
 import logging
+import math
 import sys
 import threading
 import time
@@ -276,6 +277,24 @@ class NicoRosMotion:
         )
         self._palm_thread = threading.Thread(target=self._palm_sensor_publisher)
         self._palm_thread.start()
+
+        self._publisher_right = rospy.Publisher(
+            "/right/open_manipulator_p/joint_states",
+            sensor_msgs.msg.JointState,
+            queue_size=10,
+        )
+        self._publisher_left = rospy.Publisher(
+            "/left/open_manipulator_p/joint_states",
+            sensor_msgs.msg.JointState,
+            queue_size=10,
+        )
+        self._publisher_head = rospy.Publisher(
+            "/NICOL/joint_states",
+            sensor_msgs.msg.JointState,
+            queue_size=10,
+        )
+        self._joint_state_thread = threading.Thread(target=self._joint_state_publisher)
+        self._joint_state_thread.start()
 
         if "nicomoveit.moveitWrapper" in sys.modules:
             self._jointStatePublisher = rospy.Publisher(
@@ -607,6 +626,43 @@ class NicoRosMotion:
         """
         self.robot.stopSimulation()
         return []
+
+    def _joint_state_publisher(self):
+        r = rospy.Rate(50)  # 10hz
+        pubs = self._publisher_head, self._publisher_left, self._publisher_right
+        chains = (
+            ["head_z", "head_y"],
+            [
+                "l_shoulder_z",
+                "l_shoulder_y",
+                "l_arm_x",
+                "l_elbow_y",
+                "l_wrist_z",
+                "l_wrist_x",
+                "l_indexfingers_x",
+                "l_thumb_x",
+            ],
+            [
+                "r_shoulder_z",
+                "r_shoulder_y",
+                "r_arm_x",
+                "r_elbow_y",
+                "r_wrist_z",
+                "r_wrist_x",
+                "r_indexfingers_x",
+                "r_thumb_x",
+            ],
+        )
+        while not rospy.is_shutdown():
+            for i, pub in enumerate(pubs):
+                message = sensor_msgs.msg.JointState()
+                message.name = chains[i]
+                message.position = [
+                    math.radians(self.robot.getAngle(j)) for j in chains[i]
+                ]
+                message.header.stamp = rospy.get_rostime()
+                pub.publish(message)
+            r.sleep()
 
     def _sendJointState(self):
         """

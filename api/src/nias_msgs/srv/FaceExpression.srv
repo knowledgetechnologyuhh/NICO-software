@@ -1,0 +1,4 @@
+string face_expression
+bool trained
+---
+bool success

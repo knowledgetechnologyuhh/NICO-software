@@ -1,0 +1,4 @@
+float32 percent
+int32[] finger
+---
+bool success

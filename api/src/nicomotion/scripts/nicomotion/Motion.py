@@ -443,7 +443,7 @@ class Motion:
             self._logger.warning("resetSimulation() has no effect on a real robot")
 
     def callVREPRemoteApi(self, func_name, *args, **kwargs):
-        """ Calls any remote API func in a thread_safe way.
+        """Calls any remote API func in a thread_safe way.
 
         :param str func_name: name of the remote API func to call
         :param args: args to pass to the remote API call
@@ -584,6 +584,46 @@ class Motion:
             self._logger.warning("Unknown hand name {}".format(handName))
 
         return hand.getPalmSensorReading()
+
+    def setHandLEDColor(self, handName, red, green, blue):
+        """
+        Sets RGB color of the LED on the back of the hand.
+
+        :param handName: Name of the hand (RHand, LHand)
+        :type handName: str
+        :param red: Percentage of red channel intensity (0.0 to 1.0)
+        :type red: float
+        :param green: Percentage of green channel intensity (0.0 to 1.0)
+        :type green: float
+        :param blue: Percentage of blue channel intensity (0.0 to 1.0)
+        :type blue: float
+        """
+        if handName.lower().startswith("l"):
+            hand = self._leftHand
+        elif handName.lower().startswith("r"):
+            hand = self._rightHand
+        else:
+            self._logger.warning("Unknown hand name {}".format(handName))
+
+        hand.setLEDColor(red, green, blue)
+
+    def getHandLEDColor(self, handName):
+        """
+        Returns RGB color of the LED on the back of the hand.
+
+        :param handName: Name of the hand (RHand, LHand)
+        :type handName: str
+        :return: Percentages of RGB channel intensities (0.0 to 1.0)
+        :rtype: (float, float, float)
+        """
+        if handName.lower().startswith("l"):
+            hand = self._leftHand
+        elif handName.lower().startswith("r"):
+            hand = self._rightHand
+        else:
+            self._logger.warning("Unknown hand name {}".format(handName))
+
+        return hand.getLEDColor()
 
     def enableForceControlAll(self, goalForce=500):
         """
@@ -1071,18 +1111,18 @@ class Motion:
 
     def getPose(self, objectName, relativeToObject=None):
         """
-          Returns the current pose of the scene object with given name relative
-          to the second given object
+        Returns the current pose of the scene object with given name relative
+        to the second given object
 
-          :param objectName: Name of the object
-          :type objectName: str
-          :param relativeToObject: Name of the object that the position should
-                                   be relative to
-          :type relativeToObject: str
-          :return: Position of the requestet object in x,y,z coordinates
-                   relative to the second object
-          :rtype: list of three floats
-          """
+        :param objectName: Name of the object
+        :type objectName: str
+        :param relativeToObject: Name of the object that the position should
+                                 be relative to
+        :type relativeToObject: str
+        :return: Position of the requestet object in x,y,z coordinates
+                 relative to the second object
+        :rtype: list of three floats
+        """
         return self._robot.get_object_position(objectName, relativeToObject)
 
     def cleanup(self):

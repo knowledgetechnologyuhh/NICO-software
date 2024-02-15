@@ -1,0 +1,4 @@
+geometry_msgs/Pose[] goals
+string approaching_side
+---
+bool success
