@@ -5,6 +5,7 @@ __pycache__
 
 #IDE
 .idea
+.vscode
 
 #temporary files
 *~
@@ -37,6 +38,7 @@ api/src/*/dist
 api/src/*/*.egg-info
 */catkin_generated/*
 cv_bridge_build_ws
+api/.catkin_tools/
 
 #data files
 api/examples/mixed-modules/touch-sensor-experiments/data

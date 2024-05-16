@@ -719,7 +719,7 @@ class Motion:
             else:
                 motor = getattr(self._robot, jointName)
                 motor.compliant = False
-                motor.goal_speed = 1000.0 * min(fractionMaxSpeed, self._maximumSpeed)
+                motor.moving_speed = 1000.0 * min(fractionMaxSpeed, self._maximumSpeed)
                 motor.goal_position = angle
         else:
             self._logger.warning('No joint "%s" found' % jointName)

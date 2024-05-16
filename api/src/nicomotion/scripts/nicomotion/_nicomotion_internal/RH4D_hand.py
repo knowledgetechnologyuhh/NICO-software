@@ -20,8 +20,8 @@ class RH4DHand(AbstractHand):
     }
 
     conversion_angles = {
-        "l_wrist_x": ((-180, 180), (-50, 0)),
-        "r_wrist_x": ((-180, 180), (0, 50)),
+        "l_wrist_x": ((-50, 110), (-50, 0)),
+        "r_wrist_x": ((-110, 50), (0, 50)),
         "l_wrist_z": ((-180, 180), (-90, 90)),
         "r_wrist_z": ((-180, 180), (-90, 90)),
         "l_indexfingers_x": ((-160, 160), (-75, 0)),

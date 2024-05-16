@@ -628,7 +628,7 @@ class NicoRosMotion:
         return []
 
     def _joint_state_publisher(self):
-        r = rospy.Rate(50)  # 10hz
+        r = rospy.Rate(50)  # 50hz
         pubs = self._publisher_head, self._publisher_left, self._publisher_right
         chains = (
             ["head_z", "head_y"],
@@ -660,6 +660,7 @@ class NicoRosMotion:
                 message.position = [
                     math.radians(self.robot.getAngle(j)) for j in chains[i]
                 ]
+                message.velocity = [self.robot.getSpeed(j) for j in chains[i]]
                 message.header.stamp = rospy.get_rostime()
                 pub.publish(message)
             r.sleep()

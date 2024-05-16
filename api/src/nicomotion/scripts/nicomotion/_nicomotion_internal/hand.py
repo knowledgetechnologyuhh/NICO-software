@@ -171,7 +171,7 @@ class AbstractHand(object):
                     self.motor_directions[motor_name] = "opening"
 
             motor.compliant = False
-            motor.goal_speed = 1000.0 * fraction_max_speed
+            motor.moving_speed = 1000.0 * fraction_max_speed
             motor.goal_position = position
             self.mutex.release()
         else:
