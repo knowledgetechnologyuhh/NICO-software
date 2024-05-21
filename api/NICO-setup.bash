@@ -2,13 +2,18 @@
 
 # parameters
 : ${PYTHON="/usr/bin/python2.7"} # python executable of virtualenv
-: ${VIRTUALENVDIR="NICO"} # directory name of virtualenv in home (with a '.' prefix)
+: ${VIRTUALENV_DIR=$HOME} # where to create the virtualenv
+: ${VIRTUALENV_NAME="NICO"} # directory name of virtualenv in $VIRTUALENVROOT (with a '.' prefix)
 : ${REINSTALL_PYPOT=0} # Set this to 1 to force a reinstall of pypot
+if ! [ -z $VIRTUALENVDIR ]; then
+  echo -e "\e[31mERROR: VIRTUALENVDIR is no longer supported, please set VIRTUALENV_DIR and VIRTUALENV_NAME instead.\e[0m"
+  return 1 2> /dev/null
+fi
 if [ $# -eq 1 ]
 then
-  VIRTUALENVDIR="$1"
+  VIRTUALENV_NAME="$1"
 fi
-echo Virtual environment directory: "$VIRTUALENVDIR"
+echo Virtual environment directory: "$VIRTUALENV_DIR/.$VIRTUALENV_NAME"
 
 # get dir
 CALLDIR=`pwd`
@@ -23,7 +28,8 @@ cd
 cleanup() {
   echo "Cleanup"
   unset PYTHON
-  unset VIRTUALENVDIR
+  unset VIRTUALENV_DIR
+  unset VIRTUALENV_NAME
   unset REINSTALL_PYPOT
   rm -rf /tmp/pypot
   cd "$CALLDIR"
@@ -36,7 +42,7 @@ done
 
 #virtualenv setup
 echo "Checking for virtualenv"
-if [ -d ".$VIRTUALENVDIR/" ]; then
+if [ -d "$VIRTUALENV_DIR/.$VIRTUALENV_NAME/" ]; then
   echo "Existing virtualenv found"
 else
   echo "No virtualenv found - setting up new virtualenv"
@@ -44,17 +50,18 @@ else
   if ! [ -x "$(command -v $VIRTUALENV)" ]; then
     echo -e "\e[31mERROR: Could not find command $VIRTUALENV, please make sure it is installed or change the value of VIRTUALENV to the proper command.\e[0m"
   fi
-  $VIRTUALENV -p $PYTHON ~/.$VIRTUALENVDIR
+  $VIRTUALENV -p $PYTHON $VIRTUALENV_DIR/.$VIRTUALENV_NAME/
 fi
 echo "Activating virtualenv"
-source ~/.$VIRTUALENVDIR/bin/activate
+source $VIRTUALENV_DIR/.$VIRTUALENV_NAME/bin/activate
 
 #install python packages
-if [ $ONLINE ] && [ $VIRTUAL_ENV == ~/.$VIRTUALENVDIR ]; then
+if [ $ONLINE ] && [ $VIRTUAL_ENV == $VIRTUALENV_DIR/.$VIRTUALENV_NAME ]; then
 
   echo "Checking python packages"
   pip install 'sphinx' # required inside virtualenv to find all modules
   pip install cffi # pyrep requirement
+  pip install 'empy<4'
 
   # install/update custom pypot
   cd /tmp
@@ -67,13 +74,13 @@ if [ $ONLINE ] && [ $VIRTUAL_ENV == ~/.$VIRTUALENVDIR ]; then
   cd pypot
   CURRENT_GIT_COMMIT=`git show --name-status | grep commit`
   CURRENT_GIT_COMMIT=${CURRENT_GIT_COMMIT#'commit '}
-  if [ $REINSTALL_PYPOT == 1 ] || [ ! -f ~/.$VIRTUALENVDIR/.current_git_commit ] || [ ! `cat ~/.$VIRTUALENVDIR/.current_git_commit` == $CURRENT_GIT_COMMIT ]; then
+  if [ $REINSTALL_PYPOT == 1 ] || [ ! -f $VIRTUALENV_DIR/.$VIRTUALENV_NAME/.current_git_commit ] || [ ! `cat $VIRTUALENV_DIR/.$VIRTUALENV_NAME/.current_git_commit` == $CURRENT_GIT_COMMIT ]; then
     echo "Custom pypot outdated - updating to commit $CURRENT_GIT_COMMIT"
     pip uninstall pypot -y
     pip install .
     if [ ! -z "$(pip list --disable-pip-version-check | grep -F pypot)" ]
     then
-      echo $CURRENT_GIT_COMMIT >| ~/.$VIRTUALENVDIR/.current_git_commit
+      echo $CURRENT_GIT_COMMIT >| $VIRTUALENV_DIR/.$VIRTUALENV_NAME/.current_git_commit
     else
       cleanup
       echo -e "\e[31mERROR: Could not install pypot\e[0m"
@@ -133,7 +140,7 @@ cd $WORKDIR
 
 if [ -x "$(command -v catkin_make)" ]; then
   pip install rospkg catkin_pkg empy
-  catkin_make -DPYTHON_EXECUTABLE=~/.$VIRTUALENVDIR/bin/python
+  catkin_make -DPYTHON_EXECUTABLE=$VIRTUALENV_DIR/.$VIRTUALENV_NAME/bin/python
   source $WORKDIR/devel/setup.bash
 fi
 if ! [ -x "$(command -v catkin_make)" ]; then
@@ -150,7 +157,7 @@ cat <<END > activate.bash
 #!/bin/bash
 
 # activate python environment
-source ~/.$VIRTUALENVDIR/bin/activate
+source $VIRTUALENV_DIR/.$VIRTUALENV_NAME/bin/activate
 
 # activate ros workspace
 if [ ! -z $ROS_DISTRO ] && [ -f /opt/ros/$ROS_DISTRO/setup.bash ]; then
