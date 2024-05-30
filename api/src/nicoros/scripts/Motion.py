@@ -6,12 +6,14 @@ import math
 import sys
 import threading
 import time
+from os.path import abspath, dirname, join
 
 import nicomsg.msg
 import nicomsg.srv
 import rospy
 import sensor_msgs.msg
 from nicomotion.Motion import Motion
+from RosLoggingHandler import RosLoggingHandler
 from std_srvs.srv import Empty
 
 try:
@@ -35,8 +37,11 @@ class NicoRosMotion:
         :return: dict
         """
         return {
-            "logFile": "NICO.log",
-            "robotMotorFile": "config.json",
+            "robotMotorFile": join(
+                dirname(abspath(__file__)),
+                "../../../..",
+                "json/nico_humanoid_upper.json",
+            ),
             "vrep": False,
             "vrepHost": "127.0.0.1",
             "vrepPort": 19997,
@@ -721,7 +726,9 @@ class NicoRosMotion:
             time.sleep(0.25)
 
     def __del__(self):
-        self.robot.cleanup()
+        if self._running:
+            self.stop()
+        del self.robot
 
     def _palm_sensor_publisher(self):
         r = rospy.Rate(10)  # 10hz
@@ -744,12 +751,6 @@ if __name__ == "__main__":
         help="Sets log level. Default: INFO",
         type=str,
         default="INFO",
-    )
-    parser.add_argument(
-        "--log-file",
-        dest="logFile",
-        help=("Path to log file. Default: %s" % config["logFile"]),
-        type=str,
     )
     parser.add_argument(
         "-m",
@@ -824,8 +825,6 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_known_args()[0]
-    if args.logFile:
-        config["logFile"] = args.logFile
     if args.robotMotorFile:
         config["robotMotorFile"] = args.robotMotorFile
     config["vrep"] = args.vrep
@@ -860,25 +859,15 @@ if __name__ == "__main__":
         sys.stderr.write("LOGGING ERROR: Unknown log level %s\n" % args.logLevel)
         pass
 
-    logging.basicConfig(
-        filename=config["logFile"],
-        format=(
-            "%(asctime)s %(levelname)s at %(funcName)s "
-            + "(%(module)s: %(lineno)d): %(message)s"
-        ),
-        level=loggingLevel,
-    )
-    stdoutHandler = logging.StreamHandler(sys.stdout)
-    stdoutHandler.setLevel(loggingLevel)
-    logging_format = logging.Formatter(
-        "%(asctime)s %(levelname)s at %(funcName)s (%(module)s: "
-        + "%(lineno)d): %(message)s"
-    )
-    stdoutHandler.setFormatter(logging_format)
-    logging.getLogger().addHandler(stdoutHandler)
+    logger = logging.getLogger(__name__)
+    logger.setLevel(loggingLevel)
+    handler = RosLoggingHandler()
+    logger.addHandler(handler)
 
     rosConnection = NicoRosMotion(config)
 
     rospy.spin()
 
-    rosConnection.stop()
+    del rosConnection
+
+    rospy.loginfo("test")
