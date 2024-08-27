@@ -58,6 +58,6 @@ if __name__ == "__main__":
         nargs="?",
         help=("The directory where generated soundfiles are stored for reuse"),
     )
-    args = parser.parse_args()
+    args = parser.parse_known_args()[0]
 
     NicoRosTTS(args.cache_dir)
