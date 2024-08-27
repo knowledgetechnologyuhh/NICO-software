@@ -2,7 +2,8 @@
 
 # parameters
 : ${PYTHON="/usr/bin/python3"} # python executable of virtualenv
-: ${VIRTUALENVDIR="NICO-python3"} # directory name of virtualenv in home (with a '.' prefix)
+: ${VIRTUALENV_DIR=$HOME} # where to create the virtualenv
+: ${VIRTUALENV_NAME="NICO-python3"} # directory name of virtualenv in $VIRTUALENVROOT (with a '.' prefix)
 : ${SKIP_PYREP=0} # set to 1 to ignore pyrep environment checks
 : ${REINSTALL_PYPOT=0} # Set this to 1 to force a reinstall of pypot
 
@@ -38,7 +39,7 @@ if [ ! -z $ROS_DISTRO ] && [ $ROS_DISTRO != noetic ]; then
     mkdir $WORKDIR/../cv_bridge_build_ws
     cd $WORKDIR/../cv_bridge_build_ws
     mkdir src
-    catkin config -DPYTHON_EXECUTABLE=~/.$VIRTUALENVDIR/bin/python3 -DPYTHON_INCLUDE_DIR=/usr/include/python3.6m -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.6m.so
+    catkin config -DPYTHON_EXECUTABLE=$VIRTUALENV_DIR/.$VIRTUALENV_NAME/bin/python3 -DPYTHON_INCLUDE_DIR=/usr/include/python3.6m -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.6m.so
     catkin config --install
     cd src
     git clone -b melodic https://github.com/ros-perception/vision_opencv.git

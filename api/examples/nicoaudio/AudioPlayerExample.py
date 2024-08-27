@@ -1,36 +1,23 @@
-import math
-import os
-import struct
 import time
-import wave
 
 from nicoaudio.AudioPlayer import AudioPlayer
+from nicoaudio.TextToSpeech import TextToSpeech
 
-
-def generate_audio_file(volume=0.5, sampleRate=44100, duration=5.0,
-                        frequency=440.0):
-    # taken from http://blog.acipo.com/wave-generation-in-python/
-    wav = wave.open("/tmp/NICO_playback_test.wav", "wb")
-    wav.setnchannels(1)
-    wav.setsampwidth(2)
-    wav.setframerate(sampleRate)
-
-    for i in range(int(duration * sampleRate)):
-        value = int(volume * 32767.0 * math.cos(frequency *
-                                                math.pi *
-                                                float(i) / float(sampleRate)))
-        data = struct.pack('<h', value)
-        wav.writeframesraw(data)
-    wav.close()
-
-
-generate_audio_file()
+# generate audio file using tts (see TextToSpeechExample for detailed usage)
+tts = TextToSpeech()
+file_name = tts.generate_audio(
+    "This is an example to showcase the usage of the audio player class, which will be paused for a few seconds now, and then resumes playback until it reaches the end of the audio file."
+)
 
 # load file
-playback = AudioPlayer("/tmp/NICO_playback_test.wav")
+playback = AudioPlayer(file_name)
 # start playback
-playback.play()
+playback.play(volume=1.0)
+# wait until it approximately says "now"
+time.sleep(4.75 - playback.position)
+# pause playback for 2 seconds
+playback.pause()
+time.sleep(2.0)
+playback.resume()
 # wait until playback is finished
 time.sleep(playback.duration - playback.position)
-# delete file
-os.remove("/tmp/NICO_playback_test.wav")

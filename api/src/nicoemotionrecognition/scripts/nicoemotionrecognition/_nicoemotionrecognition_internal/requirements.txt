@@ -1,0 +1,5 @@
+keras==2.1.6
+dlib
+opencv-python==4.2.0.32
+opencv-contrib-python==4.2.0.32
+git+https://github.com/LemonSpeech/flaskcom.git@44660c8#egg=flaskcom

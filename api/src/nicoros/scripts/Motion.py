@@ -2,15 +2,18 @@
 
 import argparse
 import logging
+import math
 import sys
 import threading
 import time
+from os.path import abspath, dirname, join
 
 import nicomsg.msg
 import nicomsg.srv
 import rospy
 import sensor_msgs.msg
 from nicomotion.Motion import Motion
+from RosLoggingHandler import RosLoggingHandler
 from std_srvs.srv import Empty
 
 try:
@@ -34,8 +37,11 @@ class NicoRosMotion:
         :return: dict
         """
         return {
-            "logFile": "NICO.log",
-            "robotMotorFile": "config.json",
+            "robotMotorFile": join(
+                dirname(abspath(__file__)),
+                "../../../..",
+                "json/nico_humanoid_upper.json",
+            ),
             "vrep": False,
             "vrepHost": "127.0.0.1",
             "vrepPort": 19997,
@@ -276,6 +282,24 @@ class NicoRosMotion:
         )
         self._palm_thread = threading.Thread(target=self._palm_sensor_publisher)
         self._palm_thread.start()
+
+        self._publisher_right = rospy.Publisher(
+            "/right/open_manipulator_p/joint_states",
+            sensor_msgs.msg.JointState,
+            queue_size=10,
+        )
+        self._publisher_left = rospy.Publisher(
+            "/left/open_manipulator_p/joint_states",
+            sensor_msgs.msg.JointState,
+            queue_size=10,
+        )
+        self._publisher_head = rospy.Publisher(
+            "/NICOL/joint_states",
+            sensor_msgs.msg.JointState,
+            queue_size=10,
+        )
+        self._joint_state_thread = threading.Thread(target=self._joint_state_publisher)
+        self._joint_state_thread.start()
 
         if "nicomoveit.moveitWrapper" in sys.modules:
             self._jointStatePublisher = rospy.Publisher(
@@ -608,6 +632,44 @@ class NicoRosMotion:
         self.robot.stopSimulation()
         return []
 
+    def _joint_state_publisher(self):
+        r = rospy.Rate(50)  # 50hz
+        pubs = self._publisher_head, self._publisher_left, self._publisher_right
+        chains = (
+            ["head_z", "head_y"],
+            [
+                "l_shoulder_z",
+                "l_shoulder_y",
+                "l_arm_x",
+                "l_elbow_y",
+                "l_wrist_z",
+                "l_wrist_x",
+                "l_indexfingers_x",
+                "l_thumb_x",
+            ],
+            [
+                "r_shoulder_z",
+                "r_shoulder_y",
+                "r_arm_x",
+                "r_elbow_y",
+                "r_wrist_z",
+                "r_wrist_x",
+                "r_indexfingers_x",
+                "r_thumb_x",
+            ],
+        )
+        while not rospy.is_shutdown():
+            for i, pub in enumerate(pubs):
+                message = sensor_msgs.msg.JointState()
+                message.name = chains[i]
+                message.position = [
+                    math.radians(self.robot.getAngle(j)) for j in chains[i]
+                ]
+                message.velocity = [self.robot.getSpeed(j) for j in chains[i]]
+                message.header.stamp = rospy.get_rostime()
+                pub.publish(message)
+            r.sleep()
+
     def _sendJointState(self):
         """
         Loop for sending the current joint state
@@ -664,7 +726,9 @@ class NicoRosMotion:
             time.sleep(0.25)
 
     def __del__(self):
-        self.robot.cleanup()
+        if self._running:
+            self.stop()
+        del self.robot
 
     def _palm_sensor_publisher(self):
         r = rospy.Rate(10)  # 10hz
@@ -687,12 +751,6 @@ if __name__ == "__main__":
         help="Sets log level. Default: INFO",
         type=str,
         default="INFO",
-    )
-    parser.add_argument(
-        "--log-file",
-        dest="logFile",
-        help=("Path to log file. Default: %s" % config["logFile"]),
-        type=str,
     )
     parser.add_argument(
         "-m",
@@ -767,8 +825,6 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_known_args()[0]
-    if args.logFile:
-        config["logFile"] = args.logFile
     if args.robotMotorFile:
         config["robotMotorFile"] = args.robotMotorFile
     config["vrep"] = args.vrep
@@ -803,25 +859,15 @@ if __name__ == "__main__":
         sys.stderr.write("LOGGING ERROR: Unknown log level %s\n" % args.logLevel)
         pass
 
-    logging.basicConfig(
-        filename=config["logFile"],
-        format=(
-            "%(asctime)s %(levelname)s at %(funcName)s "
-            + "(%(module)s: %(lineno)d): %(message)s"
-        ),
-        level=loggingLevel,
-    )
-    stdoutHandler = logging.StreamHandler(sys.stdout)
-    stdoutHandler.setLevel(loggingLevel)
-    logging_format = logging.Formatter(
-        "%(asctime)s %(levelname)s at %(funcName)s (%(module)s: "
-        + "%(lineno)d): %(message)s"
-    )
-    stdoutHandler.setFormatter(logging_format)
-    logging.getLogger().addHandler(stdoutHandler)
+    logger = logging.getLogger(__name__)
+    logger.setLevel(loggingLevel)
+    handler = RosLoggingHandler()
+    logger.addHandler(handler)
 
     rosConnection = NicoRosMotion(config)
 
     rospy.spin()
 
-    rosConnection.stop()
+    del rosConnection
+
+    rospy.loginfo("test")

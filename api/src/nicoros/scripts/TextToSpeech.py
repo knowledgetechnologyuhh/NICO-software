@@ -11,7 +11,7 @@ class NicoRosTTS(object):
     :class:`nicoaudio.TextToSpeech` to ROS
     """
 
-    def __init__(self, cache_dir="/tmp", port="http://0.0.0.0:5002/api/tts"):
+    def __init__(self, cache_dir="/tmp"):
         """
         The NicoRosTTS class exposes the functions of
         :class:`nicoaudio.TextToSpeech` to ROS
@@ -24,8 +24,9 @@ class NicoRosTTS(object):
         :type port: str
         """
         rospy.init_node("text_to_speech", anonymous=True)
-        self.tts = TextToSpeech(cache_dir, port)
+        self.tts = TextToSpeech(cache_dir)
         rospy.Service("nico/text_to_speech/say", srv.SayText, self._ROSPY_speak)
+        rospy.loginfo("TTS started successfully")
         rospy.spin()
 
     def _ROSPY_speak(self, request):
@@ -57,12 +58,6 @@ if __name__ == "__main__":
         nargs="?",
         help=("The directory where generated soundfiles are stored for reuse"),
     )
-    parser.add_argument(
-        "--port",
-        default="http://0.0.0.0:5002/api/tts",
-        nargs="?",
-        help=("Port of the tts server (if any)"),
-    )
-    args = parser.parse_args()
+    args = parser.parse_known_args()[0]
 
-    NicoRosTTS(args.cache_dir, args.port)
+    NicoRosTTS(args.cache_dir)

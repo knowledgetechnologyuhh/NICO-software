@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="json_path" default="$(find nicoros)/../../../json/nico_humanoid_upper.json" doc="Path to the JSON which describes the motors in a way PyPot understands it. Path must be absolute or relative to python working path (~/.ros)" />
+    
+    <node name="motion" pkg="nicoros" args="-m $(arg json_path)" type="Motion.py" required="true"  output="screen"/> 
+    <node name="joint_controller_left" pkg="nicoros" type="JointController.py" required="true"  output="screen">
+        <param name="prefix" type="string" value="left/open_manipulator_p" />
+    </node>
+	<node name="joint_controller_right" pkg="nicoros" type="JointController.py" required="true"  output="screen">
+        <param name="prefix" type="string" value="right/open_manipulator_p" />
+    </node>
+    <node name="joint_controller_head" pkg="nicoros" type="JointController.py" required="true"  output="screen">
+        <param name="prefix" type="string" value="NICOL/head" />
+    </node>
+
+</launch>

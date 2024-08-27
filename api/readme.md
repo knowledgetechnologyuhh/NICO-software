@@ -63,11 +63,10 @@ sudo apt-get install ffmpeg
 ```
 TextToSpeech:
 
-The `nicoaudio.TextToSpeech` uses `pico2wave` as fallback (e.g if there is no internet):
+The `nicoaudio.TextToSpeech` requires `espeak` as backend:
 ```
-sudo apt-get install pico2wave
+sudo apt-get install espeak
 ```
-It can also use a locally hosted [MozillaTTS server](https://github.com/mozilla/TTS/tree/master/server) (note that MozillaTTS is still in developement)
 
 nicomotion
 --
