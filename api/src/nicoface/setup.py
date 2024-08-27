@@ -3,8 +3,8 @@ import sys
 from setuptools import find_packages, setup
 
 extra = {}
-if sys.version_info >= (3,):
-    extra["use_2to3"] = True
+# if sys.version_info >= (3,):
+#     extra["use_2to3"] = True
 
 setup(
     name="nicoface",

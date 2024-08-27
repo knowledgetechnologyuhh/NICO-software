@@ -6,7 +6,7 @@ import sys
 import time
 import threading
 import yaml
-from os.path import abspath, dirname
+from os.path import abspath, dirname, join
 
 from nicoaudio.TextToSpeech import TextToSpeech
 from nicoemotionrecognition.EmotionRecognition import EmotionRecognition
@@ -31,7 +31,8 @@ class EmotionDemo(object):
         robot=None,
         face=None,
         voice_enabled=False,
-        voice_cache_dir="/tmp",
+        voice_cache_dir=join(dirname(abspath(__file__)), "tts_storage"),
+        voice_load_tts=False,
         voice_use_cuda=False,
         german=False,
         face_tracking=False,
@@ -59,13 +60,16 @@ class EmotionDemo(object):
         if voice_enabled:
             if german:
                 self._tts = TextToSpeech(
+                    load_tts=voice_load_tts,
                     model_name="tts_models/de/thorsten/vits",
                     cache_dir=voice_cache_dir,
                     use_cuda=voice_use_cuda,
                 )
             else:
                 self._tts = TextToSpeech(
-                    cache_dir=voice_cache_dir, use_cuda=voice_use_cuda
+                    load_tts=voice_load_tts,
+                    cache_dir=voice_cache_dir,
+                    use_cuda=voice_use_cuda,
                 )
             self._tts_end = 0
             with open(
@@ -95,6 +99,7 @@ class EmotionDemo(object):
             if self._update_face and face is not None:
                 self._face_expression.morph_face_expression(self._last_exp)
                 self._update_face = False
+            time.sleep(0.05)
 
     def show_emotion(self, emotion):
         """
@@ -268,19 +273,25 @@ if __name__ == "__main__":
         action="store_true",
         help="Displays face as image rather than sending it to the real robot",
     )
-
+    tts_storage_pth = join(dirname(abspath(__file__)), "tts_storage")
     parser.add_argument(
         "--cache-dir",
         dest="voice_cache_dir",
         type=str,
-        default="/tmp",
-        help="Path to cache generated sound files. (Default: /tmp)",
+        default=tts_storage_pth,
+        help=f"Path to cache generated sound files. (Default: {tts_storage_pth})",
     )
     parser.add_argument(
         "--use-cuda",
         dest="voice_use_cuda",
         action="store_true",
         help="Enable cuda for tts model",
+    )
+    parser.add_argument(
+        "--load-tts",
+        dest="voice_load_tts",
+        action="store_true",
+        help="Load tts model for live generation instead of only using pre-generated files",
     )
     # parser.add_argument(
     #     "--disable-gui", dest="gui", action="store_false", help="Disables the GUI."
@@ -308,10 +319,11 @@ if __name__ == "__main__":
         face,
         voice_enabled=args.voice,
         voice_cache_dir=args.voice_cache_dir,
+        voice_load_tts=args.voice_load_tts,
         voice_use_cuda=args.voice_use_cuda,
         german=args.german,
         face_tracking=args.motion,
-        mirror_emotion=args.face_enabled,
+        mirror_emotion=args.face_enabled or args.voice,
         tracking_delta=10,
         mirror_emotion_delta=10,
     )

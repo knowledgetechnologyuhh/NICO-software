@@ -16,7 +16,7 @@ setup(
     author_email="4gaede@informatik.uni-hamburg.de",
     install_requires=[
         "numpy",
-        # FIXME remove version when pyrep incompatibility fixed
+        # FIXME remove version when qt incompatibility fixed
         "opencv-python==4.3.0.36",
     ],
     **extra

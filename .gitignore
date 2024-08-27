@@ -1,9 +1,11 @@
 #python
 __pycache__
 *.pyc
+*.egg-info/
 
 #IDE
 .idea
+.vscode
 
 #temporary files
 *~
@@ -36,6 +38,7 @@ api/src/*/dist
 api/src/*/*.egg-info
 */catkin_generated/*
 cv_bridge_build_ws
+api/.catkin_tools/
 
 #data files
 api/examples/mixed-modules/touch-sensor-experiments/data
@@ -43,6 +46,7 @@ api/examples/mixed-modules/touch-sensor-experiments/data_old
 api/examples/mixed-modules/touch-sensor-experiments/data_orig
 api/examples/mixed-modules/touch-sensor-experiments/data-very-small-dataset
 api/examples/mixed-modules/touch-sensor-experiments/arm_data
+api/examples/nicoemotionrecognition/tts_storage
 
 # log file
 *.log
