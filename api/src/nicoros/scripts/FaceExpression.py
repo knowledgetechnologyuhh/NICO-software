@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import nias_msgs.srv as srv
 import nicomsg.msg as msg
 import numpy as np
 import rospy
@@ -103,11 +102,6 @@ class NicoRosFaceExpression:
             msg.bitmap_face,
             self._ROSPY_bitmap,
         )
-        rospy.Service(
-            "/NICOL/face_expression_service",
-            srv.FaceExpression,
-            self._ROSPY_send_face_expression_service,
-        )
 
         # execute callbacks in main thread
         while not rospy.is_shutdown():
@@ -179,18 +173,6 @@ class NicoRosFaceExpression:
         self.queue.put((self.face.sendFaceExpression, (message.param1,)))
         self.pause.acquire()
         self.mutex.release()
-
-    def _ROSPY_send_face_expression_service(self, request):
-        """
-        Callback handle for nias spoof service
-        """
-        self.mutex.acquire()
-        self.queue.put(
-            (self.face.send_morphable_face_expression, (request.face_expression,))
-        )
-        self.pause.acquire()
-        self.mutex.release()
-        return True
 
     def _ROSPY_trained_expression(self, message):
         """

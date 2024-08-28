@@ -35,7 +35,7 @@ class TextToSpeech(object):
         :param load_tts: whether to load the tts model or only use cached files
         :type load_tts: bool
         :param model_name: which TTS model to use
-        :type use_cuda: str
+        :type model_name: str
         :param use_cuda: whether to run the model on the gpu
         :type use_cuda: bool
         """
@@ -171,7 +171,7 @@ class TextToSpeech(object):
         text,
         language="en",
         pitch=0.25,
-        speed=2 ** -0.25,
+        speed=2**-0.25,
         blocking=True,
         speaker="p336",
         use_cached=True,
