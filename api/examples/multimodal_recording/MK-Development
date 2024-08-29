@@ -1,0 +1,134 @@
+Current status of development (MK, ES, SH):
+
+Issue with hand not responding on every 2nd initialization DONE
+- issue is known - workaround: use idle skript & restart application DONE
+
+Add Integrity Constraint for external cameras DONE
+- check for file existance DONE
+- evaluate of any error ever occurs
+
+Checking quality of data
+- disruptions & breaks in sound file - possilbe solutions DONE
+  - decrease and monitor loadon the entire system (load max when writing images)
+  - move one cymera to another usb port
+  - reduce resolution of images
+- lag in the update of motor positions (and only positions - not currents)
+  - look again at the 
+
+Fixed directory of plot files DONE
+
+Enter new object set and create new database DONE
+- Adapt list of objects DONE
+
+Re-evaluate settings for integrity constraints - ensure the experiment runs well most of the time
+- MAX_NUM_DIF_CAMS = 10 (error occurs too often - almost no trial under 10 frames difference) DONE
+- MAX_POS_DIFFERENCE = 25.0 DONE
+  <-- this is very unrealistic: 25 deg. in 1/30 second ? but we often have these    errors - need to check   
+  if this occurs consistently or in any way linked to movement patterns.
+  - could be that this is linked to the hardware malfunction in the hand - maybe encoder not working
+  - find out which joint is offending - is this consistant?
+
+
+Run PILOT with simple objects (sponge & tissue)
+Count acceptes vs. rejected samples
+
+Results are listet here: 16 trials should be needed - occuring errors are listed below
+
+1. OK - but grip too weak, object slipped during lifting
+2. OK
+3. FAIL - Pos difference (27.87)
+4. FAIL - difference between exspected camera picture and recorded ones too high:
+          cam1-diff: 26 cam2-diff: 32
+5. OK
+6. OK
+7. FAIL - Pos difference (28.05)
+8. FAIL - difference between exspected camera picture and recorded ones too high:
+          cam1-diff: 26 cam2-diff: 32
+9. OK
+10. FAIL - difference between exspected camera picture and recorded ones too high:
+           cam1-diff: 25 cam2-diff: 31'
+11. OK
+12. OK
+13. OK
+14. FAIL current to high: 32979.0 - could see problem with the wrist-z
+15. OK
+16. FAIL - difference between exspected camera picture and recorded ones too high: cam1-diff: 25 cam2-diff: 31
+17. OK
+18. FAIL: difference between exspected camera picture and recorded ones too high:
+          cam1-diff: 25 cam2-diff: 32
+19. FAIL: 'Pos difference', 'current to high: 16542.0', 'current to high: 16542.0'
+20. FAIL: difference between exspected camera picture and recorded ones too high: cam1-diff: 25 cam2-diff: 32
+21. OK
+22. FAIL: Pos Difference
+
+--
+
+2nd trial
+
+only failures due to position of joints - mostly during lift/scoot trials
+
+---code snippet for smoothing hand data
+
+import numpy as np
+import random
+
+list_with_outlier = []
+length = 20
+
+#generate test data
+for i in range(length):
+    list_with_outlier.append(round(random.random(),3))
+    if random.random() < 0.1:
+        list_with_outlier[i] = round(random.random(),3)+10    
+
+print(list_with_outlier)
+
+#smooth out data
+#filter exactly one outlier between two datapoints - if the outlier is not the first or last datapoint
+
+for i in range(length):
+    if i > 1:
+        difference_one_two = list_with_outlier[i-2]-list_with_outlier[i-1]
+        difference_one_three = list_with_outlier[i-2]-list_with_outlier[i]
+        if difference_one_two < difference_one_three:
+            list_with_outlier[i-1] = np.mean([list_with_outlier[i-2],list_with_outlier[i-2]])
+        
+print("Cleaning list...")
+
+print(list_with_outlier)
+
+
+
+
+
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Integrate GUI into recording script
+
+Check Observer-HD recording - DONE.
+- camera resolution is wrong - 1920x1080 for hd and VGA for rgb+d
+- camera image not sharp - ok
+
+Checked Observer-Depth recording
+- issues with wrong duration (speed seems to be slow - double length of recording)
+- quality of depth sensing is bad - white vs. black surfaces are messured differenty - black surfaces are     almost not registered - all DONE, was wrong max depth distance
+
+Evaluate rate of successful trials
+- often check fails for image count - do we accept a difference there?
+- sometimes check fails for sound/image duration - could be related to errors in sound recording
+- rarely some odd errors - restar helps

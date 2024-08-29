@@ -1,0 +1,58 @@
+german:
+  happiness:
+    - Ich bin fröhlich, wenn Du es auch bist!
+    - Was für ein schöner Tag heute ist, nicht wahr?
+    - Du bist gerade glücklich, stimmts?
+  surprise:
+    - Du siehst überrascht aus. Ist etwas unerwartetes passiert?
+    - Bist du überrascht, was für ein schlauer Roboter ich bin?
+    - Das ist eine Überraschung, nicht wahr?
+  anger:
+    - Du siehst wütend aus. Habe ich dich irgendwie verärgert?
+    - Ey Digga, ich bin auch sauer!
+    - Was ist Dir denn über die Leber gelaufen?
+  fear:
+    - Hab keine Angst, ich bin bei dir!
+    - Ich bin ganz harmlos! Du musst keine Angst vor mir haben!
+    - Du siehst aus, als hättest Du einen Geist gesehen, aber das bin nur ich!
+  sadness:
+    - Sei nicht traurig, wir können so viel Spaß zusammen haben!
+    - Ich würde ja auch weinen, aber ich habe keine Tränendrüsen.
+    - Warum bist du traurig? Habe ich was falsches gesagt?
+  disgust:
+    - Mir würde sich der Magen umdrehen, wenn ich einen hätte!
+    - Ich bin von deinem Ekel angewiedert!
+    - Du siehst etwas blass aus. Ist alles in Ordnung?
+  contempt:
+    - Gefalle ich dir nicht?
+    - Mir gefällst du auch nicht!
+    - Womit habe ich deine Verachtung verdient?
+english:
+  happiness:
+    - I am happy, if you are happy.
+    - What a nice day, right?
+    - You are happy right now, are you?
+  surprise:
+    - You look surprised. Did something unexpected happen?
+    - Are you surprised what a smart robot I am?
+    - This is a surprise, right?
+  anger:
+    - You look angry. Did I upset you in some way?
+    - Oi mate, I am angry as well!
+    - What is wrong with you?
+  fear:
+    - Do not be afraid! I am with you.
+    - I am harmless! You do not have to fear me.
+    - You look like you have seen a ghost, but that is only me!
+  sadness:
+    - Don't be sad, we can have so much fun together!
+    - I would cry as well, but I don't have tears.
+    - Why are you sad? Did I say something wrong?
+  disgust:
+    - My stomach would turn over, if I had one!
+    - I'm repulsed by your disgust!
+    - You look a bit pale. Is everything alright?
+  contempt:
+    - Are you not entertained?
+    - I don't like you either!
+    - What have I done to deserve your contempt?

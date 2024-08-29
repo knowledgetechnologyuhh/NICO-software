@@ -42,6 +42,11 @@ class AbstractHand(object):
         {"motor_name": pypot_range, real_range}"""
         pass
 
+    @abstractproperty
+    def closing_direction(self):
+        """Direction in which the hand is closing (-1 or 1)"""
+        pass
+
     def __init__(self, robot, isLeft, monitorCurrents=True, vrep=False):
 
         if isLeft:
@@ -157,13 +162,16 @@ class AbstractHand(object):
 
             self.mutex.acquire()
             if motor_name in self.sensitive_motors:
-                if position > motor.present_position:
+                if (
+                    self.closing_direction * position
+                    > self.closing_direction * motor.present_position
+                ):
                     self.motor_directions[motor_name] = "closing"
                 else:
                     self.motor_directions[motor_name] = "opening"
 
             motor.compliant = False
-            motor.goal_speed = 1000.0 * fraction_max_speed
+            motor.moving_speed = 1000.0 * fraction_max_speed
             motor.goal_position = position
             self.mutex.release()
         else:
@@ -274,3 +282,25 @@ class AbstractHand(object):
                         self.motor_directions[motor_name] = "idle"
             self.mutex.release()
             time.sleep(max(0, 0.1 - (time.time() - before)))
+
+    def setLEDColor(self, red, green, blue):
+        """
+        Sets RGB color of the LED on the back of the hand.
+
+        :param red: Percentage of red channel intensity (0.0 to 1.0)
+        :type red: float
+        :param green: Percentage of green channel intensity (0.0 to 1.0)
+        :type green: float
+        :param blue: Percentage of blue channel intensity (0.0 to 1.0)
+        :type blue: float
+        """
+        self.board.hand_led_rgb = (red, green, blue)
+
+    def getLEDColor(self):
+        """
+        Returns RGB color of the LED on the back of the hand.
+
+        :return: Percentages of RGB channel intensities (0.0 to 1.0)
+        :rtype: (float, float, float)
+        """
+        return self.board.hand_led_rgb

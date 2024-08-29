@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 import nicomsg.msg as msg
 import numpy as np
 import rospy
@@ -69,7 +68,9 @@ class NicoRosFaceExpression:
             self._ROSPY_trained_expression,
         )
         rospy.Subscriber(
-            "nico/faceExpression/morph_face_expression", msg.s, self._ROSPY_morph,
+            "nico/faceExpression/morph_face_expression",
+            msg.s,
+            self._ROSPY_morph,
         )
         rospy.Subscriber(
             "nico/faceExpression/send_morphable_expression",
@@ -97,7 +98,9 @@ class NicoRosFaceExpression:
             self._ROSPY_polynomial_morph,
         )
         rospy.Subscriber(
-            "nico/faceExpression/send_bitmap", msg.bitmap_face, self._ROSPY_bitmap,
+            "nico/faceExpression/send_bitmap",
+            msg.bitmap_face,
+            self._ROSPY_bitmap,
         )
 
         # execute callbacks in main thread

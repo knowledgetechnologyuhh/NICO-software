@@ -10,6 +10,34 @@ import os
 import subprocess
 import threading
 import time
+import numpy as np
+import cv2
+
+VIDEO_DEVICE_PATH = "/dev/v4l/by-id/"
+ID_STR_LEGGED_NICO_LEFT_CAM = "usb-e-con_systems_See3CAM_CU135_09229807-video-index0"
+ID_STR_LEGGED_NICO_RIGHT_CAM = "usb-e-con_systems_See3CAM_CU135_36249807-video-index0"
+PATH_LEGGED_NICO_LEFT_CAM = VIDEO_DEVICE_PATH + ID_STR_LEGGED_NICO_LEFT_CAM
+PATH_LEGGED_NICO_RIGHT_CAM = VIDEO_DEVICE_PATH + ID_STR_LEGGED_NICO_RIGHT_CAM
+
+NICO_EYES = {
+    "left": (
+        "usb-046d_080a_2DE7B460-video-index0",
+        "usb-046d_080a_6C686AA1-video-index0",
+        "usb-e-con_systems_See3CAM_CU135_09229807-video-index0",
+        "usb-e-con_systems_See3CAM_CU135_2B08CD07-video-index0",
+        "usb-e-con_systems_See3CAM_CU135_2722500C-video-index0",
+        "usb-e-con_systems_See3CAM_CU135_2708CD07-video-index0",
+    ),
+    "right": (
+        "usb-046d_080a_17E79161-video-index0",
+        "usb-046d_080a_78918AA0-video-index0",
+        "usb-e-con_systems_See3CAM_CU135_36249807-video-index0",
+        "usb-e-con_systems_See3CAM_CU135_2606CD07-video-index0",
+        "usb-e-con_systems_See3CAM_CU135_22035000-video-index0",
+        "usb-e-con_systems_See3CAM_CU135_260FCB07-video-index0",
+    ),
+}
+
 
 import cv2
 
@@ -107,10 +135,10 @@ class VideoDevice:
             if device in file:
                 candidates += [file]
 
-        if len(candidates) is 0:
+        if len(candidates) == 0:
             logger.error("No candidates found")
             return -1
-        elif len(candidates) is 1:
+        elif len(candidates) == 1:
             return int(os.readlink(VideoDevice._VIDEO_DEVICE_PATH + candidates[0])[-1:])
         else:
             logger.error("Multiple candidates found: {}".format(candidates))
@@ -141,7 +169,7 @@ class VideoDevice:
         """
         logger = logging.getLogger(__name__)
         id = VideoDevice.resolve_device(device)
-        if id is -1:
+        if id == -1:
             logger.error("Can not create VideoDevice from ID %s" % id)
             return None
         return VideoDevice(
@@ -406,7 +434,7 @@ class VideoDevice:
         :return: value of zoom_absolute
         :rtype: int
         """
-        call_str = "v4l2-ctl -d {} -C zoom_absolute".format(self._deviceId, value)
+        call_str = "v4l2-ctl -d {} -C zoom_absolute".format(self._deviceId)
         output = subprocess.check_output([call_str], shell=True)
         return int(output.split()[1])
 

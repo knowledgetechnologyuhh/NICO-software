@@ -7,6 +7,8 @@ except (ImportError, SyntaxError):
     if (
         sys.version_info < (3,)
         or "COPPELIASIM_ROOT" not in os.environ
+        or "LD_LIBRARY_PATH" not in os.environ
+        or "QT_QPA_PLATFORM_PLUGIN_PATH" not in os.environ
         or os.environ["COPPELIASIM_ROOT"] not in os.environ["LD_LIBRARY_PATH"]
         or os.environ["COPPELIASIM_ROOT"]
         not in os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"]

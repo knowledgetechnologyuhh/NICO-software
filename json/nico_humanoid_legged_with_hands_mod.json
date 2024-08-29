@@ -9,21 +9,19 @@
       ],
       "port": "auto"
     }
-   },
+  },
   "motorgroups": {
     "head": [
       "head_z",
       "head_y"
     ],
-
     "r_arm": [
       "r_shoulder_y",
       "r_shoulder_z",
       "r_arm_x",
       "r_elbow_y"
     ],
-
-     "l_arm": [
+    "l_arm": [
       "l_shoulder_y",
       "l_shoulder_z",
       "l_arm_x",
@@ -39,7 +37,6 @@
       "r_indexfingers_x",
       "r_thumb_x",
       "r_virtualhand_x"
-
     ],
     "l_hand": [
       "l_wrist_z",
@@ -90,12 +87,12 @@
       "id": 21,
       "angle_limit": [
         -100,
-         125
+        125
       ],
       "orientation": "direct"
     },
     "r_arm_x": {
-      "offset": -32.0 ,
+      "offset": -32.0,
       "type": "MX-64",
       "id": 3,
       "angle_limit": [
@@ -154,7 +151,7 @@
       ],
       "orientation": "direct"
     },
-     "l_wrist_z": {
+    "l_wrist_z": {
       "offset": 0.0,
       "type": "SR-SEED56",
       "id": 24,
@@ -184,7 +181,7 @@
       ],
       "orientation": "direct"
     },
-     "l_thumb_x": {
+    "l_thumb_x": {
       "offset": 0.0,
       "type": "SR-SEED56",
       "id": 30,
@@ -194,7 +191,7 @@
       ],
       "orientation": "direct"
     },
-     "l_virtualhand_x": {
+    "l_virtualhand_x": {
       "offset": 0.0,
       "type": "SR-EROSBRD",
       "id": 31,
@@ -213,8 +210,7 @@
         90
       ],
       "orientation": "direct"
-    }
-    ,
+    },
     "r_wrist_x": {
       "offset": 0.0,
       "type": "SR-SEED56",
@@ -224,8 +220,7 @@
         35
       ],
       "orientation": "direct"
-    }
-    ,
+    },
     "r_indexfingers_x": {
       "offset": 0.0,
       "type": "SR-RH4D",
@@ -236,7 +231,7 @@
       ],
       "orientation": "direct"
     },
-     "r_thumb_x": {
+    "r_thumb_x": {
       "offset": 0.0,
       "type": "SR-RH4D",
       "id": 29,
@@ -246,7 +241,7 @@
       ],
       "orientation": "direct"
     },
-     "r_virtualhand_x": {
+    "r_virtualhand_x": {
       "offset": 0.0,
       "type": "SR-EROSBRD",
       "id": 32,
@@ -256,5 +251,5 @@
       ],
       "orientation": "direct"
     }
-   }
+  }
 }

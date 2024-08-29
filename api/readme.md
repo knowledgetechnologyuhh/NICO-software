@@ -1,8 +1,5 @@
 Usage
 ===
-
-> **Note:** Due to changes in the setup, versions of the API installed prior to 22.09.2020 should be removed. Please delete the `~/.NICO`, `api/build` and `api/devel` folders before running the setup script.
-
 To setup a virtualenv, install most required packages and build ros, use one of
 the two setup scripts.
 
@@ -66,11 +63,10 @@ sudo apt-get install ffmpeg
 ```
 TextToSpeech:
 
-The `nicoaudio.TextToSpeech` uses `pico2wave` as fallback (e.g if there is no internet):
+The `nicoaudio.TextToSpeech` requires `espeak` as backend:
 ```
-sudo apt-get install pico2wave
+sudo apt-get install espeak
 ```
-It can also use a locally hosted [MozillaTTS server](https://github.com/mozilla/TTS/tree/master/server) (note that MozillaTTS is still in developement)
 
 nicomotion
 --

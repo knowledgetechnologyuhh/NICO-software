@@ -5,6 +5,8 @@ class RH5DHand(AbstractHand):
     """This class represents the Seed Robotics RH4D Hand."""
 
     current_limit = 175
+    
+    closing_direction = 1
 
     sensitive_motors = ("thumb_z", "thumb_x", "indexfinger_x", "middlefingers_x")
 

@@ -4,6 +4,7 @@ import numpy as np
 import weakref
 from pyrep import PyRep
 from pyrep.objects.vision_sensor import VisionSensor
+from pyrep.const import RenderMode
 
 logger = logging.getLogger(__name__)
 
@@ -105,6 +106,9 @@ class PyrepDevice(object):
         near_clipping_plane=1e-2,
         far_clipping_plane=10.0,
         view_angle=60.0,
+        render_mode=RenderMode.OPENGL3,
+        fisheye=False,
+        fisheye_suffixes=["_front", "_top", "_back", "_bottom", "_left", "_right"],
     ):
         """
         Connects to Vision Sensor with given name and updates parameters
@@ -122,12 +126,24 @@ class PyrepDevice(object):
         :type far_clipping_plane: float
         :param view_angle: field of view of the camera in degree.
         :type view_angle: float
+        :param render_mode: Render mode of the camera.
+        :type render_mode: pyrep.const.RenderMode
+        :param fisheye: set this to True if you are using a spherical vision sensor with multiple subsensors
+        :type fisheye: bool
+        :param fisheye_suffixes: suffixes of the subsensors for the spherical vision sensor
+        :type fisheye_suffix: list(string)
         """
         self._sensor = VisionSensor(sensor_name)
+        self._fisheye = fisheye
+        if fisheye:
+            self._subsensors = [
+                VisionSensor(sensor_name + suffix) for suffix in fisheye_suffixes
+            ]
         self.resolution = (width, height)
         self.near_clipping_plane = near_clipping_plane
         self.far_clipping_plane = far_clipping_plane
         self.view_angle = view_angle
+        self.render_mode = render_mode
         self._callback = []
         self._removed_ids = []
         ref = weakref.ref(self, StepListener.unregister)
@@ -204,6 +220,25 @@ class PyrepDevice(object):
         :type val: float
         """
         self._sensor.set_perspective_angle(val)
+
+    @property
+    def render_mode(self):
+        """
+        :return: Render mode of the camera.
+        :rtype: pyrep.const.RenderMode
+        """
+        return self._sensor.get_render_mode()
+
+    @render_mode.setter
+    def render_mode(self, val):
+        """
+        :return: Render mode of the camera.
+        :rtype: pyrep.const.RenderMode
+        """
+        self._sensor.set_render_mode(val)
+        if self._fisheye:
+            for sensor in self._subsensors:
+                sensor.set_render_mode(val)
 
     def get_image(self):
         """
